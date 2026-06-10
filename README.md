@@ -152,7 +152,6 @@ MIT
 
 如果这个项目对你有帮助，欢迎赞助，支持后续开发维护。
 
-<!-- 在这里放你的微信收款码或支付宝收款码 -->
-<!-- <img src="images/wechat-pay.png" width="200" alt="微信收款码"> -->
+<img src="images/wechat-pay.jpg" width="200" alt="微信收款码">
 
 **作者：** Zhencheng · 独立开发者
