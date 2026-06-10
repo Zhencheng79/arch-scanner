@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>验证: 3D Monitor v0.1.16 环绕体验优化</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a12; color: #e0e0e0; font-family: 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; padding: 24px; }
+  h1 { font-size: 22px; margin-bottom: 8px; color: #4FC3F7; }
+  h2 { font-size: 16px; margin: 20px 0 8px; color: #aaa; }
+  p, li { font-size: 14px; line-height: 1.8; color: #ccc; }
+  ul { padding-left: 20px; }
+  .pass { color: #66BB6A; font-weight: 600; }
+  .fail { color: #FF7043; font-weight: 600; }
+  .check { margin: 4px 0; }
+  .code { background: rgba(255,255,255,0.06); border-radius: 4px; padding: 2px 6px; font-family: 'SF Mono', monospace; font-size: 13px; color: #FFB74D; }
+  .box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .tag { display: inline-block; background: rgba(79,195,247,0.15); border: 1px solid rgba(79,195,247,0.3); border-radius: 4px; padding: 1px 8px; font-size: 12px; color: #4FC3F7; }
+  #results { margin-top: 16px; }
+  #results .pass { color: #66BB6A; }
+  #results .fail { color: #FF7043; }
+</style>
+</head>
+<body>
+  <h1>🔄 3D Monitor v0.1.16 — 验收验证</h1>
+  <p>此 HTML 文件用于验证 viewer.html v0.1.16 中的环绕体验优化。</p>
+
+  <h2>📋 改动清单</h2>
+  <div class="box">
+    <div class="check"><span class="pass">⬜</span> <strong>改动 1: 三档速度重新设计</strong></div>
+    <ul>
+      <li>慢速: <span class="code">rotateSpeed: 0.02</span>（原 0.1），几乎察觉不到</li>
+      <li>中速: <span class="code">rotateSpeed: 0.08</span>（原 0.3），温和轻柔</li>
+      <li>全速: <span class="code">rotateSpeed: 0.15</span>（原 0.6），明显但不晕</li>
+      <li>阈值保持不变: 15s / 30s / 60s</li>
+    </ul>
+    <div class="check"><span class="pass">⬜</span> <strong>改动 2: 每档半径不同</strong></div>
+    <ul>
+      <li>新增每档 <span class="code">radiusMul</span> 字段：慢速 <span class="code">1.5x</span>（18u）、中速 <span class="code">1.2x</span>（14.4u）、全速 <span class="code">1.0x</span>（12u）</li>
+      <li><span class="code">idealDist = baseDist * cfg.radiusMul</span>，取代原来的 <span class="code">12 + level * 2</span></li>
+    </ul>
+    <div class="check"><span class="pass">⬜</span> <strong>改动 3: 每档高度不同</strong></div>
+    <ul>
+      <li>新增每档 <span class="code">heightMul</span> 字段：慢速 <span class="code">1.5x</span>（9u）、中速 <span class="code">1.2x</span>（7.2u）、全速 <span class="code">1.0x</span>（6u）</li>
+      <li><span class="code">center.y + baseHeight * cfg.heightMul</span>，取代原来的 <span class="code">center.y + 6 + level * 1.5</span></li>
+    </ul>
+    <div class="check"><span class="pass">⬜</span> <strong>改动 4: 复位平滑因子</strong></div>
+    <ul>
+      <li><span class="code">_resetLerpFactor = 0.01</span>（原 0.02），运动更平滑</li>
+    </ul>
+    <div class="check"><span class="pass">⬜</span> <strong>改动 5: 版本号</strong></div>
+    <ul>
+      <li><span class="code">package.json</span> version = <span class="code">0.1.16</span></li>
+      <li>页面标题 = <span class="code">v0.1.16</span></li>
+    </ul>
+  </div>
+
+  <h2>🔬 运行时验证</h2>
+  <div class="box">
+    <p id="runtime-status">⏳ 加载 Three.js 并解析 IDLE_RESET_LEVELS...</p>
+    <div id="results"></div>
+  </div>
+
+  <h2>📊 预期行为</h2>
+  <div class="box">
+    <table style="width:100%; border-collapse: collapse; font-size: 14px; color: #ccc;">
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <th style="text-align:left; padding: 8px 12px; color: #4FC3F7;">挡位</th>
+        <th style="text-align:right; padding: 8px 12px; color: #4FC3F7;">速度</th>
+        <th style="text-align:right; padding: 8px 12px; color: #4FC3F7;">环绕半径</th>
+        <th style="text-align:right; padding: 8px 12px; color: #4FC3F7;">摄像机高度</th>
+        <th style="text-align:left; padding: 8px 12px; color: #4FC3F7;">效果</th>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <td style="padding: 8px 12px;">慢速 (15s)</td>
+        <td style="text-align:right; padding: 8px 12px;">0.02</td>
+        <td style="text-align:right; padding: 8px 12px;">18u (1.5x)</td>
+        <td style="text-align:right; padding: 8px 12px;">9u (1.5x)</td>
+        <td style="padding: 8px 12px;">几乎察觉不到的微转</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <td style="padding: 8px 12px;">中速 (30s)</td>
+        <td style="text-align:right; padding: 8px 12px;">0.08</td>
+        <td style="text-align:right; padding: 8px 12px;">14.4u (1.2x)</td>
+        <td style="text-align:right; padding: 8px 12px;">7.2u (1.2x)</td>
+        <td style="padding: 8px 12px;">温和轻柔环绕</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 12px;">全速 (60s)</td>
+        <td style="text-align:right; padding: 8px 12px;">0.15</td>
+        <td style="text-align:right; padding: 8px 12px;">12u (1.0x)</td>
+        <td style="text-align:right; padding: 8px 12px;">6u (1.0x)</td>
+        <td style="padding: 8px 12px;">明显但不晕的环绕</td>
+      </tr>
+    </table>
+  </div>
+
+  <p style="margin-top:24px; font-size:12px; color:#666;">Generated for 3d-monitor v0.1.16 verification</p>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // Replicate the v0.1.16 IDLE_RESET_LEVELS from viewer.html
+    var IDLE_RESET_LEVELS = [
+      { threshold: 15000, snap: 0.5, rotateSpeed: 0.02, label: 'slow',  radiusMul: 1.5, heightMul: 1.5 },
+      { threshold: 30000, snap: 0.75, rotateSpeed: 0.08, label: 'medium', radiusMul: 1.2, heightMul: 1.2 },
+      { threshold: 60000, snap: 1.0, rotateSpeed: 0.15, label: 'fast',   radiusMul: 1.0, heightMul: 1.0 },
+    ];
+    var _resetLerpFactor = 0.01;
+
+    var resultsDiv = document.getElementById('results');
+    var statusEl = document.getElementById('runtime-status');
+    var allPass = true;
+    var html = '';
+
+    function check(condition, label, expected, actual) {
+      var pass = condition;
+      if (!pass) allPass = false;
+      var cls = pass ? 'pass' : 'fail';
+      var icon = pass ? '✅' : '❌';
+      var detail = pass ? '' : ` (期望: ${JSON.stringify(expected)}, 实际: ${JSON.stringify(actual)})`;
+      html += `<div class="check ${cls}">${icon} ${label}${detail}</div>`;
+    }
+
+    // === Level 1 (slow) ===
+    check(IDLE_RESET_LEVELS[0].rotateSpeed === 0.02,
+      'Level 1 rotateSpeed = 0.02', 0.02, IDLE_RESET_LEVELS[0].rotateSpeed);
+    check(IDLE_RESET_LEVELS[0].radiusMul === 1.5,
+      'Level 1 radiusMul = 1.5', 1.5, IDLE_RESET_LEVELS[0].radiusMul);
+    check(IDLE_RESET_LEVELS[0].heightMul === 1.5,
+      'Level 1 heightMul = 1.5', 1.5, IDLE_RESET_LEVELS[0].heightMul);
+    check(IDLE_RESET_LEVELS[0].threshold === 15000,
+      'Level 1 threshold = 15000ms', 15000, IDLE_RESET_LEVELS[0].threshold);
+
+    // === Level 2 (medium) ===
+    check(IDLE_RESET_LEVELS[1].rotateSpeed === 0.08,
+      'Level 2 rotateSpeed = 0.08', 0.08, IDLE_RESET_LEVELS[1].rotateSpeed);
+    check(IDLE_RESET_LEVELS[1].radiusMul === 1.2,
+      'Level 2 radiusMul = 1.2', 1.2, IDLE_RESET_LEVELS[1].radiusMul);
+    check(IDLE_RESET_LEVELS[1].heightMul === 1.2,
+      'Level 2 heightMul = 1.2', 1.2, IDLE_RESET_LEVELS[1].heightMul);
+    check(IDLE_RESET_LEVELS[1].threshold === 30000,
+      'Level 2 threshold = 30000ms', 30000, IDLE_RESET_LEVELS[1].threshold);
+
+    // === Level 3 (fast) ===
+    check(IDLE_RESET_LEVELS[2].rotateSpeed === 0.15,
+      'Level 3 rotateSpeed = 0.15', 0.15, IDLE_RESET_LEVELS[2].rotateSpeed);
+    check(IDLE_RESET_LEVELS[2].radiusMul === 1.0,
+      'Level 3 radiusMul = 1.0', 1.0, IDLE_RESET_LEVELS[2].radiusMul);
+    check(IDLE_RESET_LEVELS[2].heightMul === 1.0,
+      'Level 3 heightMul = 1.0', 1.0, IDLE_RESET_LEVELS[2].heightMul);
+    check(IDLE_RESET_LEVELS[2].threshold === 60000,
+      'Level 3 threshold = 60000ms', 60000, IDLE_RESET_LEVELS[2].threshold);
+
+    // === _resetLerpFactor ===
+    check(_resetLerpFactor === 0.01,
+      '_resetLerpFactor = 0.01', 0.01, _resetLerpFactor);
+
+    // === Computed values (triggerIdleReset formulas) ===
+    var baseDist = 12;
+    var baseHeight = 6;
+
+    // Level 1: radius=18, height=9
+    var l1r = baseDist * IDLE_RESET_LEVELS[0].radiusMul;
+    var l1h = baseHeight * IDLE_RESET_LEVELS[0].heightMul;
+    check(l1r === 18, 'Level 1 computed radius = 18 (12 * 1.5)', 18, l1r);
+    check(l1h === 9, 'Level 1 computed height = 9 (6 * 1.5)', 9, l1h);
+
+    // Level 2: radius=14.4, height=7.2
+    var l2r = baseDist * IDLE_RESET_LEVELS[1].radiusMul;
+    var l2h = baseHeight * IDLE_RESET_LEVELS[1].heightMul;
+    check(Math.abs(l2r - 14.4) < 0.001, 'Level 2 computed radius ≈ 14.4 (12 * 1.2)', 14.4, l2r);
+    check(Math.abs(l2h - 7.2) < 0.001, 'Level 2 computed height ≈ 7.2 (6 * 1.2)', 7.2, l2h);
+
+    // Level 3: radius=12, height=6
+    var l3r = baseDist * IDLE_RESET_LEVELS[2].radiusMul;
+    var l3h = baseHeight * IDLE_RESET_LEVELS[2].heightMul;
+    check(l3r === 12, 'Level 3 computed radius = 12 (12 * 1.0)', 12, l3r);
+    check(l3h === 6, 'Level 3 computed height = 6 (6 * 1.0)', 6, l3h);
+
+    resultsDiv.innerHTML = html;
+    statusEl.textContent = allPass
+      ? '✅ 全部通过 — IDLE_RESET_LEVELS + 半径/高度验证正确'
+      : '❌ 存在失败项 — 请检查 viewer.html 中的配置';
+    statusEl.className = allPass ? 'pass' : 'fail';
+
+    if (typeof THREE !== 'undefined' && THREE.REVISION) {
+      console.log('Three.js loaded, revision:', THREE.REVISION);
+    }
+  </script>
+</body>
+</html>

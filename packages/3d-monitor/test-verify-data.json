@@ -1,0 +1,263 @@
+{
+  "nodes": [
+    {
+      "id": "user-input",
+      "label": "用户输入",
+      "layer": "frontend",
+      "chineseName": "用户输入",
+      "color": "#FFB74D",
+      "description": "用户输入处理模块"
+    },
+    {
+      "id": "dispatcher",
+      "label": "调度器",
+      "layer": "agent",
+      "chineseName": "任务调度器",
+      "color": "#4CAF50",
+      "description": "中央任务调度模块"
+    },
+    {
+      "id": "nlp-engine",
+      "label": "NLP引擎",
+      "layer": "agent",
+      "chineseName": "NLP语义引擎",
+      "color": "#4CAF50",
+      "description": "自然语言处理引擎"
+    },
+    {
+      "id": "search-module",
+      "label": "搜索模块",
+      "layer": "agent",
+      "chineseName": "搜索模块",
+      "color": "#4CAF50",
+      "description": "信息检索与搜索"
+    },
+    {
+      "id": "memory-db",
+      "label": "记忆库",
+      "layer": "infrastructure",
+      "chineseName": "记忆数据库",
+      "color": "#4A90D9",
+      "description": "持久化记忆存储"
+    },
+    {
+      "id": "response-gen",
+      "label": "回复生成",
+      "layer": "agent",
+      "chineseName": "回复生成器",
+      "color": "#4CAF50",
+      "description": "最终回复生成"
+    },
+    {
+      "id": "output-format",
+      "label": "输出格式化",
+      "layer": "frontend",
+      "chineseName": "输出格式化",
+      "color": "#FFB74D",
+      "description": "输出格式化与展示"
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "user-input",
+      "to": "dispatcher",
+      "label": "用户指令",
+      "flowType": "control",
+      "color": "#FFEB3B"
+    },
+    {
+      "id": "c2",
+      "from": "dispatcher",
+      "to": "nlp-engine",
+      "label": "语义分析请求",
+      "flowType": "control",
+      "color": "#FFEB3B"
+    },
+    {
+      "id": "c3",
+      "from": "dispatcher",
+      "to": "search-module",
+      "label": "检索请求",
+      "flowType": "control",
+      "color": "#FFEB3B"
+    },
+    {
+      "id": "c4",
+      "from": "nlp-engine",
+      "to": "dispatcher",
+      "label": "语义分析结果",
+      "flowType": "data",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "c5",
+      "from": "search-module",
+      "to": "dispatcher",
+      "label": "检索结果",
+      "flowType": "data",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "c6",
+      "from": "memory-db",
+      "to": "nlp-engine",
+      "label": "历史记忆",
+      "flowType": "data",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "c7",
+      "from": "memory-db",
+      "to": "search-module",
+      "label": "历史记忆",
+      "flowType": "data",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "c8",
+      "from": "dispatcher",
+      "to": "response-gen",
+      "label": "生成回复指令",
+      "flowType": "control",
+      "color": "#FFEB3B"
+    },
+    {
+      "id": "c9",
+      "from": "response-gen",
+      "to": "output-format",
+      "label": "最终回复",
+      "flowType": "data",
+      "color": "#00BCD4"
+    }
+  ],
+  "ports": [
+    {
+      "portId": "user-input-out-c1",
+      "nodeId": "user-input",
+      "type": "output",
+      "color": "#FFEB3B",
+      "label": "发送: 用户指令"
+    },
+    {
+      "portId": "dispatcher-in-c1",
+      "nodeId": "dispatcher",
+      "type": "input",
+      "color": "#FFEB3B",
+      "label": "接收: 用户指令"
+    },
+    {
+      "portId": "dispatcher-out-c2",
+      "nodeId": "dispatcher",
+      "type": "output",
+      "color": "#FFEB3B",
+      "label": "发送: 语义分析请求"
+    },
+    {
+      "portId": "nlp-engine-in-c2",
+      "nodeId": "nlp-engine",
+      "type": "input",
+      "color": "#FFEB3B",
+      "label": "接收: 语义分析请求"
+    },
+    {
+      "portId": "dispatcher-out-c3",
+      "nodeId": "dispatcher",
+      "type": "output",
+      "color": "#FFEB3B",
+      "label": "发送: 检索请求"
+    },
+    {
+      "portId": "search-module-in-c3",
+      "nodeId": "search-module",
+      "type": "input",
+      "color": "#FFEB3B",
+      "label": "接收: 检索请求"
+    },
+    {
+      "portId": "nlp-engine-out-c4",
+      "nodeId": "nlp-engine",
+      "type": "output",
+      "color": "#00BCD4",
+      "label": "发送: 语义分析结果"
+    },
+    {
+      "portId": "dispatcher-in-c4",
+      "nodeId": "dispatcher",
+      "type": "input",
+      "color": "#00BCD4",
+      "label": "接收: 语义分析结果"
+    },
+    {
+      "portId": "search-module-out-c5",
+      "nodeId": "search-module",
+      "type": "output",
+      "color": "#00BCD4",
+      "label": "发送: 检索结果"
+    },
+    {
+      "portId": "dispatcher-in-c5",
+      "nodeId": "dispatcher",
+      "type": "input",
+      "color": "#00BCD4",
+      "label": "接收: 检索结果"
+    },
+    {
+      "portId": "memory-db-out-c6",
+      "nodeId": "memory-db",
+      "type": "output",
+      "color": "#00BCD4",
+      "label": "发送: 历史记忆"
+    },
+    {
+      "portId": "nlp-engine-in-c6",
+      "nodeId": "nlp-engine",
+      "type": "input",
+      "color": "#00BCD4",
+      "label": "接收: 历史记忆"
+    },
+    {
+      "portId": "memory-db-out-c7",
+      "nodeId": "memory-db",
+      "type": "output",
+      "color": "#00BCD4",
+      "label": "发送: 历史记忆"
+    },
+    {
+      "portId": "search-module-in-c7",
+      "nodeId": "search-module",
+      "type": "input",
+      "color": "#00BCD4",
+      "label": "接收: 历史记忆"
+    },
+    {
+      "portId": "dispatcher-out-c8",
+      "nodeId": "dispatcher",
+      "type": "output",
+      "color": "#FFEB3B",
+      "label": "发送: 生成回复指令"
+    },
+    {
+      "portId": "response-gen-in-c8",
+      "nodeId": "response-gen",
+      "type": "input",
+      "color": "#FFEB3B",
+      "label": "接收: 生成回复指令"
+    },
+    {
+      "portId": "response-gen-out-c9",
+      "nodeId": "response-gen",
+      "type": "output",
+      "color": "#00BCD4",
+      "label": "发送: 最终回复"
+    },
+    {
+      "portId": "output-format-in-c9",
+      "nodeId": "output-format",
+      "type": "input",
+      "color": "#00BCD4",
+      "label": "接收: 最终回复"
+    }
+  ],
+  "tags": {}
+}

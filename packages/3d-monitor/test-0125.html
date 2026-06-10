@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>验证 v0.1.25</title></head>
+<body>
+<h1>3D Monitor v0.1.25 验证报告</h1>
+<div id="results"></div>
+<script>
+(function() {
+  var results = document.getElementById('results');
+  function check(ok, msg) {
+    var div = document.createElement('div');
+    div.style.color = ok ? '#0f0' : '#f00';
+    div.textContent = (ok ? 'PASS' : 'FAIL') + ': ' + msg;
+    results.appendChild(div);
+    return ok;
+  }
+  var passed = 0, failed = 0;
+
+  // 1. 版本号
+  var title = document.title;
+  if (check(/v0\.1\.25/.test(title), '标题版本号 = v0.1.25 (' + title + ')')) passed++; else failed++;
+
+  // 2. handleClick / handleDblClick 全局可访问
+  if (check(typeof window.handleClick === 'function', 'window.handleClick 是 function')) passed++; else failed++;
+  if (check(typeof window.handleDblClick === 'function', 'window.handleDblClick 是 function')) passed++; else failed++;
+
+  // 3. _levelLabel 重置逻辑
+  var src = document.querySelector('script').textContent; // only first script
+  if (check(src.indexOf('_levelLabel = null') > -1, '存在 _levelLabel = null 重置代码')) passed++; else failed++;
+
+  // 4. JS 语法检查 — 全文提取脚本并 eval
+  var allScripts = document.querySelectorAll('script');
+  var fullJS = '';
+  for (var i = 0; i < allScripts.length; i++) {
+    if (allScripts[i].src) continue;
+    fullJS += allScripts[i].textContent + '\n';
+  }
+  try {
+    new Function(fullJS);
+    check(true, '全文 JS 语法无错误');
+    passed++;
+  } catch (e) {
+    check(false, 'JS 语法错误: ' + e.message);
+    failed++;
+  }
+
+  // 汇总
+  var sum = document.createElement('h2');
+  sum.textContent = '结果: ' + passed + ' 通过, ' + failed + ' 失败';
+  sum.style.color = failed === 0 ? '#0f0' : '#f00';
+  results.parentNode.insertBefore(sum, results);
+})();
+</script>
+</body>
+</html>

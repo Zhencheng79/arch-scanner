@@ -1,0 +1,36 @@
+{
+  "nodes": [
+    {"id":"zhaogongming","label":"赵公明","layer":"command","chineseName":"主帅","chineseDesc":"Hermes团队主帅，统筹调度整个投研团队","color":"#F44336","geometryType":"sphere"},
+    {"id":"strategist","label":"军师","layer":"command","chineseName":"参谋部","chineseDesc":"参谋部，负责制定投资策略和实施方案","color":"#F44336","geometryType":"sphere"},
+    {"id":"x-commissioner","label":"X专员","layer":"command","chineseName":"调度员","chineseDesc":"系统部调度员，负责调度Codex CLI执行编程任务","color":"#F44336","geometryType":"sphere"},
+    {"id":"research","label":"研究部","layer":"analysis","chineseName":"研究员","chineseDesc":"研究部，负责行业分析和公司调研","color":"#FF9800","geometryType":"sphere"},
+    {"id":"analyst-a","label":"分析师A","layer":"analysis","chineseName":"A角","chineseDesc":"分析师A，对调研数据进行深度分析","color":"#FF9800","geometryType":"sphere"},
+    {"id":"analyst-b","label":"分析师B","layer":"analysis","chineseName":"B角","chineseDesc":"分析师B，对调研数据进行深度分析（平行验证）","color":"#FF9800","geometryType":"sphere"},
+    {"id":"team-lead","label":"小队长","layer":"management","chineseName":"队长","chineseDesc":"小队长，合成分析师A/B的报告","color":"#4CAF50","geometryType":"sphere"},
+    {"id":"risk-control","label":"风控部","layer":"risk","chineseName":"风控员","chineseDesc":"风控部，审核决策建议","color":"#9C27B0","geometryType":"sphere"},
+    {"id":"knowledge","label":"知识管理","layer":"knowledge","chineseName":"档案室","chineseDesc":"知识管理部，归档研究成果","color":"#2196F3","geometryType":"sphere"},
+    {"id":"codex-cli","label":"Codex","layer":"execution","chineseName":"编程助手","chineseDesc":"编程助手，执行代码编写、系统优化等编程任务","color":"#00BCD4","geometryType":"sphere"},
+    {"id":"data-collector","label":"数据管家","layer":"data","chineseName":"数据采集","chineseDesc":"数据管家，从外部数据源采集原始数据","color":"#607D8B","geometryType":"sphere"},
+    {"id":"duckdb","label":"数据仓库","layer":"data","chineseName":"DuckDB","chineseDesc":"数据仓库，存储结构化数据","color":"#607D8B","geometryType":"sphere"},
+    {"id":"hermes-web","label":"投研管家","layer":"frontend","chineseName":"Web前端","chineseDesc":"投研管家Web前端","color":"#795548","geometryType":"sphere"}
+  ],
+  "connections": [
+    {"from":"zhaogongming","to":"strategist","flowType":"control","label":"战略指令"},
+    {"from":"zhaogongming","to":"research","flowType":"control","label":"调研指令"},
+    {"from":"zhaogongming","to":"x-commissioner","flowType":"control","label":"编程任务"},
+    {"from":"zhaogongming","to":"risk-control","flowType":"control","label":"风控指令"},
+    {"from":"strategist","to":"zhaogongming","flowType":"data","label":"方案交付"},
+    {"from":"research","to":"analyst-a","flowType":"data","label":"调研发现"},
+    {"from":"research","to":"analyst-b","flowType":"data","label":"调研发现"},
+    {"from":"analyst-a","to":"team-lead","flowType":"data","label":"分析报告"},
+    {"from":"analyst-b","to":"team-lead","flowType":"data","label":"分析报告"},
+    {"from":"team-lead","to":"risk-control","flowType":"control","label":"决策指令"},
+    {"from":"risk-control","to":"zhaogongming","flowType":"data","label":"风控结果"},
+    {"from":"x-commissioner","to":"codex-cli","flowType":"control","label":"代码调度"},
+    {"from":"codex-cli","to":"knowledge","flowType":"data","label":"结果归档"},
+    {"from":"data-collector","to":"duckdb","flowType":"data","label":"数据存储"},
+    {"from":"duckdb","to":"research","flowType":"data","label":"数据查询"},
+    {"from":"knowledge","to":"research","flowType":"data","label":"知识同步"},
+    {"from":"duckdb","to":"hermes-web","flowType":"data","label":"数据展示"}
+  ]
+}

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Test: startIdleTimer 异常保护 v0.1.30</title>
+<style>
+  body{background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:20px}
+  #status{white-space:pre-wrap;margin:10px 0;padding:10px;background:#0a0a12;border:1px solid #333;max-height:80vh;overflow-y:auto}
+  .pass{color:#4caf50}
+  .fail{color:#f44336}
+  .info{color:#90caf9}
+  button{margin:4px;padding:8px 16px;cursor:pointer}
+</style>
+</head>
+<body>
+<h2>🧪 startIdleTimer 异常保护测试 v0.1.30</h2>
+<p>目标：验证 try/catch 捕获异常而非导致 interval/interval 被静默终止</p>
+<div>
+  <button onclick="testThrowsInCallback()">测试1: 回调中抛异常</button>
+  <button onclick="testNullRef()">测试2: null引用异常</button>
+  <button onclick="testControlsUpdate()">测试3: controls.update()异常</button>
+  <button onclick="clearLogs()">清空日志</button>
+</div>
+<pre id="status">[info] 就绪，点击按钮测试...</pre>
+
+<script>
+var statusEl = document.getElementById('status');
+
+function log(msg, cls) {
+  var line = document.createElement('div');
+  line.className = cls || 'info';
+  line.textContent = '[' + new Date().toISOString().slice(11,23) + '] ' + msg;
+  statusEl.appendChild(line);
+  statusEl.scrollTop = statusEl.scrollHeight;
+  console.log(msg);
+}
+
+// 模拟 startIdleTimer 的 interval 结构（带 try/catch）
+function createProtectedInterval(fn, ms) {
+  var id = setInterval(function() {
+    try {
+      fn();
+    } catch(e) {
+      console.error('[timer] ERROR:', e.message, e.stack ? e.stack.substring(0,200) : '');
+      log('ERROR caught: ' + e.message, 'fail');
+    }
+  }, ms);
+  log('protected interval created, ID=' + id, 'info');
+  return id;
+}
+
+// 模拟 unprotected interval（对照：无 try/catch）
+function createUnprotectedInterval(fn, ms) {
+  return setInterval(fn, ms);
+}
+
+function testThrowsInCallback() {
+  log('', 'info');
+  log('═══ 测试1: 回调中抛异常 ═══', 'info');
+  var count = 0;
+  var id = createProtectedInterval(function() {
+    count++;
+    if (count === 2) {
+      log('>>> 第2次回调：抛异常', 'info');
+      throw new Error('模拟异常 #' + count);
+    }
+    if (count === 4) {
+      log('>>> 第4次回调：还能正常执行！interval未被终止', 'pass');
+      clearInterval(id);
+      log('>>> [PASS] try/catch保护有效，interval存活', 'pass');
+      return;
+    }
+    log('tick #' + count, 'info');
+  }, 200);
+}
+
+function testNullRef() {
+  log('', 'info');
+  log('═══ 测试2: null引用异常 ═══', 'info');
+  var count = 0;
+  var id = createProtectedInterval(function() {
+    count++;
+    if (count === 2) {
+      log('>>> 第2次回调：访问null.length', 'info');
+      var x = null;
+      log(x.length.toString()); // 会抛TypeError
+    }
+    if (count === 4) {
+      log('>>> 第4次回调：null引用后interval仍在运行', 'pass');
+      clearInterval(id);
+      log('>>> [PASS] 空引用异常被捕获，interval继续运行', 'pass');
+      return;
+    }
+    log('tick #' + count, 'info');
+  }, 200);
+}
+
+function testControlsUpdate() {
+  log('', 'info');
+  log('═══ 测试3: controls.update()异常保护 ═══', 'info');
+  // 模拟 animate 中的 controls.update() 调用方式
+  function safeControlsUpdate() {
+    try { controls.update(); } catch(e) { console.error('[anim] controls.update error:', e.message); }
+  }
+  // 无 controls 对象时调用
+  log('调用 safeControlsUpdate() —— controls未定义', 'info');
+  safeControlsUpdate();
+  log('未抛出异常，OK', 'pass');
+
+  // 有 controls 但 update 是undefined
+  var controls = {};
+  log('调用 safeControlsUpdate() —— controls.update未定义', 'info');
+  safeControlsUpdate();
+  log('未抛出异常，OK', 'pass');
+
+  // 正常 controls
+  controls = { update: function() { log('controls.update() 正常调用', 'pass'); } };
+  log('调用 safeControlsUpdate() —— 正常对象', 'info');
+  safeControlsUpdate();
+  log('[PASS] 所有场景通过', 'pass');
+}
+
+function clearLogs() {
+  statusEl.innerHTML = '[info] 日志已清空';
+}
+</script>
+</body>
+</html>
