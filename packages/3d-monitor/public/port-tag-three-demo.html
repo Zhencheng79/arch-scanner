@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor — Three.js Enhanced</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0a0f;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+canvas{display:block}
+#tooltip{position:fixed;pointer-events:none;background:rgba(0,0,0,0.85);color:#fff;padding:6px 12px;border-radius:6px;font-size:13px;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(8px);display:none;z-index:1000;max-width:260px;line-height:1.4}
+#tooltip .sub{color:#aaa;font-size:11px}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.35);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none}
+#legend{position:fixed;bottom:60px;right:20px;z-index:10;background:rgba(10,10,15,0.85);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 14px;font-size:11px;color:#ccc;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px)}
+#legend .row{display:flex;align-items:center;gap:8px}
+#legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:20px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+#stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.5);pointer-events:none;font-family:monospace;line-height:1.6}
+#stats b{color:#4FC3F7}
+</style>
+</head>
+<body>
+<div id="tooltip"></div>
+<div id="stats"><b id="fps">0</b> FPS | <b id="nodeCount">0</b> nodes | <b id="edgeCount">0</b> edges | <b id="particleCount">0</b> particles</div>
+<div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点高亮</div>
+<div id="legend">
+<div class="row"><span class="dot" style="background:#4FC3F7"></span>Research</div>
+<div class="row"><span class="dot" style="background:#81C784"></span>Analysis</div>
+<div class="row"><span class="dot" style="background:#FFB74D"></span>Management</div>
+<div class="row"><span class="dot" style="background:#F44336"></span>Risk</div>
+<div class="row"><span class="dot" style="background:#CE93D8"></span>Decision</div>
+<div class="row"><span class="dot" style="background:#4CAF50"></span>Infrastructure</div>
+<div class="row"><span class="dot" style="background:#FF7043"></span>External</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.08)">
+<span class="line-sample" style="background:#4CAF50"></span>Data
+<span class="line-sample" style="background:#2196F3;margin-left:8px"></span>Control
+<span class="line-sample" style="background:#AB47BC;margin-left:8px"></span>Request
+<span class="line-sample" style="background:#F06292;margin-left:8px"></span>Event
+</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script>
+// __DATA_EMBED_HERE__
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── Layer config ──────────────────────────────────────
+const LAYER_NAMES=['research','analysis','management','risk','decision'];
+const LAYER_COLORS={
+  research:new THREE.Color('#4FC3F7'),
+  analysis:new THREE.Color('#81C784'),
+  management:new THREE.Color('#FFB74D'),
+  risk:new THREE.Color('#F44336'),
+  decision:new THREE.Color('#CE93D8'),
+  infrastructure:new THREE.Color('#4CAF50'),
+  frontend:new THREE.Color('#FFB74D'),
+  external:new THREE.Color('#FF7043')
+};
+const FLOW_COLORS={
+  data:new THREE.Color('#4CAF50'),
+  control:new THREE.Color('#2196F3'),
+  request:new THREE.Color('#AB47BC'),
+  event:new THREE.Color('#F06292')
+};
+const DEFAULT_FLOW_COLOR=new THREE.Color('#4CAF50');
+
+// ─── Data state ────────────────────────────────────────
+let nodeData=[], edgeData=[];
+let NUM_NODES=0, NUM_EDGES=0;
+
+// ─── Three.js setup ────────────────────────────────────
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,500);
+camera.position.set(0,18,35);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+document.body.prepend(renderer.domElement);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=0.08;
+controls.target.set(0,0,0);
+controls.update();
+
+// ─── Scene objects ─────────────────────────────────────
+let nodePoints=null;
+let edgeLines=null;
+let flowParticles=null;
+let highlightMesh=null;
+
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+let selectedNodeIndex=-1;
+
+// ─── Particle state ────────────────────────────────────
+let particleData=[];
+
+// ─── Create highlight ring ─────────────────────────────
+function createHighlight(){
+  const geo=new THREE.RingGeometry(0.45,0.65,32);
+  const mat=new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,transparent:true,opacity:0.8});
+  highlightMesh=new THREE.Mesh(geo,mat);
+  highlightMesh.visible=false;
+  scene.add(highlightMesh);
+}
+
+// ─── Grid layout per layer — clean separation ──────────
+function computeNodePositions(nodes){
+  const count=nodes.length;
+  const positions=new Float32Array(count*3);
+  // Phase 1: Use node.position if available
+  for(let i=0;i<count;i++){
+    const p=nodes[i].position;
+    if(p&&Array.isArray(p)&&p.length===3){
+      positions[i*3]=p[0];
+      positions[i*3+1]=p[1];
+      positions[i*3+2]=p[2];
+    }
+  }
+  // Phase 2: Layer-based grid for nodes without a pre-set position
+  // Build a set of node ids that already have positions
+  const positionedIds=new Set();
+  for(let i=0;i<count;i++){
+    if(positions[i*3]!==0||positions[i*3+1]!==0||positions[i*3+2]!==0){
+      positionedIds.add(nodes[i].id);
+    }
+  }
+  const layerNodes={};
+  for(const n of nodes){
+    if(positionedIds.has(n.id))continue;
+    const l=n.layer||'management';
+    if(!layerNodes[l])layerNodes[l]=[];
+    layerNodes[l].push(n.id);
+  }
+  const layerZ={research:-16,analysis:-8,management:0,risk:8,decision:16};
+  for(const l of LAYER_NAMES){
+    const ids=layerNodes[l];
+    if(!ids||ids.length===0)continue;
+    const n=ids.length;
+    const cols=Math.ceil(Math.sqrt(n*1.2));
+    const rows=Math.ceil(n/cols);
+    const spacing=3.0;
+    const ox=-(cols-1)*spacing*0.5;
+    const oy=-(rows-1)*spacing*0.5;
+    const z0=layerZ[l]||0;
+    for(let i=0;i<n;i++){
+      const idx=nodes.findIndex(nd=>nd.id===ids[i]);
+      if(idx<0)continue;
+      const r=Math.floor(i/cols);
+      const c=i%cols;
+      positions[idx*3]=ox+c*spacing+(Math.random()-0.5)*0.3;
+      positions[idx*3+1]=oy+r*spacing+(Math.random()-0.5)*0.3;
+      positions[idx*3+2]=z0;
+    }
+  }
+  return positions;
+}
+
+// ─── PCB-style orthogonal path routing ─────────────────
+function buildOrthogonalPath(x1,y1,z1,x2,y2,z2){
+  const midZ=(z1+z2)*0.5;
+  const midX=(x1+x2)*0.5;
+  const midY=(y1+y2)*0.5;
+  const dz=Math.abs(z2-z1);
+  const dy=Math.abs(y2-y1);
+  const dx=Math.abs(x2-x1);
+  const pts=[x1,y1,z1];
+  if(dz>dy+dx){pts.push(x1,y1,midZ);pts.push(x2,y2,midZ);}
+  else if(dy>dx){pts.push(x1,midY,z1);pts.push(x1,midY,midZ);pts.push(x2,midY,midZ);pts.push(x2,y2,midZ);}
+  else{pts.push(midX,y1,z1);pts.push(midX,y1,midZ);pts.push(midX,y2,midZ);pts.push(x2,y2,midZ);}
+  pts.push(x2,y2,z2);
+  return new Float32Array(pts);
+}
+
+// ─── Build nodes (Points) ──────────────────────────────
+function buildNodes(nodes){
+  const count=nodes.length; NUM_NODES=count;
+  const positions=computeNodePositions(nodes);
+  const colors=new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    const layer=nodes[i].layer||'management';
+    const col=LAYER_COLORS[layer]||LAYER_COLORS.management;
+    colors[i*3]=col.r; colors[i*3+1]=col.g; colors[i*3+2]=col.b;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const mat=new THREE.PointsMaterial({size:0.45,vertexColors:true,transparent:true,opacity:0.9,sizeAttenuation:true,blending:THREE.AdditiveBlending,depthWrite:false});
+  const points=new THREE.Points(geo,mat);
+  points.frustumCulled=false;
+  points.userData.nodePositions=positions;
+  points.userData.nodeData=nodes;
+  return points;
+}
+
+// ─── Build edges with orthogonal routing ───────────────
+function buildEdges(connections,nodes){
+  const nodeMap={};
+  for(let i=0;i<nodes.length;i++)nodeMap[nodes[i].id]=i;
+  const validEdges=[];
+  for(const ec of connections){
+    const fi=nodeMap[ec.from],ti=nodeMap[ec.to];
+    if(fi!==undefined&&ti!==undefined)validEdges.push({fi,ti,flowType:ec.flowType});
+  }
+  const count=validEdges.length; NUM_EDGES=count;
+  const posAttr=nodePoints.geometry.attributes.position;
+  const segPositions=[];
+  const segColors=[];
+  const edgeInfo=[];
+  for(let e=0;e<count;e++){
+    const ed=validEdges[e];
+    const fi=ed.fi,ti=ed.ti;
+    const col=FLOW_COLORS[ed.flowType]||DEFAULT_FLOW_COLOR;
+    const x1=posAttr.array[fi*3],y1=posAttr.array[fi*3+1],z1=posAttr.array[fi*3+2];
+    const x2=posAttr.array[ti*3],y2=posAttr.array[ti*3+1],z2=posAttr.array[ti*3+2];
+    const path=buildOrthogonalPath(x1,y1,z1,x2,y2,z2);
+    const pts=path.length/3;
+    let totalLen=0;
+    const lengths=[];
+    for(let p=0;p<pts-1;p++){
+      const dx=path[(p+1)*3]-path[p*3];
+      const dy=path[(p+1)*3+1]-path[p*3+1];
+      const dz=path[(p+1)*3+2]-path[p*3+2];
+      const segLen=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      lengths.push(segLen);
+      totalLen+=segLen;
+      segPositions.push(path[p*3],path[p*3+1],path[p*3+2]);
+      segPositions.push(path[(p+1)*3],path[(p+1)*3+1],path[(p+1)*3+2]);
+      segColors.push(col.r,col.g,col.b,col.r,col.g,col.b);
+    }
+    edgeInfo.push({segments:lengths,totalLen,color:col});
+  }
+  let cumSegs=0;
+  for(const ei of edgeInfo){ei.pathStartIdx=cumSegs;cumSegs+=ei.segments.length*6;}
+  window.__edgeInfo=edgeInfo;
+  window.__edgePositions=segPositions;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(segPositions),3));
+  geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(segColors),3));
+  const mat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.15,depthWrite:false});
+  return new THREE.LineSegments(geo,mat);
+}
+
+// ─── Build flow particles ──────────────────────────────
+function buildFlowParticles(edgeCount){
+  const count=Math.max(edgeCount*3,1);
+  const positions=new Float32Array(count*3);
+  const colors=new Float32Array(count*3);
+  particleData=[];
+  const eiList=window.__edgeInfo||[];
+  for(let i=0;i<count;i++){
+    const eiIdx=Math.floor(Math.random()*Math.max(eiList.length,1));
+    if(!eiList[eiIdx]||eiList.length===0){positions[i*3]=0;positions[i*3+1]=-100;positions[i*3+2]=0;particleData.push({edgeIdx:0,progress:0,speed:0});continue;}
+    const col=eiList[eiIdx].color;
+    particleData.push({edgeIdx:eiIdx,progress:Math.random(),speed:0.006+Math.random()*0.008});
+    colors[i*3]=col.r;colors[i*3+1]=col.g;colors[i*3+2]=col.b;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const mat=new THREE.PointsMaterial({size:0.3,vertexColors:true,transparent:true,opacity:0.9,sizeAttenuation:true,blending:THREE.AdditiveBlending,depthWrite:false});
+  const pts=new THREE.Points(geo,mat);
+  pts.frustumCulled=false;
+  document.getElementById('particleCount').textContent=count;
+  return pts;
+}
+
+// ─── Update particles each frame ───────────────────────
+function updateParticles(time){
+  if(!flowParticles||!window.__edgePositions)return;
+  const pos=flowParticles.geometry.attributes.position;
+  const posArr=pos.array;
+  const edgePos=window.__edgePositions;
+  const eiList=window.__edgeInfo||[];
+  for(let i=0;i<particleData.length;i++){
+    const pd=particleData[i];
+    if(!eiList[pd.edgeIdx]||eiList.length===0)continue;
+    pd.progress+=pd.speed;
+    if(pd.progress>1)pd.progress-=1;
+    const ei=eiList[pd.edgeIdx];
+    const numSegs=ei.segments.length;
+    const targetPos=pd.progress*ei.totalLen;
+    let accumulated=0;
+    let found=false;
+    for(let s=0;s<numSegs;s++){
+      const segLen=ei.segments[s];
+      if(targetPos<=accumulated+segLen||s===numSegs-1){
+        const t=segLen>0?(targetPos-accumulated)/segLen:0;
+        const baseIdx=ei.pathStartIdx+s*6;
+        posArr[i*3]=edgePos[baseIdx]+(edgePos[baseIdx+3]-edgePos[baseIdx])*t;
+        posArr[i*3+1]=edgePos[baseIdx+1]+(edgePos[baseIdx+4]-edgePos[baseIdx+1])*t;
+        posArr[i*3+2]=edgePos[baseIdx+2]+(edgePos[baseIdx+5]-edgePos[baseIdx+2])*t;
+        found=true;break;
+      }
+      accumulated+=segLen;
+    }
+    if(!found&&numSegs>0){
+      const baseIdx=ei.pathStartIdx+(numSegs-1)*6;
+      posArr[i*3]=edgePos[baseIdx+3];posArr[i*3+1]=edgePos[baseIdx+4];posArr[i*3+2]=edgePos[baseIdx+5];
+    }
+  }
+  pos.needsUpdate=true;
+}
+
+// ─── Initialize scene ──────────────────────────────────
+function initScene(nodes,connections){
+  if(nodePoints){scene.remove(nodePoints);nodePoints.geometry.dispose();nodePoints.material.dispose()}
+  if(edgeLines){scene.remove(edgeLines);edgeLines.geometry.dispose();edgeLines.material.dispose()}
+  if(flowParticles){scene.remove(flowParticles);flowParticles.geometry.dispose();flowParticles.material.dispose()}
+  nodeData=nodes; edgeData=connections;
+  nodePoints=buildNodes(nodes);
+  scene.add(nodePoints);
+  edgeLines=buildEdges(connections,nodes);
+  scene.add(edgeLines);
+  flowParticles=buildFlowParticles(connections.length);
+  scene.add(flowParticles);
+  if(!highlightMesh)createHighlight();
+  document.getElementById('nodeCount').textContent=NUM_NODES;
+  document.getElementById('edgeCount').textContent=NUM_EDGES;
+}
+
+// ─── Node picking ──────────────────────────────────────
+function getNodeUnderPointer(event){
+  const rect=renderer.domElement.getBoundingClientRect();
+  pointer.x=((event.clientX-rect.left)/rect.width)*2-1;
+  pointer.y=-((event.clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(pointer,camera);
+  const intersects=raycaster.intersectObject(nodePoints);
+  return intersects.length>0?intersects[0].index:-1;
+}
+
+function selectNode(index){
+  selectedNodeIndex=index;
+  if(index>=0&&highlightMesh){
+    const pos=nodePoints.geometry.attributes.position;
+    highlightMesh.position.set(pos.array[index*3],pos.array[index*3+1],pos.array[index*3+2]);
+    highlightMesh.visible=true;
+  }else if(highlightMesh)highlightMesh.visible=false;
+}
+
+// ─── Throttled mouse handler ───────────────────────────
+let lastMouseTime=0;
+function onPointerMove(event){
+  const now=performance.now();
+  if(now-lastMouseTime<50)return;
+  lastMouseTime=now;
+  const idx=getNodeUnderPointer(event);
+  const tooltip=document.getElementById('tooltip');
+  if(idx>=0&&idx<nodeData.length){
+    const nd=nodeData[idx];
+    tooltip.innerHTML='<div>'+(nd.chineseName||nd.label||nd.id)+'</div><div class="sub">层级: '+(nd.layer||'unknown')+'</div>';
+    tooltip.style.display='block';tooltip.style.left=(event.clientX+14)+'px';tooltip.style.top=(event.clientY-10)+'px';
+    renderer.domElement.style.cursor='pointer';
+  }else{tooltip.style.display='none';renderer.domElement.style.cursor='grab';}
+}
+
+function onClick(event){const idx=getNodeUnderPointer(event);selectNode(idx>=0?idx:-1);}
+
+// ─── Resize ────────────────────────────────────────────
+window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+
+// ─── Event listeners ───────────────────────────────────
+renderer.domElement.addEventListener('pointermove',onPointerMove);
+renderer.domElement.addEventListener('click',onClick);
+
+// ─── 60fps render loop (no frame cap) ──────────────────
+let frameCount=0, fpsTime=0;
+function render(time){
+  requestAnimationFrame(render);
+  controls.update();
+  if(flowParticles)updateParticles(time);
+  renderer.render(scene,camera);
+  frameCount++;
+  if(time-fpsTime>=1000){document.getElementById('fps').textContent=frameCount;frameCount=0;fpsTime=time;}
+}
+
+// ─── Load data ─────────────────────────────────────────
+
+
+// === 嵌入数据: hermes-web 项目扫描 ===
+window.__EMBEDDED_DATA__ = {"nodes":[{"id":"project-root","label":"hermes-web","layer":"infrastructure","description":"Project: hermes-web","chineseName":"系统3D全景","chineseDesc":"3D全景可视化系统 — 架构节点、连接、数据流展示","color":"#4CAF50","geometryType":"sphere","status":"Active","position":[0,0,-4]},{"id":"src","label":"Src","layer":"frontend","description":"3D Panorama Frontend — Three.js-based architecture visualization","chineseName":"3D全景前端","chineseDesc":"3D全景展示前端，基于Three.js渲染架构可视化","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-10.5,7.729956995561042]},{"id":"api","label":"Api","layer":"frontend","description":"Module: src/api (1 source files)","chineseName":"Api","chineseDesc":"Api模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-7.5,8.228554890654049]},{"id":"components","label":"Components","layer":"frontend","description":"3D Render Components — Three.js scene rendering components","chineseName":"3D渲染组件","chineseDesc":"Three.js 3D场景渲染组件集合","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-4.5,7.938093435841256]},{"id":"hooks","label":"Hooks","layer":"frontend","description":"Module: src/hooks (1 source files)","chineseName":"Hooks","chineseDesc":"Hooks模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-1.5,7.703969012205198]},{"id":"pages","label":"Pages","layer":"frontend","description":"Module: src/pages (11 source files)","chineseName":"Pages","chineseDesc":"Pages模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,1.5,8.112542624640628]},{"id":"store","label":"Store","layer":"frontend","description":"Module: src/store (1 source files)","chineseName":"Store","chineseDesc":"Store模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,4.5,8.025288266091593]},{"id":"types","label":"Types","layer":"frontend","description":"Module: src/types (2 source files)","chineseName":"Types","chineseDesc":"Types模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,7.5,8.16184692226634]},{"id":"utils","label":"Utils","layer":"frontend","description":"Frontend Utility Functions","chineseName":"前端工具函数","chineseDesc":"前端通用工具函数和帮助方法","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,10.5,7.9627445214109915]},{"id":"src--App","label":"App","layer":"frontend","description":"File: App.tsx in src","chineseName":"App","chineseDesc":"3D全景前端的子模块App","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"src","position":[8,-11.5,8.029956995561042]},{"id":"src--main","label":"Main","layer":"frontend","description":"File: main.tsx in src","chineseName":"Main","chineseDesc":"3D全景前端的子模块Main","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"src","position":[8,-12.5,8.029956995561042]},{"id":"src--sw","label":"Sw","layer":"frontend","description":"File: sw.ts in src","chineseName":"Sw","chineseDesc":"3D全景前端的子模块Sw","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"src","position":[8,-13.5,8.029956995561042]},{"id":"components--AppNav","label":"AppNav","layer":"frontend","description":"File: AppNav.tsx in src/components","chineseName":"AppNav","chineseDesc":"3D渲染组件的子模块AppNav","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-5.5,8.238093435841256]},{"id":"components--BattingZoneSection","label":"BattingZoneSection","layer":"frontend","description":"File: BattingZoneSection.tsx in src/components","chineseName":"BattingZoneSection","chineseDesc":"3D渲染组件的子模块BattingZoneSection","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-6.5,8.238093435841256]},{"id":"components--CashModal","label":"CashModal","layer":"frontend","description":"File: CashModal.tsx in src/components","chineseName":"CashModal","chineseDesc":"3D渲染组件的子模块CashModal","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-7.5,8.238093435841256]},{"id":"components--FdcfCard","label":"FdcfCard","layer":"frontend","description":"File: FdcfCard.tsx in src/components","chineseName":"FdcfCard","chineseDesc":"3D渲染组件的子模块FdcfCard","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-8.5,8.238093435841256]},{"id":"components--HoldingDetailSection","label":"HoldingDetailSection","layer":"frontend","description":"File: HoldingDetailSection.tsx in src/components","chineseName":"HoldingDetailSection","chineseDesc":"3D渲染组件的子模块HoldingDetailSection","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-9.5,8.238093435841256]},{"id":"components--IndustryChart","label":"IndustryChart","layer":"frontend","description":"File: IndustryChart.tsx in src/components","chineseName":"IndustryChart","chineseDesc":"3D渲染组件的子模块IndustryChart","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-10.5,8.238093435841256]},{"id":"components--InitPanel","label":"InitPanel","layer":"frontend","description":"File: InitPanel.tsx in src/components","chineseName":"InitPanel","chineseDesc":"3D渲染组件的子模块InitPanel","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-11.5,8.238093435841256]},{"id":"components--KpiCard","label":"KpiCard","layer":"frontend","description":"File: KpiCard.tsx in src/components","chineseName":"KpiCard","chineseDesc":"3D渲染组件的子模块KpiCard","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-12.5,8.238093435841256]},{"id":"components--ResearchPanel","label":"ResearchPanel","layer":"frontend","description":"File: ResearchPanel.tsx in src/components","chineseName":"ResearchPanel","chineseDesc":"3D渲染组件的子模块ResearchPanel","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-13.5,8.238093435841256]},{"id":"components--StockChips","label":"StockChips","layer":"frontend","description":"File: StockChips.tsx in src/components","chineseName":"StockChips","chineseDesc":"3D渲染组件的子模块StockChips","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-14.5,8.238093435841256]},{"id":"components--TradeModal","label":"TradeModal","layer":"frontend","description":"File: TradeModal.tsx in src/components","chineseName":"TradeModal","chineseDesc":"3D渲染组件的子模块TradeModal","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-15.5,8.238093435841256]},{"id":"components--UserMenu","label":"UserMenu","layer":"frontend","description":"File: UserMenu.tsx in src/components","chineseName":"UserMenu","chineseDesc":"3D渲染组件的子模块UserMenu","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-16.5,8.238093435841256]},{"id":"pages--DailyReportPage","label":"DailyReportPage","layer":"frontend","description":"File: DailyReportPage.tsx in src/pages","chineseName":"DailyReportPage","chineseDesc":"Pages的子模块DailyReportPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,0.5,8.41254262464063]},{"id":"pages--DashboardPage","label":"DashboardPage","layer":"frontend","description":"File: DashboardPage.tsx in src/pages","chineseName":"DashboardPage","chineseDesc":"Pages的子模块DashboardPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-0.5,8.41254262464063]},{"id":"pages--HoldingDetailPage","label":"HoldingDetailPage","layer":"frontend","description":"File: HoldingDetailPage.tsx in src/pages","chineseName":"HoldingDetailPage","chineseDesc":"Pages的子模块HoldingDetailPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-1.5,8.41254262464063]},{"id":"pages--LoginPage","label":"LoginPage","layer":"frontend","description":"File: LoginPage.tsx in src/pages","chineseName":"LoginPage","chineseDesc":"Pages的子模块LoginPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-2.5,8.41254262464063]},{"id":"pages--PricingPage","label":"PricingPage","layer":"frontend","description":"File: PricingPage.tsx in src/pages","chineseName":"PricingPage","chineseDesc":"Pages的子模块PricingPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-3.5,8.41254262464063]},{"id":"pages--ReportDetailPage","label":"ReportDetailPage","layer":"frontend","description":"File: ReportDetailPage.tsx in src/pages","chineseName":"ReportDetailPage","chineseDesc":"Pages的子模块ReportDetailPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-4.5,8.41254262464063]},{"id":"pages--ReportListPage","label":"ReportListPage","layer":"frontend","description":"File: ReportListPage.tsx in src/pages","chineseName":"ReportListPage","chineseDesc":"Pages的子模块ReportListPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-5.5,8.41254262464063]},{"id":"pages--ScoringDashboardPage","label":"ScoringDashboardPage","layer":"frontend","description":"File: ScoringDashboardPage.tsx in src/pages","chineseName":"ScoringDashboardPage","chineseDesc":"Pages的子模块ScoringDashboardPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-6.5,8.41254262464063]},{"id":"pages--SettingsPage","label":"SettingsPage","layer":"frontend","description":"File: SettingsPage.tsx in src/pages","chineseName":"SettingsPage","chineseDesc":"Pages的子模块SettingsPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-7.5,8.41254262464063]},{"id":"pages--SignalBoardPage","label":"SignalBoardPage","layer":"frontend","description":"File: SignalBoardPage.tsx in src/pages","chineseName":"SignalBoardPage","chineseDesc":"Pages的子模块SignalBoardPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-8.5,8.41254262464063]},{"id":"pages--WikiPage","label":"WikiPage","layer":"frontend","description":"File: WikiPage.tsx in src/pages","chineseName":"WikiPage","chineseDesc":"Pages的子模块WikiPage","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"pages","position":[8,-9.5,8.41254262464063]},{"id":"dep-@tanstack/react-query","label":"@tanstack/react-query","layer":"external","description":"External dependency: @tanstack/react-query@^5.60.0","chineseName":"@tanstack/react-query","chineseDesc":"外部依赖: @tanstack/react-query@^5.60.0","color":"#FF7043","geometryType":"box","status":"External","position":[14.199713303740282,0,13.7618496355135]},{"id":"dep-axios","label":"axios","layer":"external","description":"External dependency: axios@^1.7.0","chineseName":"axios","chineseDesc":"外部依赖: axios@^1.7.0","color":"#FF7043","geometryType":"box","status":"External","position":[15.58728957227504,0,12.013230040683993]},{"id":"dep-react","label":"react","layer":"external","description":"External dependency: react@^18.3.1","chineseName":"react","chineseDesc":"外部依赖: react@^18.3.1","color":"#FF7043","geometryType":"box","status":"External","position":[16.75028416427085,0,13.08429422030531]},{"id":"dep-react-dom","label":"react-dom","layer":"external","description":"External dependency: react-dom@^18.3.1","chineseName":"react-dom","chineseDesc":"外部依赖: react-dom@^18.3.1","color":"#FF7043","geometryType":"box","status":"External","position":[17.078979481775605,0,12.87581507136997]},{"id":"dep-react-router-dom","label":"react-router-dom","layer":"external","description":"External dependency: react-router-dom@^6.28.0","chineseName":"react-router-dom","chineseDesc":"外部依赖: react-router-dom@^6.28.0","color":"#FF7043","geometryType":"box","status":"External","position":[17.07251745501344,0,12.55570011128657]},{"id":"dep-zustand","label":"zustand","layer":"external","description":"External dependency: zustand@^5.0.0","chineseName":"zustand","chineseDesc":"外部依赖: zustand@^5.0.0","color":"#FF7043","geometryType":"box","status":"External","position":[17.305866931113997,0,13.337221781930566]},{"id":"dep-@types/react","label":"@types/react","layer":"external","description":"External dependency: @types/react@^18.3.12","chineseName":"@types/react","chineseDesc":"外部依赖: @types/react@^18.3.12","color":"#FF7043","geometryType":"box","status":"External","position":[14.724642832847167,0,12.562361684565843]},{"id":"dep-@types/react-dom","label":"@types/react-dom","layer":"external","description":"External dependency: @types/react-dom@^18.3.1","chineseName":"@types/react-dom","chineseDesc":"外部依赖: @types/react-dom@^18.3.1","color":"#FF7043","geometryType":"box","status":"External","position":[14.345509494633006,0,13.82316657877891]},{"id":"dep-@vitejs/plugin-react","label":"@vitejs/plugin-react","layer":"external","description":"External dependency: @vitejs/plugin-react@^4.3.4","chineseName":"@vitejs/plugin-react","chineseDesc":"外部依赖: @vitejs/plugin-react@^4.3.4","color":"#FF7043","geometryType":"box","status":"External","position":[14.55399378137372,0,13.960168732235616]},{"id":"dep-autoprefixer","label":"autoprefixer","layer":"external","description":"External dependency: autoprefixer@^10.4.20","chineseName":"autoprefixer","chineseDesc":"外部依赖: autoprefixer@^10.4.20","color":"#FF7043","geometryType":"box","status":"External","position":[17.310787550413806,0,13.649012255521484]},{"id":"dep-postcss","label":"postcss","layer":"external","description":"External dependency: postcss@^8.4.49","chineseName":"postcss","chineseDesc":"外部依赖: postcss@^8.4.49","color":"#FF7043","geometryType":"box","status":"External","position":[17.18861466344606,0,13.737591051522031]},{"id":"dep-tailwindcss","label":"tailwindcss","layer":"external","description":"External dependency: tailwindcss@^3.4.15","chineseName":"tailwindcss","chineseDesc":"外部依赖: tailwindcss@^3.4.15","color":"#FF7043","geometryType":"box","status":"External","position":[15.701108677647426,0,12.162823384078365]},{"id":"dep-typescript","label":"typescript","layer":"external","description":"External dependency: typescript@^5.6.3","chineseName":"typescript","chineseDesc":"外部依赖: typescript@^5.6.3","color":"#FF7043","geometryType":"box","status":"External","position":[15.814925540169497,0,12.763986507198979]},{"id":"dep-vite","label":"vite","layer":"external","description":"External dependency: vite@^5.4.11","chineseName":"vite","chineseDesc":"外部依赖: vite@^5.4.11","color":"#FF7043","geometryType":"box","status":"External","position":[17.37120018621863,0,13.940891358502995]},{"id":"dep-vite-plugin-pwa","label":"vite-plugin-pwa","layer":"external","description":"External dependency: vite-plugin-pwa@^1.3.0","chineseName":"vite-plugin-pwa","chineseDesc":"外部依赖: vite-plugin-pwa@^1.3.0","color":"#FF7043","geometryType":"box","status":"External","position":[16.050412542448612,0,13.219784144343066]}],"connections":[{"id":"conn-src-dep-react-router-dom","from":"src","to":"dep-react-router-dom","flowType":"data","label":"react-router-dom","color":"#FF7043"},{"id":"conn-src-store","from":"src","to":"store","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-src-pages","from":"src","to":"pages","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-src-dep-react","from":"src","to":"dep-react","flowType":"data","label":"react","color":"#FF7043"},{"id":"conn-src-dep-react-dom","from":"src","to":"dep-react-dom","flowType":"data","label":"react-dom","color":"#FF7043"},{"id":"conn-src-dep-@tanstack/react-query","from":"src","to":"dep-@tanstack/react-query","flowType":"data","label":"@tanstack/react-query","color":"#FF7043"},{"id":"conn-api-dep-axios","from":"api","to":"dep-axios","flowType":"data","label":"axios","color":"#FF7043"},{"id":"conn-components-dep-react-router-dom","from":"components","to":"dep-react-router-dom","flowType":"data","label":"react-router-dom","color":"#FF7043"},{"id":"conn-components-dep-react","from":"components","to":"dep-react","flowType":"data","label":"react","color":"#FF7043"},{"id":"conn-components-api","from":"components","to":"api","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-components-pages","from":"components","to":"pages","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-components-utils","from":"components","to":"utils","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-components-store","from":"components","to":"store","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-hooks-dep-react","from":"hooks","to":"dep-react","flowType":"data","label":"react","color":"#FF7043"},{"id":"conn-pages-dep-react-router-dom","from":"pages","to":"dep-react-router-dom","flowType":"data","label":"react-router-dom","color":"#FF7043"},{"id":"conn-pages-store","from":"pages","to":"store","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-pages-dep-react","from":"pages","to":"dep-react","flowType":"data","label":"react","color":"#FF7043"},{"id":"conn-pages-api","from":"pages","to":"api","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-pages-components","from":"pages","to":"components","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-pages-hooks","from":"pages","to":"hooks","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-pages-utils","from":"pages","to":"utils","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-store-dep-zustand","from":"store","to":"dep-zustand","flowType":"data","label":"zustand","color":"#FF7043"},{"id":"conn-store-api","from":"store","to":"api","flowType":"data","label":"import","color":"#00BCD4"}]};
+function loadData(){
+  const nodes=[],connections=[];
+  if(typeof window.__EMBEDDED_DATA__!=='undefined'&&Array.isArray(window.__EMBEDDED_DATA__.nodes)&&Array.isArray(window.__EMBEDDED_DATA__.connections)){
+    nodes.push(...window.__EMBEDDED_DATA__.nodes);connections.push(...window.__EMBEDDED_DATA__.connections);
+    initScene(nodes,connections);return;
+  }
+  const sp=new URLSearchParams(window.location.search);
+  const encoded=sp.get('data');
+  if(encoded){
+    try{const data=JSON.parse(decodeURIComponent(encoded));if(Array.isArray(data.nodes)&&Array.isArray(data.connections)){nodes.push(...data.nodes);connections.push(...data.connections);initScene(nodes,connections);return;}}catch(e){}
+  }
+  const countParam=parseInt(sp.get('count'))||0;
+  const totalNodes=countParam>0?countParam:150;
+  for(let i=0;i<totalNodes;i++){const layer=LAYER_NAMES[i%5];nodes.push({id:'node_'+i,label:'Node '+i,chineseName:'节点'+i,layer:layer});}
+  for(let i=0;i<totalNodes*1.5;i++){const fi=Math.floor(Math.random()*totalNodes);let ti=Math.floor(Math.random()*totalNodes);if(ti===fi)ti=(fi+1)%totalNodes;const types=['data','control','request','event'];connections.push({from:nodes[fi].id,to:nodes[ti].id,flowType:types[Math.floor(Math.random()*4)]});}
+  initScene(nodes,connections);
+}
+
+// ─── Start ─────────────────────────────────────────────
+loadData();
+requestAnimationFrame(render);
+console.log('3D Monitor (Three.js Enhanced) started — 60fps with flow particles');
+</script>
+</body>
+</html>

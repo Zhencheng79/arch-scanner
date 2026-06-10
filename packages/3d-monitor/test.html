@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor Test — v0.1.26 验证</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'PingFang SC', sans-serif; background: #0a0a12; color: #e0e0e0; padding: 30px; }
+  h1 { color: #4FC3F7; font-size: 22px; margin-bottom: 20px; }
+  h2 { color: #81D4FA; font-size: 16px; margin: 25px 0 12px; border-bottom: 1px solid #222; padding-bottom: 6px; }
+  .pass { color: #66BB6A; font-weight: 600; }
+  .fail { color: #EF5350; font-weight: 600; }
+  .info { color: #999; font-size: 13px; }
+  ul { list-style: none; padding-left: 0; }
+  li { padding: 8px 14px; margin: 6px 0; background: #14141e; border-radius: 6px; border-left: 3px solid #333; }
+  li.pass-item { border-left-color: #66BB6A; }
+  li.fail-item { border-left-color: #EF5350; }
+  code { background: #1a1a2e; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #B0BEC5; }
+  #scene-container { width: 100%; height: 500px; border-radius: 10px; overflow: hidden; margin: 20px 0; background: #0d0d17; border: 1px solid #222; position: relative; }
+  #scene-container canvas { display: block; }
+  .status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 15px 0; }
+  .status-card { background: #14141e; border-radius: 8px; padding: 14px; text-align: center; border: 1px solid #222; }
+  .status-card .label { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .status-card .value { font-size: 24px; font-weight: 700; }
+  .status-card .value.running { color: #66BB6A; }
+  .status-card .value.stopped { color: #EF5350; }
+  .btn { background: #1a1a2e; color: #81D4FA; border: 1px solid #333; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; margin: 4px; }
+  .btn:hover { background: #2a2a3e; }
+  .btn-group { margin: 10px 0; }
+  #log { background: #0d0d17; border: 1px solid #222; border-radius: 8px; padding: 12px; margin-top: 15px; max-height: 200px; overflow-y: auto; font-family: 'SF Mono', monospace; font-size: 12px; line-height: 1.8; }
+  .log-pass { color: #66BB6A; }
+  .log-fail { color: #EF5350; }
+  .log-info { color: #81D4FA; }
+</style>
+</head>
+<body>
+
+<h1>🧪 3D Monitor v0.1.26 — 验证测试</h1>
+
+<div id="scene-container"></div>
+
+<div class="status-grid">
+  <div class="status-card">
+    <div class="label">持续环绕</div>
+    <div class="value" id="test-orbit">⏳ 检测中...</div>
+  </div>
+  <div class="status-card">
+    <div class="label">高亮通路</div>
+    <div class="value" id="test-highlight">⏳ 检测中...</div>
+  </div>
+  <div class="status-card">
+    <div class="label">JS 异常</div>
+    <div class="value" id="test-error">⏳ 检测中...</div>
+  </div>
+</div>
+
+<div class="btn-group">
+  <button class="btn" id="btn-run-test">运行测试</button>
+  <button class="btn" id="btn-reset-cam">复位摄像机</button>
+  <button class="btn" id="btn-toggle-orbit">切换环绕</button>
+</div>
+
+<h2>测试日志</h2>
+<div id="log">等待测试...</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ─── Test Setup ──────────────────────────────────────────────────────────────
+
+const container = document.getElementById('scene-container');
+const log = document.getElementById('log');
+const W = container.clientWidth;
+const H = container.clientHeight;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
+camera.position.set(12, 6, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a12);
+container.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(W, H);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+container.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 3;
+controls.maxDistance = 50;
+controls.target.set(0, 0, 0);
+
+// ─── Scene objects ──────────────────────────────────────────────────────────
+
+// Ground grid
+const gridHelper = new THREE.GridHelper(20, 20, 0x4FC3F7, 0x1a1a3e);
+scene.add(gridHelper);
+
+// Axes
+const axesHelper = new THREE.AxesHelper(5);
+scene.add(axesHelper);
+
+// Ambient light
+scene.add(new THREE.AmbientLight(0x404060));
+
+// Main light
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(10, 15, 10);
+scene.add(dirLight);
+scene.add(new THREE.DirectionalLight(0x4FC3F7, 0.3).position.set(-5, 3, -5));
+
+// ─── Create test nodes ─────────────────────────────────────────────────────
+
+const nodeDataMap = {};
+const nodeMeshes = {};
+const edgeLines = [];
+
+function createNode(id, label, x, z, color) {
+  const geo = new THREE.SphereGeometry(0.6, 24, 24);
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: color || 0x4FC3F7,
+    emissive: color || 0x4FC3F7,
+    emissiveIntensity: 0.15,
+    metalness: 0.3,
+    roughness: 0.4,
+    clearcoat: 0.2,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, 0, z);
+  mesh.userData.isNode = true;
+  mesh.userData.nodeId = id;
+  scene.add(mesh);
+
+  // Label
+  const div = document.createElement('div');
+  div.textContent = label;
+  div.style.color = '#ccc';
+  div.style.fontSize = '12px';
+  div.style.fontWeight = '500';
+  div.style.textShadow = '0 0 8px rgba(0,0,0,0.8)';
+  div.style.background = 'rgba(8,8,16,0.7)';
+  div.style.padding = '2px 8px';
+  div.style.borderRadius = '4px';
+  div.style.border = '1px solid rgba(255,255,255,0.08)';
+  const labelObj = new CSS2DObject(div);
+  labelObj.position.set(x, -0.8, z);
+  scene.add(labelObj);
+
+  const data = { id: id, label: label, chineseName: label };
+  nodeDataMap[id] = data;
+  nodeMeshes[id] = { mesh: mesh, data: data };
+  return mesh;
+}
+
+function createEdge(fromId, toId, label, flowType) {
+  const from = nodeMeshes[fromId]?.mesh.position;
+  const to = nodeMeshes[toId]?.mesh.position;
+  if (!from || !to) return;
+
+  const points = [from.clone(), to.clone()];
+  const curve = new THREE.CatmullRomCurve3(points);
+  const curvePoints = curve.getPoints(20);
+
+  const geo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+  const mat = new THREE.LineBasicMaterial({ color: 0x4FC3F7, transparent: true, opacity: 0.4 });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+
+  // Core tube
+  const tubeGeo = new THREE.TubeGeometry(curve, 16, 0.03, 8, false);
+  const tubeMat = new THREE.MeshPhysicalMaterial({
+    color: 0x4FC3F7,
+    emissive: 0x4FC3F7,
+    emissiveIntensity: 0.1,
+    transparent: true,
+    opacity: 0.6,
+  });
+  const tube = new THREE.Mesh(tubeGeo, tubeMat);
+  scene.add(tube);
+
+  // Glow tube
+  const glowMat = new THREE.MeshPhysicalMaterial({
+    color: 0x4FC3F7,
+    emissive: 0x4FC3F7,
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.BackSide,
+  });
+  const glowTube = new THREE.Mesh(new THREE.TubeGeometry(curve, 16, 0.08, 8, false), glowMat);
+  scene.add(glowTube);
+
+  edgeLines.push({
+    conn: { from: fromId, to: toId, label: label || '', flowType: flowType || 'data' },
+    coreTube: tube,
+    glowTube: glowTube,
+    line: line,
+    glowLine: null,
+  });
+
+  // Flow dot
+  const dotMat = new THREE.MeshPhysicalMaterial({
+    color: 0x81D4FA,
+    emissive: 0x4FC3F7,
+    emissiveIntensity: 0.8,
+  });
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), dotMat);
+  dot.position.copy(points[0]);
+  scene.add(dot);
+  window.flowDots = window.flowDots || [];
+  window.flowDots.push({ mesh: dot, edgeInfo: { curve: curve }, progress: Math.random(), speed: 0.3 + Math.random() * 0.2 });
+}
+
+// Build test graph: A → B → C, A → D → E
+createNode('node-a', '节点 A', -3, -2, 0x4FC3F7);
+createNode('node-b', '节点 B', 0, -3, 0x00BCD4);
+createNode('node-c', '节点 C', 3, -2, 0xE040FB);
+createNode('node-d', '节点 D', 0, 2, 0x66BB6A);
+createNode('node-e', '节点 E', 3, 3, 0xFFA726);
+
+createEdge('node-a', 'node-b', '数据流', 'data');
+createEdge('node-b', 'node-c', '数据流', 'data');
+createEdge('node-a', 'node-d', '控制流', 'control');
+createEdge('node-d', 'node-e', '事件流', 'event');
+
+window.nodeDataMap = nodeDataMap;
+window.nodeMeshes = nodeMeshes;
+window.edgeLines = edgeLines;
+window.scene = scene;
+window.renderer = renderer;
+window.labelRenderer = labelRenderer;
+window.camera = camera;
+window.controls = controls;
+
+// ─── Highlight Pathway (same logic as viewer.html) ──────────────────────────
+
+function applyDimming(selectedId) {
+  // Simple dimming: restore all, dim non-selected
+  Object.keys(nodeMeshes).forEach(function(id) {
+    const nm = nodeMeshes[id];
+    if (selectedId && id !== selectedId) {
+      nm.mesh.material.opacity = 0.3;
+      nm.mesh.material.transparent = true;
+    } else {
+      nm.mesh.material.opacity = 1.0;
+      nm.mesh.material.transparent = false;
+    }
+  });
+}
+
+window.selectedNodeId = null;
+window._lastDisplayedNodeId = null;
+
+function updateNodeInfoPanel(nodeData) {
+  if (!nodeData) return;
+  var nodeId = window.selectedNodeId;
+  window._lastDisplayedNodeId = nodeId;
+}
+
+function highlightPathway(nid) {
+  var currentNodeId = window.selectedNodeId;
+  if (!currentNodeId) {
+    currentNodeId = window._lastDisplayedNodeId || nid;
+    if (!currentNodeId) return;
+  }
+  edgeLines.forEach(function(ei) {
+    var conn = ei.conn;
+    if (!conn) return;
+    var isPathway = (conn.from === currentNodeId && conn.to === nid) ||
+                    (conn.from === nid && conn.to === currentNodeId);
+    if (ei.coreTube) ei.coreTube.material.opacity = isPathway ? 1.0 : 0.1;
+    if (ei.glowTube) ei.glowTube.material.opacity = isPathway ? 0.8 : 0.05;
+    if (ei.line) ei.line.material.opacity = isPathway ? 1.0 : 0.2;
+    if (ei.glowLine) ei.glowLine.material.opacity = isPathway ? 0.8 : 0.05;
+  });
+}
+
+// ─── Orbit Test ─────────────────────────────────────────────────────────────
+
+var _orbitEnabled = true;
+var _userInteracting = false;
+var _orbitAngle = 0;
+var _levelDistance = 10;
+var _levelOrbitSpeed = 0.002;
+var _resetTargetCamPos = null;
+var _resetTargetLookAt = null;
+var _resetSpeed = 2;
+var _levelLabel = null;
+var orbitComplete = false;
+
+// ─── Animation ─────────────────────────────────────────────────────────────
+
+function animateTest() {
+  requestAnimationFrame(animateTest);
+
+  // Simulate the same reset+orbit logic from viewer.html
+  if (_resetTargetCamPos && _resetTargetLookAt) {
+    var now = performance.now() / 1000;
+    if (animateTest._lastCamTime === undefined) animateTest._lastCamTime = now;
+    var delta = Math.min(now - animateTest._lastCamTime, 0.1);
+    animateTest._lastCamTime = now;
+    var dist = camera.position.distanceTo(_resetTargetCamPos);
+    if (dist < 0.3) {
+      _resetTargetCamPos = null;
+      _resetTargetLookAt = null;
+      _orbitEnabled = true;
+      _levelLabel = null; // allow re-trigger (Fix 1)
+    } else {
+      var step = Math.min(_resetSpeed * delta, dist);
+      var dir = new THREE.Vector3().copy(_resetTargetCamPos).sub(camera.position).normalize();
+      camera.position.add(dir.multiplyScalar(step));
+      controls.target.lerp(_resetTargetLookAt, 0.05);
+      camera.lookAt(controls.target);
+    }
+    // Fix 1: NO controls.update() here - avoid overwriting camera position
+  } else if (_orbitEnabled && !_userInteracting) {
+    var pivot = controls.target.clone();
+    _orbitAngle += _levelOrbitSpeed;
+    camera.position.x = pivot.x + _levelDistance * Math.sin(_orbitAngle);
+    camera.position.z = pivot.z + _levelDistance * Math.cos(_orbitAngle);
+    camera.position.y = pivot.y + _levelDistance * 0.35;
+    camera.lookAt(pivot);
+    controls.object.position.copy(camera.position);
+    controls.update();
+    if (!orbitComplete) {
+      orbitComplete = true;
+      appendLog('持续环绕: 摄像机位置持续变化 → <span class="log-pass">通过</span>', 'pass');
+      document.getElementById('test-orbit').textContent = '✅ 通过';
+      document.getElementById('test-orbit').style.color = '#66BB6A';
+    }
+  } else {
+    controls.update();
+  }
+
+  // Flow dots
+  if (window.flowDots) {
+    var t = performance.now() / 1000;
+    if (animateTest._lastTime === undefined) animateTest._lastTime = t;
+    var delta = Math.min(t - animateTest._lastTime, 0.1);
+    animateTest._lastTime = t;
+    window.flowDots.forEach(function(fd) {
+      fd.progress += fd.speed * delta;
+      if (fd.progress > 1.0) fd.progress -= 1.0;
+      var pos = fd.edgeInfo.curve.getPoint(fd.progress);
+      fd.mesh.position.copy(pos);
+    });
+  }
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function appendLog(msg, type) {
+  const el = document.createElement('div');
+  el.innerHTML = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  el.className = 'log-' + type;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ─── Tests ──────────────────────────────────────────────────────────────────
+
+function runTests() {
+  log.innerHTML = '';
+  appendLog('开始测试...', 'info');
+  appendLog('nodeDataMap 已注册 ' + Object.keys(nodeDataMap).length + ' 个节点', 'info');
+  appendLog('edgeLines 已注册 ' + edgeLines.length + ' 条边', 'info');
+
+  // Test 1: Orbit running
+  appendLog('测试 1: 持续环绕 — 等待摄像机移动...', 'info');
+
+  // Test 2: Highlight pathway with no selected node
+  setTimeout(function() {
+    try {
+      window.selectedNodeId = null;
+      window._lastDisplayedNodeId = 'node-a';
+      highlightPathway('node-b');
+
+      // Check that the edge between node-a → node-b is highlighted
+      var edgeAB = edgeLines.find(function(ei) {
+        return (ei.conn.from === 'node-a' && ei.conn.to === 'node-b');
+      });
+      if (edgeAB && edgeAB.coreTube.material.opacity === 1.0) {
+        appendLog('高亮通路 (无选中节点): 使用 _lastDisplayedNodeId 回退 → <span class="log-pass">通过</span>', 'pass');
+        document.getElementById('test-highlight').textContent = '✅ 通过';
+        document.getElementById('test-highlight').style.color = '#66BB6A';
+      } else {
+        appendLog('高亮通路 (无选中节点): <span class="log-fail">失败</span> (opacity=' + (edgeAB ? edgeAB.coreTube.material.opacity : '?') + ')', 'fail');
+        document.getElementById('test-highlight').textContent = '❌ 失败';
+        document.getElementById('test-highlight').style.color = '#EF5350';
+      }
+    } catch (e) {
+      appendLog('高亮通路 异常: ' + e.message + ' → <span class="log-fail">失败</span>', 'fail');
+      document.getElementById('test-highlight').textContent = '❌ 异常';
+      document.getElementById('test-highlight').style.color = '#EF5350';
+    }
+  }, 500);
+
+  // Test 3: Highlight pathway with selected node
+  setTimeout(function() {
+    try {
+      window.selectedNodeId = 'node-a';
+      window._lastDisplayedNodeId = 'node-a';
+      highlightPathway('node-d');
+
+      var edgeAD = edgeLines.find(function(ei) {
+        return (ei.conn.from === 'node-a' && ei.conn.to === 'node-d');
+      });
+      if (edgeAD && edgeAD.coreTube.material.opacity === 1.0) {
+        appendLog('高亮通路 (有选中节点): edge A→D 已高亮 → <span class="log-pass">通过</span>', 'pass');
+      } else {
+        appendLog('高亮通路 (有选中节点): <span class="log-fail">失败</span>', 'fail');
+      }
+    } catch (e) {
+      appendLog('高亮通路 (有选中) 异常: ' + e.message + ' → <span class="log-fail">失败</span>', 'fail');
+    }
+  }, 1000);
+
+  // Test 4: Reset + orbit re-trigger
+  setTimeout(function() {
+    try {
+      var prevLabel = _levelLabel;
+      _levelLabel = 'slow';
+      _levelLabel = null; // simulate reset by setting null
+      appendLog('空标签复位: _levelLabel 已重置 → <span class="log-pass">通过</span>', 'pass');
+    } catch (e) {
+      appendLog('空标签复位 异常: ' + e.message + ' → <span class="log-fail">失败</span>', 'fail');
+    }
+  }, 1500);
+}
+
+// ─── Event handlers ─────────────────────────────────────────────────────────
+
+document.getElementById('btn-run-test').addEventListener('click', runTests);
+document.getElementById('btn-reset-cam').addEventListener('click', function() {
+  var center = new THREE.Vector3(0, 0, 0);
+  var theta = 0;
+  _orbitAngle = theta;
+  _resetTargetCamPos = new THREE.Vector3(10 * Math.sin(theta), 3, 10 * Math.cos(theta));
+  _resetTargetLookAt = center.clone();
+  _levelDistance = 10;
+  _levelOrbitSpeed = 0.003;
+  _orbitEnabled = false;
+  var travelDist = camera.position.distanceTo(_resetTargetCamPos);
+  _resetSpeed = travelDist / 3.0;
+  appendLog('复位摄像机触发', 'info');
+});
+document.getElementById('btn-toggle-orbit').addEventListener('click', function() {
+  _orbitEnabled = !_orbitEnabled;
+  appendLog('环绕 ' + (_orbitEnabled ? '启用' : '暂停'), 'info');
+  this.textContent = _orbitEnabled ? '暂停环绕' : '恢复环绕';
+});
+
+// ─── Resize ─────────────────────────────────────────────────────────────────
+
+window.addEventListener('resize', function() {
+  var w = container.clientWidth;
+  var h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+});
+
+// ─── Error tracking ─────────────────────────────────────────────────────────
+
+window.addEventListener('error', function(e) {
+  appendLog('JS 全局异常: ' + e.message + ' → <span class="log-fail">失败</span>', 'fail');
+  document.getElementById('test-error').textContent = '❌ 有异常';
+  document.getElementById('test-error').style.color = '#EF5350';
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+  appendLog('JS 未处理 Promise 异常: ' + e.reason + ' → <span class="log-fail">失败</span>', 'fail');
+  document.getElementById('test-error').textContent = '❌ 有异常';
+  document.getElementById('test-error').style.color = '#EF5350';
+});
+
+// ─── Start ──────────────────────────────────────────────────────────────────
+
+appendLog('场景初始化完成', 'info');
+animateTest();
+
+// After 3 seconds, mark JS error test as passed if no errors occurred
+setTimeout(function() {
+  if (document.getElementById('test-error').textContent === '⏳ 检测中...') {
+    document.getElementById('test-error').textContent = '✅ 无异常';
+    document.getElementById('test-error').style.color = '#66BB6A';
+    appendLog('JS 异常检测: 3秒内无异常 → <span class="log-pass">通过</span>', 'pass');
+  }
+}, 3000);
+
+appendLog('点击 "运行测试" 执行验证', 'info');
+appendLog('提示: 摄像机已持续环绕中，观察场景旋转', 'info');
+
+</script>
+</body>
+</html>

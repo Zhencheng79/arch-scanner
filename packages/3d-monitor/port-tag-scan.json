@@ -1,0 +1,3345 @@
+{
+  "nodes": [
+    {
+      "id": "project-root",
+      "label": "system-3d-panorama",
+      "layer": "infrastructure",
+      "description": "3D Panoramic Visualization for AI Agent System Architecture — Visualize nodes, connections, data flows in an interactive 3D space",
+      "chineseName": "系统3D全景",
+      "chineseDesc": "3D Panoramic Visualization for AI Agent System Architecture — Visualize nodes, connections, data flows in an interactive 3D space",
+      "color": "#4CAF50",
+      "geometryType": "sphere",
+      "status": "Active",
+      "position": [
+        0,
+        0,
+        -4
+      ]
+    },
+    {
+      "id": ".hermes",
+      "label": ".Hermes",
+      "layer": "infrastructure",
+      "description": "Module: .hermes (1 source files)",
+      "chineseName": ".Hermes",
+      "chineseDesc": ".Hermes模块",
+      "color": "#4A90D9",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        -8,
+        -4.5,
+        -0.27004300443895773
+      ]
+    },
+    {
+      "id": "plugins",
+      "label": "Plugins",
+      "layer": "infrastructure",
+      "description": "Build Plugins — Vite build-time plugins for injection and optimization",
+      "chineseName": "构建插件",
+      "chineseDesc": "Vite构建插件，负责构建时注入和优化",
+      "color": "#4A90D9",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        -8,
+        -1.5,
+        0.2285548906540498
+      ]
+    },
+    {
+      "id": "public",
+      "label": "Public",
+      "layer": "presentation",
+      "description": "Module: public (1 source files)",
+      "chineseName": "Public",
+      "chineseDesc": "Public模块",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        -9,
+        6.112542624640628
+      ]
+    },
+    {
+      "id": "server",
+      "label": "Server",
+      "layer": "infrastructure",
+      "description": "MCP Server — Standardized MCP protocol server",
+      "chineseName": "MCP服务端",
+      "chineseDesc": "MCP协议服务端，提供标准化接口",
+      "color": "#4A90D9",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        -8,
+        1.5,
+        -0.061906564158744
+      ]
+    },
+    {
+      "id": "src",
+      "label": "Src",
+      "layer": "presentation",
+      "description": "3D Panorama Frontend — Three.js-based architecture visualization",
+      "chineseName": "3D全景前端",
+      "chineseDesc": "3D全景展示前端，基于Three.js渲染架构可视化",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        -6,
+        6.025288266091593
+      ]
+    },
+    {
+      "id": "packages-3d-monitor",
+      "label": "3d Monitor",
+      "layer": "infrastructure",
+      "description": "Module: packages/3d-monitor (1 source files)",
+      "chineseName": "3d Monitor",
+      "chineseDesc": "3d Monitor模块",
+      "color": "#4A90D9",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        -8,
+        4.5,
+        -0.296030987794802
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool",
+      "label": "Port Tag Tool",
+      "layer": "business",
+      "description": "Port Tag Tool — Core sensor that scans project directory structures, generates ports and tags",
+      "chineseName": "端口标签工具",
+      "chineseDesc": "核心传感器工具，扫描项目目录结构、生成端口和标签",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        0,
+        0,
+        4.1011665345791695
+      ]
+    },
+    {
+      "id": "components",
+      "label": "Components",
+      "layer": "presentation",
+      "description": "3D Render Components — Three.js scene rendering components",
+      "chineseName": "3D渲染组件",
+      "chineseDesc": "Three.js 3D场景渲染组件集合",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        -3,
+        6.16184692226634
+      ]
+    },
+    {
+      "id": "data",
+      "label": "Data",
+      "layer": "presentation",
+      "description": "Data Loader — MCP data loading adapter for sensor scan results",
+      "chineseName": "数据加载层",
+      "chineseDesc": "MCP数据加载适配层，加载传感器扫描结果",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        0,
+        5.9627445214109915
+      ]
+    },
+    {
+      "id": "examples",
+      "label": "Examples",
+      "layer": "presentation",
+      "description": "Example Data — Frontend demo data and configurations",
+      "chineseName": "示例数据",
+      "chineseDesc": "前端示例数据和演示配置",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        3,
+        6.160877618252016
+      ]
+    },
+    {
+      "id": "mcp",
+      "label": "Mcp",
+      "layer": "presentation",
+      "description": "Frontend MCP Adapter",
+      "chineseName": "MCP前端适配",
+      "chineseDesc": "前端MCP协议适配模块",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        6,
+        5.866710033385971
+      ]
+    },
+    {
+      "id": "utils",
+      "label": "Utils",
+      "layer": "presentation",
+      "description": "Frontend Utility Functions",
+      "chineseName": "前端工具函数",
+      "chineseDesc": "前端通用工具函数和帮助方法",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "position": [
+        4,
+        9,
+        6.1958800396671
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--cli",
+      "label": "Cli",
+      "layer": "business",
+      "description": "CLI Entry — Command-line interface for scan/tags/ports actions",
+      "chineseName": "命令行入口",
+      "chineseDesc": "CLI命令行入口，支持scan/tags/ports等操作",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -1,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--hermesExampleData",
+      "label": "HermesExampleData",
+      "layer": "business",
+      "description": "Hermes Example Data",
+      "chineseName": "示例数据",
+      "chineseDesc": "Hermes系统内置示例数据",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -2,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--index",
+      "label": "Index",
+      "layer": "business",
+      "description": "Module Entry — port-tag-tool package entry point",
+      "chineseName": "模块入口",
+      "chineseDesc": "port-tag-tool模块导出入口",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -3,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--mcp-server",
+      "label": "Mcp Server",
+      "layer": "business",
+      "description": "MCP Server — Exposes standardized tool interfaces via MCP protocol",
+      "chineseName": "MCP服务器",
+      "chineseDesc": "MCP协议服务器，对外暴露标准化工具接口",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -4,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--portRegistry",
+      "label": "PortRegistry",
+      "layer": "business",
+      "description": "Port Registry — Port registration and management engine",
+      "chineseName": "端口注册表",
+      "chineseDesc": "端口注册与管理引擎，计算入口/出口端口",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -5,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--projectScanner",
+      "label": "ProjectScanner",
+      "layer": "business",
+      "description": "Project Scanner — Heuristic sensor that discovers modules and dependencies",
+      "chineseName": "项目扫描器",
+      "chineseDesc": "启发式项目扫描传感器，发现模块和依赖",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -6,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "packages-port-tag-tool--tagRegistry",
+      "label": "TagRegistry",
+      "layer": "business",
+      "description": "Tag Registry — Tag definition and management engine",
+      "chineseName": "标签注册表",
+      "chineseDesc": "标签定义与管理引擎，自动贴标签",
+      "color": "#4CAF50",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "packages-port-tag-tool",
+      "position": [
+        0,
+        -7,
+        4.401166534579169
+      ]
+    },
+    {
+      "id": "components--AccordionExpand",
+      "label": "AccordionExpand",
+      "layer": "presentation",
+      "description": "File: AccordionExpand.jsx in src/components",
+      "chineseName": "AccordionExpand",
+      "chineseDesc": "3D渲染组件的子模块AccordionExpand",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -4,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--BillboardText",
+      "label": "BillboardText",
+      "layer": "presentation",
+      "description": "File: BillboardText.jsx in src/components",
+      "chineseName": "BillboardText",
+      "chineseDesc": "3D渲染组件的子模块BillboardText",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -5,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--ConnectionLine",
+      "label": "ConnectionLine",
+      "layer": "presentation",
+      "description": "File: ConnectionLine.jsx in src/components",
+      "chineseName": "ConnectionLine",
+      "chineseDesc": "3D渲染组件的子模块ConnectionLine",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -6,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--ErrorBoundary",
+      "label": "ErrorBoundary",
+      "layer": "presentation",
+      "description": "File: ErrorBoundary.jsx in src/components",
+      "chineseName": "ErrorBoundary",
+      "chineseDesc": "3D渲染组件的子模块ErrorBoundary",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -7,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--HoverLabel",
+      "label": "HoverLabel",
+      "layer": "presentation",
+      "description": "File: HoverLabel.jsx in src/components",
+      "chineseName": "HoverLabel",
+      "chineseDesc": "3D渲染组件的子模块HoverLabel",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -8,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--InfoPanel",
+      "label": "InfoPanel",
+      "layer": "presentation",
+      "description": "File: InfoPanel.jsx in src/components",
+      "chineseName": "InfoPanel",
+      "chineseDesc": "3D渲染组件的子模块InfoPanel",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -9,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--NebulaLink",
+      "label": "NebulaLink",
+      "layer": "presentation",
+      "description": "File: NebulaLink.jsx in src/components",
+      "chineseName": "NebulaLink",
+      "chineseDesc": "3D渲染组件的子模块NebulaLink",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -10,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--Node3D",
+      "label": "Node3D",
+      "layer": "presentation",
+      "description": "File: Node3D.jsx in src/components",
+      "chineseName": "Node3D",
+      "chineseDesc": "3D渲染组件的子模块Node3D",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -11,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--PortMarker",
+      "label": "PortMarker",
+      "layer": "presentation",
+      "description": "File: PortMarker.jsx in src/components",
+      "chineseName": "PortMarker",
+      "chineseDesc": "3D渲染组件的子模块PortMarker",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -12,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "components--SubRegion",
+      "label": "SubRegion",
+      "layer": "presentation",
+      "description": "File: SubRegion.jsx in src/components",
+      "chineseName": "SubRegion",
+      "chineseDesc": "3D渲染组件的子模块SubRegion",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "components",
+      "position": [
+        4,
+        -13,
+        6.46184692226634
+      ]
+    },
+    {
+      "id": "data--mcpLoader",
+      "label": "McpLoader",
+      "layer": "presentation",
+      "description": "File: mcpLoader.js in src/data",
+      "chineseName": "McpLoader",
+      "chineseDesc": "数据加载层的子模块McpLoader",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "data",
+      "position": [
+        4,
+        -1,
+        6.262744521410991
+      ]
+    },
+    {
+      "id": "data--portRegistry",
+      "label": "PortRegistry",
+      "layer": "presentation",
+      "description": "Port Registry — Port registration and management engine",
+      "chineseName": "端口注册表",
+      "chineseDesc": "端口注册与管理引擎，计算入口/出口端口",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "data",
+      "position": [
+        4,
+        -2,
+        6.262744521410991
+      ]
+    },
+    {
+      "id": "data--systemData",
+      "label": "SystemData",
+      "layer": "presentation",
+      "description": "File: systemData.js in src/data",
+      "chineseName": "SystemData",
+      "chineseDesc": "数据加载层的子模块SystemData",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "data",
+      "position": [
+        4,
+        -3,
+        6.262744521410991
+      ]
+    },
+    {
+      "id": "data--tagRegistry",
+      "label": "TagRegistry",
+      "layer": "presentation",
+      "description": "File: tagRegistry.py in src/data",
+      "chineseName": "TagRegistry",
+      "chineseDesc": "数据加载层的子模块TagRegistry",
+      "color": "#FFB74D",
+      "geometryType": "box",
+      "status": "Active",
+      "_parentId": "data",
+      "position": [
+        4,
+        -4,
+        6.262744521410991
+      ]
+    },
+    {
+      "id": "dep-@react-three/drei",
+      "label": "@react-three/drei",
+      "layer": "external",
+      "description": "External dependency: @react-three/drei@^9.92.7",
+      "chineseName": "@react-three/drei",
+      "chineseDesc": "外部依赖: @react-three/drei@^9.92.7",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        14.199713303740282,
+        0,
+        13.7618496355135
+      ]
+    },
+    {
+      "id": "dep-@react-three/fiber",
+      "label": "@react-three/fiber",
+      "layer": "external",
+      "description": "External dependency: @react-three/fiber@^8.15.12",
+      "chineseName": "@react-three/fiber",
+      "chineseDesc": "外部依赖: @react-three/fiber@^8.15.12",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        15.58728957227504,
+        0,
+        12.013230040683993
+      ]
+    },
+    {
+      "id": "dep-@react-three/postprocessing",
+      "label": "@react-three/postprocessing",
+      "layer": "external",
+      "description": "External dependency: @react-three/postprocessing@^2.16.2",
+      "chineseName": "@react-three/postprocessing",
+      "chineseDesc": "外部依赖: @react-three/postprocessing@^2.16.2",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        16.75028416427085,
+        0,
+        13.08429422030531
+      ]
+    },
+    {
+      "id": "dep-js-yaml",
+      "label": "js-yaml",
+      "layer": "external",
+      "description": "External dependency: js-yaml@^4.2.0",
+      "chineseName": "js-yaml",
+      "chineseDesc": "外部依赖: js-yaml@^4.2.0",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        17.078979481775605,
+        0,
+        12.87581507136997
+      ]
+    },
+    {
+      "id": "dep-react",
+      "label": "react",
+      "layer": "external",
+      "description": "External dependency: react@^18.2.0",
+      "chineseName": "react",
+      "chineseDesc": "外部依赖: react@^18.2.0",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        17.07251745501344,
+        0,
+        12.55570011128657
+      ]
+    },
+    {
+      "id": "dep-react-dom",
+      "label": "react-dom",
+      "layer": "external",
+      "description": "External dependency: react-dom@^18.2.0",
+      "chineseName": "react-dom",
+      "chineseDesc": "外部依赖: react-dom@^18.2.0",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        17.305866931113997,
+        0,
+        13.337221781930566
+      ]
+    },
+    {
+      "id": "dep-three",
+      "label": "three",
+      "layer": "external",
+      "description": "External dependency: three@^0.162.0",
+      "chineseName": "three",
+      "chineseDesc": "外部依赖: three@^0.162.0",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        14.724642832847167,
+        0,
+        12.562361684565843
+      ]
+    },
+    {
+      "id": "dep-@vitejs/plugin-react",
+      "label": "@vitejs/plugin-react",
+      "layer": "external",
+      "description": "External dependency: @vitejs/plugin-react@^4.2.1",
+      "chineseName": "@vitejs/plugin-react",
+      "chineseDesc": "外部依赖: @vitejs/plugin-react@^4.2.1",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        14.345509494633006,
+        0,
+        13.82316657877891
+      ]
+    },
+    {
+      "id": "dep-vite",
+      "label": "vite",
+      "layer": "external",
+      "description": "External dependency: vite@^5.2.0",
+      "chineseName": "vite",
+      "chineseDesc": "外部依赖: vite@^5.2.0",
+      "color": "#FF7043",
+      "geometryType": "box",
+      "status": "External",
+      "position": [
+        14.55399378137372,
+        0,
+        13.960168732235616
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-server-packages-port-tag-tool",
+      "from": "server",
+      "to": "packages-port-tag-tool",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-server-dep-js-yaml",
+      "from": "server",
+      "to": "dep-js-yaml",
+      "flowType": "data",
+      "label": "js-yaml",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-src-dep-react",
+      "from": "src",
+      "to": "dep-react",
+      "flowType": "data",
+      "label": "react",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-src-dep-@react-three/fiber",
+      "from": "src",
+      "to": "dep-@react-three/fiber",
+      "flowType": "data",
+      "label": "@react-three/fiber",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-src-dep-@react-three/drei",
+      "from": "src",
+      "to": "dep-@react-three/drei",
+      "flowType": "data",
+      "label": "@react-three/drei",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-src-dep-three",
+      "from": "src",
+      "to": "dep-three",
+      "flowType": "data",
+      "label": "three",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-src-data",
+      "from": "src",
+      "to": "data",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-src-dep-react-dom",
+      "from": "src",
+      "to": "dep-react-dom",
+      "flowType": "data",
+      "label": "react-dom",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-packages-3d-monitor-dep-three",
+      "from": "packages-3d-monitor",
+      "to": "dep-three",
+      "flowType": "data",
+      "label": "three",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-packages-port-tag-tool-packages-port-tag-tool--portRegistry",
+      "from": "packages-port-tag-tool",
+      "to": "packages-port-tag-tool--portRegistry",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-packages-port-tag-tool-packages-port-tag-tool--tagRegistry",
+      "from": "packages-port-tag-tool",
+      "to": "packages-port-tag-tool--tagRegistry",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-packages-port-tag-tool-packages-port-tag-tool--hermesExampleData",
+      "from": "packages-port-tag-tool",
+      "to": "packages-port-tag-tool--hermesExampleData",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-packages-port-tag-tool-packages-port-tag-tool--projectScanner",
+      "from": "packages-port-tag-tool",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-packages-port-tag-tool-packages-port-tag-tool--index",
+      "from": "packages-port-tag-tool",
+      "to": "packages-port-tag-tool--index",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-components-dep-react",
+      "from": "components",
+      "to": "dep-react",
+      "flowType": "data",
+      "label": "react",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-components-dep-@react-three/fiber",
+      "from": "components",
+      "to": "dep-@react-three/fiber",
+      "flowType": "data",
+      "label": "@react-three/fiber",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-components-dep-@react-three/drei",
+      "from": "components",
+      "to": "dep-@react-three/drei",
+      "flowType": "data",
+      "label": "@react-three/drei",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-components-dep-three",
+      "from": "components",
+      "to": "dep-three",
+      "flowType": "data",
+      "label": "three",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-components-data",
+      "from": "components",
+      "to": "data",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-components-utils",
+      "from": "components",
+      "to": "utils",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-components-examples",
+      "from": "components",
+      "to": "examples",
+      "flowType": "data",
+      "label": "import",
+      "color": "#00BCD4"
+    },
+    {
+      "id": "conn-data-packages-port-tag-tool--projectScanner",
+      "from": "data",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "mcpLoader -> projectScanner",
+      "color": "#FF5722"
+    },
+    {
+      "id": "conn-data-dep-three",
+      "from": "data",
+      "to": "dep-three",
+      "flowType": "data",
+      "label": "three",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-examples-dep-three",
+      "from": "examples",
+      "to": "dep-three",
+      "flowType": "data",
+      "label": "three",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-utils-dep-three",
+      "from": "utils",
+      "to": "dep-three",
+      "flowType": "data",
+      "label": "three",
+      "color": "#FF7043"
+    },
+    {
+      "id": "conn-packages-port-tag-tool--cli-packages-port-tag-tool--projectScanner",
+      "from": "packages-port-tag-tool--cli",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "cli -> scanner/registries",
+      "color": "#FF5722"
+    },
+    {
+      "id": "conn-packages-port-tag-tool--mcp-server-packages-port-tag-tool--projectScanner",
+      "from": "packages-port-tag-tool--mcp-server",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "mcp-server -> projectScanner",
+      "color": "#FF5722"
+    },
+    {
+      "id": "conn-data--mcpLoader-packages-port-tag-tool--projectScanner",
+      "from": "data--mcpLoader",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "mcpLoader -> projectScanner",
+      "color": "#FF5722"
+    },
+    {
+      "id": "conn-data--portRegistry-packages-port-tag-tool--projectScanner",
+      "from": "data--portRegistry",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "mcpLoader -> projectScanner",
+      "color": "#FF5722"
+    },
+    {
+      "id": "conn-data--systemData-packages-port-tag-tool--projectScanner",
+      "from": "data--systemData",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "mcpLoader -> projectScanner",
+      "color": "#FF5722"
+    },
+    {
+      "id": "conn-data--tagRegistry-packages-port-tag-tool--projectScanner",
+      "from": "data--tagRegistry",
+      "to": "packages-port-tag-tool--projectScanner",
+      "flowType": "control",
+      "label": "mcpLoader -> projectScanner",
+      "color": "#FF5722"
+    }
+  ],
+  "ports": {
+    "stats": {
+      "nodes": 25,
+      "ports": 62,
+      "connections": 62
+    },
+    "nodePorts": {
+      "server": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-server-out-0",
+            "nodeId": "server",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 0,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-server-out-1",
+            "nodeId": "server",
+            "direction": "out",
+            "type": "default",
+            "label": "js-yaml",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "right",
+            "globalIndex": 1,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "src": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-src-out-0",
+            "nodeId": "src",
+            "direction": "out",
+            "type": "default",
+            "label": "react",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 2,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-src-out-1",
+            "nodeId": "src",
+            "direction": "out",
+            "type": "default",
+            "label": "@react-three/fiber",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "right",
+            "globalIndex": 3,
+            "position3d": [
+              0.4200000000000001,
+              0.5092229374252498,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-src-out-2",
+            "nodeId": "src",
+            "direction": "out",
+            "type": "default",
+            "label": "@react-three/drei",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 2,
+            "position": "right",
+            "globalIndex": 4,
+            "position3d": [
+              -0.4199999999999998,
+              0.5092229374252499,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-src-out-3",
+            "nodeId": "src",
+            "direction": "out",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 3,
+            "position": "right",
+            "globalIndex": 5,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-src-out-4",
+            "nodeId": "src",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 4,
+            "position": "right",
+            "globalIndex": 6,
+            "position3d": [
+              -0.4200000000000004,
+              -0.5092229374252498,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-src-out-5",
+            "nodeId": "src",
+            "direction": "out",
+            "type": "default",
+            "label": "react-dom",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 5,
+            "position": "right",
+            "globalIndex": 7,
+            "position3d": [
+              0.4200000000000001,
+              -0.5092229374252498,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "packages-3d-monitor": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-packages-3d-monitor-out-0",
+            "nodeId": "packages-3d-monitor",
+            "direction": "out",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 8,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "packages-port-tag-tool": {
+        "inputs": [
+          {
+            "id": "port-packages-port-tag-tool-in-0",
+            "nodeId": "packages-port-tag-tool",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 14,
+            "position3d": [
+              0.4200000000000001,
+              -0.5092229374252498,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": [
+          {
+            "id": "port-packages-port-tag-tool-out-0",
+            "nodeId": "packages-port-tag-tool",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 9,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool-out-1",
+            "nodeId": "packages-port-tag-tool",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 1,
+            "position": "right",
+            "globalIndex": 10,
+            "position3d": [
+              0.25957427527495586,
+              0.5592212315815502,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool-out-2",
+            "nodeId": "packages-port-tag-tool",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 2,
+            "position": "right",
+            "globalIndex": 11,
+            "position3d": [
+              -0.6795742752749557,
+              0.3456177283479742,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool-out-3",
+            "nodeId": "packages-port-tag-tool",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 3,
+            "position": "right",
+            "globalIndex": 12,
+            "position3d": [
+              -0.6795742752749558,
+              -0.3456177283479741,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool-out-4",
+            "nodeId": "packages-port-tag-tool",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 4,
+            "position": "right",
+            "globalIndex": 13,
+            "position3d": [
+              0.2595742752749557,
+              -0.5592212315815502,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "components": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-components-out-0",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "default",
+            "label": "react",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 15,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-components-out-1",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "default",
+            "label": "@react-three/fiber",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "right",
+            "globalIndex": 16,
+            "position3d": [
+              0.5237314335613362,
+              0.4597169116912015,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-components-out-2",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "default",
+            "label": "@react-three/drei",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 2,
+            "position": "right",
+            "globalIndex": 17,
+            "position3d": [
+              -0.18691758452330404,
+              0.5732576123629123,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-components-out-3",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 3,
+            "position": "right",
+            "globalIndex": 18,
+            "position3d": [
+              -0.756813849038032,
+              0.2551236386011242,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-components-out-4",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 4,
+            "position": "right",
+            "globalIndex": 19,
+            "position3d": [
+              -0.7568138490380321,
+              -0.2551236386011241,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-components-out-5",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 5,
+            "position": "right",
+            "globalIndex": 20,
+            "position3d": [
+              -0.18691758452330426,
+              -0.5732576123629123,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-components-out-6",
+            "nodeId": "components",
+            "direction": "out",
+            "type": "llm-request",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 6,
+            "position": "right",
+            "globalIndex": 21,
+            "position3d": [
+              0.523731433561336,
+              -0.4597169116912015,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "data": {
+        "inputs": [
+          {
+            "id": "port-data-in-0",
+            "nodeId": "data",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 24,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-data-in-1",
+            "nodeId": "data",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 1,
+            "position": "left",
+            "globalIndex": 25,
+            "position3d": [
+              -1.5430549669256648e-16,
+              -0.588,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": [
+          {
+            "id": "port-data-out-0",
+            "nodeId": "data",
+            "direction": "out",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 22,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-data-out-1",
+            "nodeId": "data",
+            "direction": "out",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "right",
+            "globalIndex": 23,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "examples": {
+        "inputs": [
+          {
+            "id": "port-examples-in-0",
+            "nodeId": "examples",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 27,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": [
+          {
+            "id": "port-examples-out-0",
+            "nodeId": "examples",
+            "direction": "out",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 26,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "utils": {
+        "inputs": [
+          {
+            "id": "port-utils-in-0",
+            "nodeId": "utils",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 29,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": [
+          {
+            "id": "port-utils-out-0",
+            "nodeId": "utils",
+            "direction": "out",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 28,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "packages-port-tag-tool--cli": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-packages-port-tag-tool--cli-out-0",
+            "nodeId": "packages-port-tag-tool--cli",
+            "direction": "out",
+            "type": "default",
+            "label": "cli -> scanner/registries",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 30,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "packages-port-tag-tool--mcp-server": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-packages-port-tag-tool--mcp-server-out-0",
+            "nodeId": "packages-port-tag-tool--mcp-server",
+            "direction": "out",
+            "type": "default",
+            "label": "mcp-server -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 31,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "data--mcpLoader": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-data--mcpLoader-out-0",
+            "nodeId": "data--mcpLoader",
+            "direction": "out",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 32,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "data--portRegistry": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-data--portRegistry-out-0",
+            "nodeId": "data--portRegistry",
+            "direction": "out",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 33,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "data--systemData": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-data--systemData-out-0",
+            "nodeId": "data--systemData",
+            "direction": "out",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 34,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "data--tagRegistry": {
+        "inputs": [],
+        "outputs": [
+          {
+            "id": "port-data--tagRegistry-out-0",
+            "nodeId": "data--tagRegistry",
+            "direction": "out",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 0,
+            "position": "right",
+            "globalIndex": 35,
+            "position3d": [
+              0.84,
+              0,
+              0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ]
+      },
+      "dep-js-yaml": {
+        "inputs": [
+          {
+            "id": "port-dep-js-yaml-in-0",
+            "nodeId": "dep-js-yaml",
+            "direction": "in",
+            "type": "default",
+            "label": "js-yaml",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 36,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "dep-react": {
+        "inputs": [
+          {
+            "id": "port-dep-react-in-0",
+            "nodeId": "dep-react",
+            "direction": "in",
+            "type": "default",
+            "label": "react",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 37,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-react-in-1",
+            "nodeId": "dep-react",
+            "direction": "in",
+            "type": "default",
+            "label": "react",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "left",
+            "globalIndex": 38,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "dep-@react-three/fiber": {
+        "inputs": [
+          {
+            "id": "port-dep-@react-three/fiber-in-0",
+            "nodeId": "dep-@react-three/fiber",
+            "direction": "in",
+            "type": "default",
+            "label": "@react-three/fiber",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 39,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-@react-three/fiber-in-1",
+            "nodeId": "dep-@react-three/fiber",
+            "direction": "in",
+            "type": "default",
+            "label": "@react-three/fiber",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "left",
+            "globalIndex": 40,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "dep-@react-three/drei": {
+        "inputs": [
+          {
+            "id": "port-dep-@react-three/drei-in-0",
+            "nodeId": "dep-@react-three/drei",
+            "direction": "in",
+            "type": "default",
+            "label": "@react-three/drei",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 41,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-@react-three/drei-in-1",
+            "nodeId": "dep-@react-three/drei",
+            "direction": "in",
+            "type": "default",
+            "label": "@react-three/drei",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "left",
+            "globalIndex": 42,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "dep-three": {
+        "inputs": [
+          {
+            "id": "port-dep-three-in-0",
+            "nodeId": "dep-three",
+            "direction": "in",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 43,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-three-in-1",
+            "nodeId": "dep-three",
+            "direction": "in",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 1,
+            "position": "left",
+            "globalIndex": 44,
+            "position3d": [
+              0.4200000000000001,
+              0.5092229374252498,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-three-in-2",
+            "nodeId": "dep-three",
+            "direction": "in",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 2,
+            "position": "left",
+            "globalIndex": 45,
+            "position3d": [
+              -0.4199999999999998,
+              0.5092229374252499,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-three-in-3",
+            "nodeId": "dep-three",
+            "direction": "in",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 3,
+            "position": "left",
+            "globalIndex": 46,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-three-in-4",
+            "nodeId": "dep-three",
+            "direction": "in",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 4,
+            "position": "left",
+            "globalIndex": 47,
+            "position3d": [
+              -0.4200000000000004,
+              -0.5092229374252498,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-dep-three-in-5",
+            "nodeId": "dep-three",
+            "direction": "in",
+            "type": "default",
+            "label": "three",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 5,
+            "position": "left",
+            "globalIndex": 48,
+            "position3d": [
+              0.4200000000000001,
+              -0.5092229374252498,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "dep-react-dom": {
+        "inputs": [
+          {
+            "id": "port-dep-react-dom-in-0",
+            "nodeId": "dep-react-dom",
+            "direction": "in",
+            "type": "default",
+            "label": "react-dom",
+            "color": "#FF7043",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 49,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "packages-port-tag-tool--portRegistry": {
+        "inputs": [
+          {
+            "id": "port-packages-port-tag-tool--portRegistry-in-0",
+            "nodeId": "packages-port-tag-tool--portRegistry",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 50,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "packages-port-tag-tool--tagRegistry": {
+        "inputs": [
+          {
+            "id": "port-packages-port-tag-tool--tagRegistry-in-0",
+            "nodeId": "packages-port-tag-tool--tagRegistry",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 51,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "packages-port-tag-tool--hermesExampleData": {
+        "inputs": [
+          {
+            "id": "port-packages-port-tag-tool--hermesExampleData-in-0",
+            "nodeId": "packages-port-tag-tool--hermesExampleData",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 52,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "packages-port-tag-tool--projectScanner": {
+        "inputs": [
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-0",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 53,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-1",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 1,
+            "position": "left",
+            "globalIndex": 54,
+            "position3d": [
+              0.5939696961966999,
+              0.41577878733768986,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-2",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "cli -> scanner/registries",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 2,
+            "position": "left",
+            "globalIndex": 55,
+            "position3d": [
+              5.143516556418883e-17,
+              0.588,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-3",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "mcp-server -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 3,
+            "position": "left",
+            "globalIndex": 56,
+            "position3d": [
+              -0.5939696961966998,
+              0.4157787873376899,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-4",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 4,
+            "position": "left",
+            "globalIndex": 57,
+            "position3d": [
+              -0.84,
+              7.200923178986436e-17,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-5",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 5,
+            "position": "left",
+            "globalIndex": 58,
+            "position3d": [
+              -0.5939696961967,
+              -0.41577878733768986,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-6",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 6,
+            "position": "left",
+            "globalIndex": 59,
+            "position3d": [
+              -1.5430549669256648e-16,
+              -0.588,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          },
+          {
+            "id": "port-packages-port-tag-tool--projectScanner-in-7",
+            "nodeId": "packages-port-tag-tool--projectScanner",
+            "direction": "in",
+            "type": "default",
+            "label": "mcpLoader -> projectScanner",
+            "color": "#FF5722",
+            "shape": "circle",
+            "index": 7,
+            "position": "left",
+            "globalIndex": 60,
+            "position3d": [
+              0.5939696961966997,
+              -0.41577878733769,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      },
+      "packages-port-tag-tool--index": {
+        "inputs": [
+          {
+            "id": "port-packages-port-tag-tool--index-in-0",
+            "nodeId": "packages-port-tag-tool--index",
+            "direction": "in",
+            "type": "llm-response",
+            "label": "import",
+            "color": "#00BCD4",
+            "shape": "circle",
+            "index": 0,
+            "position": "left",
+            "globalIndex": 61,
+            "position3d": [
+              0.84,
+              0,
+              -0.1
+            ],
+            "portRadius": 0.15,
+            "connectionId": null
+          }
+        ],
+        "outputs": []
+      }
+    }
+  },
+  "tags": {
+    "definitions": [
+      {
+        "id": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "description": "赵公明通过外部API向各模块下发高层战略指令",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "context": "泡茶：水管→水桶（水源到暂存）",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "example": {
+          "from": "zhaogongming",
+          "to": "strategy",
+          "command": "deep_analysis",
+          "target": "002415",
+          "priority": "high",
+          "params": {
+            "industry": "consumer-electronics"
+          }
+        },
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)"
+      },
+      {
+        "id": "tag-dispatcher-research-command",
+        "label": "调研指令",
+        "shortLabel": "调研",
+        "description": "调度器向调研员发起调研任务",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "context": "泡茶：水桶→烧水壶",
+        "transform": "任务调度(Dispatcher)→具体调研指令(JSON/REST)→调研员",
+        "example": {
+          "from": "zhaogongming",
+          "to": "research",
+          "task": "industry_analysis",
+          "team": "consumer-electronics",
+          "depth": "deep",
+          "deadline": "2024-06-15"
+        },
+        "color": "#FFEB3B",
+        "transportContent": "调研任务 JSON: { task, team, depth, deadline }",
+        "sourceLabel": "发送: 调研指令(JSON/REST)",
+        "targetLabel": "接收: 调研指令(JSON/REST)"
+      },
+      {
+        "id": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "description": "调研员向分析师传递初步调研结果",
+        "flowType": "data",
+        "format": "Markdown/Report",
+        "context": "泡茶：烧水壶→茶海",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "example": {
+          "from": "research",
+          "to": "analyst-a",
+          "source": "annual_report",
+          "findings": [
+            "market_share_35%",
+            "revenue_growth_12%"
+          ],
+          "confidence": 0.85,
+          "evidence": [
+            "report_pg42",
+            "filing_8k"
+          ]
+        },
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)"
+      },
+      {
+        "id": "tag-analyst-lead-report",
+        "label": "分析报告",
+        "shortLabel": "报告",
+        "description": "分析师向队长提交完整分析报告",
+        "flowType": "data",
+        "format": "Markdown/Report",
+        "context": "泡茶：茶海→茶杯",
+        "transform": "结构化发现(分析师)→深度分析报告→队长",
+        "example": {
+          "from": "analyst-a",
+          "to": "team-lead",
+          "ticker": "002415",
+          "fair_value": 32.5,
+          "rating": "BUY",
+          "risk_level": "medium",
+          "reasoning": "Strong_moat_and_growth"
+        },
+        "color": "#00BCD4",
+        "transportContent": "完整分析报告 Markdown: { ticker, fair_value, rating, risk_level, reasoning }",
+        "sourceLabel": "发送: 分析报告(Markdown)",
+        "targetLabel": "接收: 分析报告(Markdown)"
+      },
+      {
+        "id": "tag-lead-risk-decision",
+        "label": "决策指令",
+        "shortLabel": "决策",
+        "description": "队长向风控员发送最终决策需要风控审核",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "context": "泡茶：茶杯→人",
+        "transform": "分析报告(队长)→可执行决策→风控员",
+        "example": {
+          "from": "team-lead",
+          "to": "risk-controller",
+          "action": "BUY",
+          "ticker": "002415",
+          "quantity": 1000,
+          "price_limit": 33,
+          "strategy": "limit_order"
+        },
+        "color": "#FFEB3B",
+        "transportContent": "决策指令 JSON: { action, ticker, quantity, price_limit, strategy }",
+        "sourceLabel": "发送: 决策指令(JSON/REST)",
+        "targetLabel": "接收: 决策指令(JSON/REST)"
+      },
+      {
+        "id": "tag-risk-zhao-result",
+        "label": "风控结果",
+        "shortLabel": "结果",
+        "description": "风控员向赵公明返回审核结果",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "transform": "风控审核(风控员)→审核结果(JSON)→赵公明",
+        "example": {
+          "from": "risk-controller",
+          "to": "zhaogongming",
+          "task_id": "t_xxxxx",
+          "status": "approved",
+          "risk_score": 2.5,
+          "notes": "Within_risk_tolerance"
+        },
+        "color": "#FFEB3B",
+        "transportContent": "审核结果 JSON: { task_id, status, risk_score, notes }",
+        "sourceLabel": "发送: 审核结果(JSON/REST)",
+        "targetLabel": "接收: 审核结果(JSON/REST)"
+      },
+      {
+        "id": "tag-system-broadcast",
+        "label": "系统广播",
+        "shortLabel": "广播",
+        "description": "系统级事件广播，通知各模块状态变更",
+        "flowType": "event",
+        "format": "JSON/PubSub",
+        "context": "泡茶：水沸信号",
+        "transform": "系统状态事件→JSON广播(PubSub)→所有订阅模块",
+        "example": {
+          "event": "system_ready",
+          "timestamp": "2024-01-01T00:00:00Z",
+          "modules": [
+            "duckdb",
+            "ccswitch",
+            "api-server"
+          ]
+        },
+        "color": "#E040FB",
+        "transportContent": "系统事件广播 JSON/PubSub: { event, timestamp, modules[] }",
+        "sourceLabel": "发送: 系统事件(PubSub)",
+        "targetLabel": "接收: 系统事件(PubSub)"
+      },
+      {
+        "id": "tag-data-query",
+        "label": "数据查询",
+        "shortLabel": "查询",
+        "description": "向数据仓库发起结构化查询",
+        "flowType": "data",
+        "format": "SQL/JSON",
+        "context": "泡茶：取茶叶",
+        "transform": "查询需求(模块)→SQL语句(DuckDB)→数据仓库",
+        "example": {
+          "from": "research",
+          "query": "SELECT * FROM signals WHERE date > now() - 7d",
+          "limit": 100
+        },
+        "color": "#00BCD4",
+        "transportContent": "SQL 查询: { query, limit }",
+        "sourceLabel": "发送: 数据查询(SQL/JSON)",
+        "targetLabel": "接收: 数据查询(SQL/JSON)"
+      },
+      {
+        "id": "tag-data-result",
+        "label": "数据查询结果",
+        "shortLabel": "结果",
+        "description": "DuckDB 数据仓库返回查询结果集",
+        "flowType": "data",
+        "format": "JSON/CSV",
+        "context": "泡茶：茶叶入壶",
+        "transform": "SQL 查询→JSON 结果行→请求模块",
+        "example": {
+          "rows": 42,
+          "columns": [
+            "ticker",
+            "value",
+            "date"
+          ],
+          "data": [
+            {
+              "ticker": "002415",
+              "value": 32.5,
+              "date": "2024-06-01"
+            }
+          ]
+        },
+        "color": "#00BCD4",
+        "transportContent": "查询结果 JSON/CSV: { rows, columns[], data[] }",
+        "sourceLabel": "发送: 查询结果(JSON/CSV)",
+        "targetLabel": "接收: 查询结果(JSON/CSV)"
+      },
+      {
+        "id": "tag-external-webhook",
+        "label": "外部 Webhook 事件",
+        "shortLabel": "事件",
+        "description": "外部系统通过 Webhook 触发平台内部事件",
+        "flowType": "event",
+        "format": "JSON/Webhook",
+        "transform": "HTTP POST 请求→JSON 内部事件→路由分发",
+        "example": {
+          "source": "github",
+          "action": "push",
+          "repo": "hermes",
+          "ref": "refs/heads/main",
+          "commits": [
+            {
+              "id": "abc123",
+              "message": "fix: bug"
+            }
+          ]
+        },
+        "color": "#E040FB",
+        "transportContent": "Webhook 事件 JSON: { source, action, repo, ref, commits[] }",
+        "sourceLabel": "发送: Webhook 事件(JSON/HTTP)",
+        "targetLabel": "接收: Webhook 事件(JSON/HTTP)"
+      },
+      {
+        "id": "tag-zhao-strategy-command",
+        "label": "战略指令下发",
+        "shortLabel": "战略",
+        "description": "赵公明向战略部下发高层战略分析指令",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→战略任务(Strategy)",
+        "example": {
+          "from": "zhaogongming",
+          "to": "strategy",
+          "command": "industry_scan",
+          "target_industry": "consumer-electronics",
+          "priority": "high",
+          "deadline": "7d"
+        },
+        "color": "#FFEB3B",
+        "transportContent": "战略指令 JSON: { command, target_industry, priority, deadline }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)"
+      },
+      {
+        "id": "tag-zhao-system-command",
+        "label": "系统开发指令",
+        "shortLabel": "开发",
+        "description": "赵公明向系统部下发系统开发/维护指令",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→开发任务(System)",
+        "example": {
+          "from": "zhaogongming",
+          "to": "system",
+          "command": "deploy_service",
+          "service": "api-server",
+          "version": "v2.1.0",
+          "env": "production"
+        },
+        "color": "#FFEB3B",
+        "transportContent": "开发指令 JSON: { command, service, version, env }",
+        "sourceLabel": "发送: 开发指令(JSON/REST)",
+        "targetLabel": "接收: 开发指令(JSON/REST)"
+      },
+      {
+        "id": "tag-zhao-operations-command",
+        "label": "运营指令",
+        "shortLabel": "运营",
+        "description": "赵公明向运营部下发育维/监控指令",
+        "flowType": "control",
+        "format": "JSON/REST",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→运营任务(Operations)",
+        "example": {
+          "from": "zhaogongming",
+          "to": "operations",
+          "command": "health_check",
+          "target": "gateway",
+          "interval": "5m"
+        },
+        "color": "#FFEB3B",
+        "transportContent": "运营指令 JSON: { command, target, interval }",
+        "sourceLabel": "发送: 运营指令(JSON/REST)",
+        "targetLabel": "接收: 运营指令(JSON/REST)"
+      },
+      {
+        "id": "tag-strategy-zhao-report",
+        "label": "战略分析报告",
+        "shortLabel": "战略报告",
+        "description": "战略部向赵公明提交战略分析结果",
+        "flowType": "data",
+        "format": "Markdown/Report",
+        "transform": "原始市场数据→战略分析(Markdown)→赵公明",
+        "example": {
+          "from": "strategy",
+          "to": "zhaogongming",
+          "report_type": "industry_landscape",
+          "summary": "AI_healthcare_growing_30%_YoY",
+          "confidence": 0.9
+        },
+        "color": "#00BCD4",
+        "transportContent": "战略分析报告 Markdown: { report_type, summary, confidence }",
+        "sourceLabel": "发送: 战略分析(Markdown)",
+        "targetLabel": "接收: 战略分析(Markdown)"
+      },
+      {
+        "id": "tag-system-zhao-report",
+        "label": "系统状态报告",
+        "shortLabel": "状态",
+        "description": "系统部向赵公明报告系统运行状态",
+        "flowType": "data",
+        "format": "Markdown/Report",
+        "transform": "系统监控数据→状态报告(Markdown)→赵公明",
+        "example": {
+          "from": "system",
+          "to": "zhaogongming",
+          "services": [
+            "api-server",
+            "gateway",
+            "duckdb"
+          ],
+          "all_green": true,
+          "incidents": []
+        },
+        "color": "#00BCD4",
+        "transportContent": "系统状态报告 Markdown: { services[], all_green, incidents[] }",
+        "sourceLabel": "发送: 系统状态(Markdown)",
+        "targetLabel": "接收: 系统状态(Markdown)"
+      },
+      {
+        "id": "tag-ops-zhao-report",
+        "label": "运营报告",
+        "shortLabel": "运营报告",
+        "description": "运营部向赵公明汇报运营数据",
+        "flowType": "data",
+        "format": "Markdown/Report",
+        "transform": "运营监控数据→运营报告(Markdown)→赵公明",
+        "example": {
+          "from": "operations",
+          "to": "zhaogongming",
+          "api_requests": 15234,
+          "avg_latency": 342,
+          "error_rate": 0.02
+        },
+        "color": "#00BCD4",
+        "transportContent": "运营报告 Markdown: { api_requests, avg_latency, error_rate }",
+        "sourceLabel": "发送: 运营报告(Markdown)",
+        "targetLabel": "接收: 运营报告(Markdown)"
+      },
+      {
+        "id": "tag-knowledge-sync",
+        "label": "知识同步",
+        "shortLabel": "同步",
+        "description": "系统部向知识库同步配置/文档更新",
+        "flowType": "data",
+        "format": "Markdown/JSON",
+        "transform": "配置变化→同步文档(Markdown/JSON)→知识库",
+        "example": {
+          "from": "system",
+          "to": "obsidian",
+          "action": "sync",
+          "path": "docs/infrastructure/",
+          "files": [
+            "api-server.md",
+            "gateway.md"
+          ]
+        },
+        "color": "#7B1FA2",
+        "transportContent": "知识同步文档 Markdown/JSON: { action, path, files[] }",
+        "sourceLabel": "发送: 知识同步(Markdown/JSON)",
+        "targetLabel": "接收: 知识同步(Markdown/JSON)"
+      },
+      {
+        "id": "tag-knowledge-result",
+        "label": "知识查询结果",
+        "shortLabel": "知识",
+        "description": "知识库返回查询结果",
+        "flowType": "data",
+        "format": "Markdown/JSON",
+        "transform": "查询→知识库检索→结果文档",
+        "color": "#7B1FA2",
+        "transportContent": "知识检索结果 Markdown/JSON",
+        "sourceLabel": "发送: 知识结果(Markdown/JSON)",
+        "targetLabel": "接收: 知识结果(Markdown/JSON)"
+      },
+      {
+        "id": "tag-external-request",
+        "label": "外部请求路由",
+        "shortLabel": "路由",
+        "description": "网关/消息队列向API服务转发外部请求",
+        "flowType": "control",
+        "format": "JSON/HTTP",
+        "transform": "外部请求→网关路由→内部API服务",
+        "color": "#4CAF50",
+        "transportContent": "外部请求 JSON/HTTP: { method, path, headers, body }",
+        "sourceLabel": "发送: 外部请求(JSON/HTTP)",
+        "targetLabel": "接收: 外部请求(JSON/HTTP)"
+      },
+      {
+        "id": "tag-config-update",
+        "label": "配置更新",
+        "shortLabel": "配置",
+        "description": "系统部向各服务下发配置更新",
+        "flowType": "config",
+        "format": "JSON",
+        "transform": "配置变更→下发JSON配置→服务实例",
+        "color": "#9C27B0",
+        "transportContent": "配置更新 JSON: { service, key, value }",
+        "sourceLabel": "发送: 配置更新(JSON)",
+        "targetLabel": "接收: 配置更新(JSON)"
+      },
+      {
+        "id": "tag-cache-request",
+        "label": "缓存请求",
+        "shortLabel": "缓存",
+        "description": "API服务向Redis发起缓存读写",
+        "flowType": "data",
+        "format": "Redis Protocol",
+        "transform": "业务请求→Redis命令→缓存数据",
+        "color": "#26C6DA",
+        "transportContent": "Redis 命令: { command, key, value?, ttl? }",
+        "sourceLabel": "发送: 缓存请求(Redis)",
+        "targetLabel": "接收: 缓存请求(Redis)"
+      },
+      {
+        "id": "tag-event-message",
+        "label": "事件消息",
+        "shortLabel": "消息",
+        "description": "服务间通过消息队列传递异步事件",
+        "flowType": "event",
+        "format": "JSON/AMQP",
+        "transform": "服务事件→AMQP消息→订阅服务",
+        "color": "#E040FB",
+        "transportContent": "事件消息 JSON/AMQP: { event, payload, timestamp }",
+        "sourceLabel": "发送: 事件消息(AMQP)",
+        "targetLabel": "接收: 事件消息(AMQP)"
+      },
+      {
+        "id": "tag-event-publish",
+        "label": "事件发布",
+        "shortLabel": "发布",
+        "description": "API服务向消息队列发布业务事件",
+        "flowType": "event",
+        "format": "JSON/AMQP",
+        "transform": "业务事件→AMQP发布→消息队列路由",
+        "color": "#E040FB",
+        "transportContent": "业务事件 JSON/AMQP: { event_type, payload, timestamp }",
+        "sourceLabel": "发送: 事件发布(AMQP)",
+        "targetLabel": "接收: 事件发布(AMQP)"
+      },
+      {
+        "id": "tag-report-submit",
+        "label": "报告提交",
+        "shortLabel": "报告",
+        "description": "各部门向赵公明提交工作报告",
+        "flowType": "data",
+        "format": "Markdown/Report",
+        "transform": "部门工作成果→Markdown报告→赵公明",
+        "color": "#00BCD4",
+        "transportContent": "工作报告 Markdown",
+        "sourceLabel": "发送: 工作报告(Markdown)",
+        "targetLabel": "接收: 工作报告(Markdown)"
+      }
+    ],
+    "index": {
+      "tag-agent-analyst-findings": {
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "fromNodes": [
+          "server",
+          "src",
+          "packages-3d-monitor",
+          "packages-port-tag-tool",
+          "components",
+          "data",
+          "examples",
+          "utils"
+        ],
+        "toNodes": [
+          "packages-port-tag-tool",
+          "dep-js-yaml",
+          "dep-react",
+          "dep-@react-three/fiber",
+          "dep-@react-three/drei",
+          "dep-three",
+          "data",
+          "dep-react-dom",
+          "packages-port-tag-tool--portRegistry",
+          "packages-port-tag-tool--tagRegistry",
+          "packages-port-tag-tool--hermesExampleData",
+          "packages-port-tag-tool--projectScanner",
+          "packages-port-tag-tool--index",
+          "utils",
+          "examples"
+        ],
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "format": "原始调研数据→结构化Markdown发现→分析师"
+      },
+      "tag-external-agent-command": {
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "fromNodes": [
+          "data",
+          "packages-port-tag-tool--cli",
+          "packages-port-tag-tool--mcp-server",
+          "data--mcpLoader",
+          "data--portRegistry",
+          "data--systemData",
+          "data--tagRegistry"
+        ],
+        "toNodes": [
+          "packages-port-tag-tool--projectScanner"
+        ],
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "format": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)"
+      }
+    },
+    "portLabels": [
+      {
+        "connectionId": "conn-server-packages-port-tag-tool",
+        "from": "server",
+        "to": "packages-port-tag-tool",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-server-dep-js-yaml",
+        "from": "server",
+        "to": "dep-js-yaml",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-src-dep-react",
+        "from": "src",
+        "to": "dep-react",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-src-dep-@react-three/fiber",
+        "from": "src",
+        "to": "dep-@react-three/fiber",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-src-dep-@react-three/drei",
+        "from": "src",
+        "to": "dep-@react-three/drei",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-src-dep-three",
+        "from": "src",
+        "to": "dep-three",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-src-data",
+        "from": "src",
+        "to": "data",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-src-dep-react-dom",
+        "from": "src",
+        "to": "dep-react-dom",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-3d-monitor-dep-three",
+        "from": "packages-3d-monitor",
+        "to": "dep-three",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--portRegistry",
+        "from": "packages-port-tag-tool",
+        "to": "packages-port-tag-tool--portRegistry",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--tagRegistry",
+        "from": "packages-port-tag-tool",
+        "to": "packages-port-tag-tool--tagRegistry",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--hermesExampleData",
+        "from": "packages-port-tag-tool",
+        "to": "packages-port-tag-tool--hermesExampleData",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--projectScanner",
+        "from": "packages-port-tag-tool",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--index",
+        "from": "packages-port-tag-tool",
+        "to": "packages-port-tag-tool--index",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-dep-react",
+        "from": "components",
+        "to": "dep-react",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-dep-@react-three/fiber",
+        "from": "components",
+        "to": "dep-@react-three/fiber",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-dep-@react-three/drei",
+        "from": "components",
+        "to": "dep-@react-three/drei",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-dep-three",
+        "from": "components",
+        "to": "dep-three",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-data",
+        "from": "components",
+        "to": "data",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-utils",
+        "from": "components",
+        "to": "utils",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-components-examples",
+        "from": "components",
+        "to": "examples",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-data-packages-port-tag-tool--projectScanner",
+        "from": "data",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      },
+      {
+        "connectionId": "conn-data-dep-three",
+        "from": "data",
+        "to": "dep-three",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-examples-dep-three",
+        "from": "examples",
+        "to": "dep-three",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-utils-dep-three",
+        "from": "utils",
+        "to": "dep-three",
+        "tagId": "tag-agent-analyst-findings",
+        "label": "调研发现",
+        "shortLabel": "发现",
+        "flowType": "data",
+        "color": "#00BCD4",
+        "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }",
+        "sourceLabel": "发送: 调研发现(Markdown)",
+        "targetLabel": "接收: 调研发现(Markdown)",
+        "transform": "原始调研数据→结构化Markdown发现→分析师",
+        "description": "调研员向分析师传递初步调研结果"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool--cli-packages-port-tag-tool--projectScanner",
+        "from": "packages-port-tag-tool--cli",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      },
+      {
+        "connectionId": "conn-packages-port-tag-tool--mcp-server-packages-port-tag-tool--projectScanner",
+        "from": "packages-port-tag-tool--mcp-server",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      },
+      {
+        "connectionId": "conn-data--mcpLoader-packages-port-tag-tool--projectScanner",
+        "from": "data--mcpLoader",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      },
+      {
+        "connectionId": "conn-data--portRegistry-packages-port-tag-tool--projectScanner",
+        "from": "data--portRegistry",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      },
+      {
+        "connectionId": "conn-data--systemData-packages-port-tag-tool--projectScanner",
+        "from": "data--systemData",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      },
+      {
+        "connectionId": "conn-data--tagRegistry-packages-port-tag-tool--projectScanner",
+        "from": "data--tagRegistry",
+        "to": "packages-port-tag-tool--projectScanner",
+        "tagId": "tag-external-agent-command",
+        "label": "战略指令下发",
+        "shortLabel": "指令",
+        "flowType": "control",
+        "color": "#FFEB3B",
+        "transportContent": "高层战略指令 JSON: { command, target, priority, params }",
+        "sourceLabel": "发送: 战略指令(JSON/REST)",
+        "targetLabel": "接收: 战略指令(JSON/REST)",
+        "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)",
+        "description": "赵公明通过外部API向各模块下发高层战略指令"
+      }
+    ]
+  },
+  "flowTypes": {
+    "data": [
+      "调研发现"
+    ],
+    "control": [
+      "战略指令下发"
+    ]
+  },
+  "conflicts": [],
+  "source": "port-tag-tool v0.1.1",
+  "projectPath": "/Users/zhencheng/projects/hermes-3d-panorama",
+  "quality": {
+    "totalDirectoriesScanned": 33,
+    "totalFilesFound": 203,
+    "totalNodesGenerated": 43,
+    "totalConnectionsGenerated": 31,
+    "moduleIds": [
+      ".hermes",
+      "plugins",
+      "public",
+      "server",
+      "src",
+      "packages-3d-monitor",
+      "packages-port-tag-tool",
+      "components",
+      "data",
+      "examples",
+      "mcp",
+      "utils",
+      "packages-port-tag-tool--cli",
+      "packages-port-tag-tool--hermesExampleData",
+      "packages-port-tag-tool--index",
+      "packages-port-tag-tool--mcp-server",
+      "packages-port-tag-tool--portRegistry",
+      "packages-port-tag-tool--projectScanner",
+      "packages-port-tag-tool--tagRegistry",
+      "components--AccordionExpand",
+      "components--BillboardText",
+      "components--ConnectionLine",
+      "components--ErrorBoundary",
+      "components--HoverLabel",
+      "components--InfoPanel",
+      "components--NebulaLink",
+      "components--Node3D",
+      "components--PortMarker",
+      "components--SubRegion",
+      "data--mcpLoader",
+      "data--portRegistry",
+      "data--systemData",
+      "data--tagRegistry"
+    ],
+    "hasPackageJson": true,
+    "hasReadme": true,
+    "hasRequirementsTxt": false,
+    "buildTools": [
+      "vite"
+    ]
+  },
+  "buildTools": [
+    "vite"
+  ]
+}

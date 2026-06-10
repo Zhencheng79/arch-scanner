@@ -1,0 +1,474 @@
+{
+  "nodes": [
+    {
+      "id": "zhaogongming",
+      "label": "赵公明",
+      "layer": "command",
+      "chineseName": "主帅",
+      "chineseDesc": "Hermes团队主帅，统筹调度整个投研团队，向各部门下发指令"
+    },
+    {
+      "id": "strategist",
+      "label": "军师",
+      "layer": "command",
+      "chineseName": "参谋部",
+      "chineseDesc": "参谋部，负责制定投资策略和实施方案"
+    },
+    {
+      "id": "x-commissioner",
+      "label": "X专员",
+      "layer": "command",
+      "chineseName": "调度员",
+      "chineseDesc": "系统部调度员，负责调度Codex CLI执行编程任务"
+    },
+    {
+      "id": "research",
+      "label": "研究部",
+      "layer": "analysis",
+      "chineseName": "研究员",
+      "chineseDesc": "研究部，负责行业分析和公司调研，产出调研发现"
+    },
+    {
+      "id": "analyst-a",
+      "label": "分析师A",
+      "layer": "analysis",
+      "chineseName": "A角",
+      "chineseDesc": "分析师A，对调研数据进行深度分析，产出分析报告"
+    },
+    {
+      "id": "analyst-b",
+      "label": "分析师B",
+      "layer": "analysis",
+      "chineseName": "B角",
+      "chineseDesc": "分析师B，对调研数据进行深度分析，产出分析报告（平行验证）"
+    },
+    {
+      "id": "team-lead",
+      "label": "小队长",
+      "layer": "management",
+      "chineseName": "队长",
+      "chineseDesc": "小队长，合成分析师A/B的报告，形成决策建议"
+    },
+    {
+      "id": "risk-control",
+      "label": "风控部",
+      "layer": "risk",
+      "chineseName": "风控员",
+      "chineseDesc": "风控部，审核决策建议，检查风险合规性"
+    },
+    {
+      "id": "knowledge",
+      "label": "知识管理",
+      "layer": "knowledge",
+      "chineseName": "档案室",
+      "chineseDesc": "知识管理部，归档研究成果，管理知识库"
+    },
+    {
+      "id": "codex-cli",
+      "label": "Codex",
+      "layer": "execution",
+      "chineseName": "编程助手",
+      "chineseDesc": "编程助手，执行代码编写、系统优化等编程任务"
+    },
+    {
+      "id": "data-collector",
+      "label": "数据管家",
+      "layer": "data",
+      "chineseName": "数据采集",
+      "chineseDesc": "数据管家，从外部数据源采集原始数据"
+    },
+    {
+      "id": "duckdb",
+      "label": "数据仓库",
+      "layer": "data",
+      "chineseName": "DuckDB",
+      "chineseDesc": "数据仓库，存储结构化数据，支持SQL查询"
+    },
+    {
+      "id": "hermes-web",
+      "label": "投研管家",
+      "layer": "frontend",
+      "chineseName": "Web前端",
+      "chineseDesc": "投研管家Web前端，展示持仓、报告、信号等数据"
+    }
+  ],
+  "connections": [
+    {
+      "from": "zhaogongming",
+      "to": "strategist",
+      "flowType": "control",
+      "label": "战略指令"
+    },
+    {
+      "from": "zhaogongming",
+      "to": "research",
+      "flowType": "control",
+      "label": "调研指令"
+    },
+    {
+      "from": "zhaogongming",
+      "to": "x-commissioner",
+      "flowType": "control",
+      "label": "编程任务"
+    },
+    {
+      "from": "zhaogongming",
+      "to": "risk-control",
+      "flowType": "control",
+      "label": "风控指令"
+    },
+    {
+      "from": "strategist",
+      "to": "zhaogongming",
+      "flowType": "data",
+      "label": "方案交付"
+    },
+    {
+      "from": "research",
+      "to": "analyst-a",
+      "flowType": "data",
+      "label": "调研发现"
+    },
+    {
+      "from": "research",
+      "to": "analyst-b",
+      "flowType": "data",
+      "label": "调研发现"
+    },
+    {
+      "from": "analyst-a",
+      "to": "team-lead",
+      "flowType": "data",
+      "label": "分析报告"
+    },
+    {
+      "from": "analyst-b",
+      "to": "team-lead",
+      "flowType": "data",
+      "label": "分析报告"
+    },
+    {
+      "from": "team-lead",
+      "to": "risk-control",
+      "flowType": "control",
+      "label": "决策指令"
+    },
+    {
+      "from": "risk-control",
+      "to": "zhaogongming",
+      "flowType": "data",
+      "label": "风控结果"
+    },
+    {
+      "from": "x-commissioner",
+      "to": "codex-cli",
+      "flowType": "control",
+      "label": "代码调度"
+    },
+    {
+      "from": "codex-cli",
+      "to": "knowledge",
+      "flowType": "data",
+      "label": "结果归档"
+    },
+    {
+      "from": "data-collector",
+      "to": "duckdb",
+      "flowType": "data",
+      "label": "数据存储"
+    },
+    {
+      "from": "duckdb",
+      "to": "research",
+      "flowType": "data",
+      "label": "数据查询"
+    },
+    {
+      "from": "knowledge",
+      "to": "research",
+      "flowType": "data",
+      "label": "知识同步"
+    },
+    {
+      "from": "duckdb",
+      "to": "hermes-web",
+      "flowType": "data",
+      "label": "数据展示"
+    }
+  ],
+  "ports": [
+    {
+      "portId": "zhaogongming-out-conn-0",
+      "nodeId": "zhaogongming",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 战略指令",
+      "connectedTo": "strategist"
+    },
+    {
+      "portId": "strategist-in-conn-0",
+      "nodeId": "strategist",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 战略指令",
+      "connectedFrom": "zhaogongming"
+    },
+    {
+      "portId": "zhaogongming-out-conn-1",
+      "nodeId": "zhaogongming",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 调研指令",
+      "connectedTo": "research"
+    },
+    {
+      "portId": "research-in-conn-1",
+      "nodeId": "research",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 调研指令",
+      "connectedFrom": "zhaogongming"
+    },
+    {
+      "portId": "zhaogongming-out-conn-2",
+      "nodeId": "zhaogongming",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 编程任务",
+      "connectedTo": "x-commissioner"
+    },
+    {
+      "portId": "x-commissioner-in-conn-2",
+      "nodeId": "x-commissioner",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 编程任务",
+      "connectedFrom": "zhaogongming"
+    },
+    {
+      "portId": "zhaogongming-out-conn-3",
+      "nodeId": "zhaogongming",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 风控指令",
+      "connectedTo": "risk-control"
+    },
+    {
+      "portId": "risk-control-in-conn-3",
+      "nodeId": "risk-control",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 风控指令",
+      "connectedFrom": "zhaogongming"
+    },
+    {
+      "portId": "strategist-out-conn-4",
+      "nodeId": "strategist",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 方案交付",
+      "connectedTo": "zhaogongming"
+    },
+    {
+      "portId": "zhaogongming-in-conn-4",
+      "nodeId": "zhaogongming",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 方案交付",
+      "connectedFrom": "strategist"
+    },
+    {
+      "portId": "research-out-conn-5",
+      "nodeId": "research",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 调研发现",
+      "connectedTo": "analyst-a"
+    },
+    {
+      "portId": "analyst-a-in-conn-5",
+      "nodeId": "analyst-a",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 调研发现",
+      "connectedFrom": "research"
+    },
+    {
+      "portId": "research-out-conn-6",
+      "nodeId": "research",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 调研发现",
+      "connectedTo": "analyst-b"
+    },
+    {
+      "portId": "analyst-b-in-conn-6",
+      "nodeId": "analyst-b",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 调研发现",
+      "connectedFrom": "research"
+    },
+    {
+      "portId": "analyst-a-out-conn-7",
+      "nodeId": "analyst-a",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 分析报告",
+      "connectedTo": "team-lead"
+    },
+    {
+      "portId": "team-lead-in-conn-7",
+      "nodeId": "team-lead",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 分析报告",
+      "connectedFrom": "analyst-a"
+    },
+    {
+      "portId": "analyst-b-out-conn-8",
+      "nodeId": "analyst-b",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 分析报告",
+      "connectedTo": "team-lead"
+    },
+    {
+      "portId": "team-lead-in-conn-8",
+      "nodeId": "team-lead",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 分析报告",
+      "connectedFrom": "analyst-b"
+    },
+    {
+      "portId": "team-lead-out-conn-9",
+      "nodeId": "team-lead",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 决策指令",
+      "connectedTo": "risk-control"
+    },
+    {
+      "portId": "risk-control-in-conn-9",
+      "nodeId": "risk-control",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 决策指令",
+      "connectedFrom": "team-lead"
+    },
+    {
+      "portId": "risk-control-out-conn-10",
+      "nodeId": "risk-control",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 风控结果",
+      "connectedTo": "zhaogongming"
+    },
+    {
+      "portId": "zhaogongming-in-conn-10",
+      "nodeId": "zhaogongming",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 风控结果",
+      "connectedFrom": "risk-control"
+    },
+    {
+      "portId": "x-commissioner-out-conn-11",
+      "nodeId": "x-commissioner",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 代码调度",
+      "connectedTo": "codex-cli"
+    },
+    {
+      "portId": "codex-cli-in-conn-11",
+      "nodeId": "codex-cli",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 代码调度",
+      "connectedFrom": "x-commissioner"
+    },
+    {
+      "portId": "codex-cli-out-conn-12",
+      "nodeId": "codex-cli",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 结果归档",
+      "connectedTo": "knowledge"
+    },
+    {
+      "portId": "knowledge-in-conn-12",
+      "nodeId": "knowledge",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 结果归档",
+      "connectedFrom": "codex-cli"
+    },
+    {
+      "portId": "data-collector-out-conn-13",
+      "nodeId": "data-collector",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 数据存储",
+      "connectedTo": "duckdb"
+    },
+    {
+      "portId": "duckdb-in-conn-13",
+      "nodeId": "duckdb",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 数据存储",
+      "connectedFrom": "data-collector"
+    },
+    {
+      "portId": "duckdb-out-conn-14",
+      "nodeId": "duckdb",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 数据查询",
+      "connectedTo": "research"
+    },
+    {
+      "portId": "research-in-conn-14",
+      "nodeId": "research",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 数据查询",
+      "connectedFrom": "duckdb"
+    },
+    {
+      "portId": "knowledge-out-conn-15",
+      "nodeId": "knowledge",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 知识同步",
+      "connectedTo": "research"
+    },
+    {
+      "portId": "research-in-conn-15",
+      "nodeId": "research",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 知识同步",
+      "connectedFrom": "knowledge"
+    },
+    {
+      "portId": "duckdb-out-conn-16",
+      "nodeId": "duckdb",
+      "type": "output",
+      "color": "#F44336",
+      "label": "发送: 数据展示",
+      "connectedTo": "hermes-web"
+    },
+    {
+      "portId": "hermes-web-in-conn-16",
+      "nodeId": "hermes-web",
+      "type": "input",
+      "color": "#4CAF50",
+      "label": "接收: 数据展示",
+      "connectedFrom": "duckdb"
+    }
+  ],
+  "tags": {}
+}

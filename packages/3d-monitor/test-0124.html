@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor v0.1.24 — 验证测试</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a12;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;color:#e0e0e0}
+#testPanel{position:fixed;bottom:20px;right:20px;z-index:200;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 18px;max-width:320px;backdrop-filter:blur(12px);font-size:12px;line-height:1.6}
+#testPanel h3{font-size:13px;color:#4FC3F7;margin-bottom:8px}
+#testPanel .check{display:flex;align-items:center;gap:6px;padding:2px 0}
+#testPanel .check .status{width:16px;text-align:center;font-size:13px}
+#testPanel .check.pass .status{color:#66BB6A}
+#testPanel .check.fail .status{color:#FF5252}
+#testPanel .check.info .status{color:#4FC3F7}
+#testPanel button{background:rgba(79,195,247,0.15);border:1px solid rgba(79,195,247,0.3);color:#4FC3F7;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:11px;margin-top:6px}
+#testPanel button:hover{background:rgba(79,195,247,0.25)}
+#testResults{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px 18px;backdrop-filter:blur(12px);font-size:12px;display:none;max-height:80vh;overflow-y:auto;min-width:400px}
+#testResults h3{font-size:13px;color:#4FC3F7;margin-bottom:8px;text-align:center}
+#testResults .log-line{font-family:'SF Mono','Fira Code',monospace;font-size:11px;padding:1px 0}
+#testResults .log-pass{color:#66BB6A}
+#testResults .log-fail{color:#FF5252}
+#testResults .log-info{color:#888}
+</style>
+</head>
+<body>
+
+<!-- Embed the full viewer.html content -->
+<div id="viewerContainer" style="position:fixed;top:0;left:0;width:100%;height:100%"></div>
+
+<!-- Test panel -->
+<div id="testPanel">
+  <h3>🧪 v0.1.24 功能验证</h3>
+  <div class="check info"><span class="status">⏳</span>点击下方按钮执行测试</div>
+  <div class="check info"><span class="status">⏳</span>FPS: <span id="testFps">—</span></div>
+  <button onclick="runTests()">▶ 运行功能测试</button>
+</div>
+
+<!-- Test results -->
+<div id="testResults">
+  <h3>📋 测试结果</h3>
+  <div id="testLog"></div>
+  <button onclick="document.getElementById('testResults').style.display='none'" style="display:block;margin:8px auto 0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#ccc;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:11px">关闭</button>
+</div>
+
+<script>
+// ============================================================
+//  Test data generation
+// ============================================================
+
+var testNodes = [];
+var testConnections = [];
+var testTags = {};
+
+// Create a simple test topology: 4 layers, ~15 nodes
+var layers = ['infrastructure', 'data', 'business', 'presentation'];
+var layerLabels = { infrastructure: '基础设施层', data: '数据层', business: '业务逻辑层', presentation: '展示层' };
+var layerColors = { infrastructure: '#4A90D9', data: '#00BCD4', business: '#66BB6A', presentation: '#FFB74D' };
+
+function addNode(id, chineseName, layer, desc) {
+  testNodes.push({ id: id, chineseName: chineseName, layer: layer, description: desc || '' });
+}
+
+addNode('n-db', '数据库', 'data', '存储系统主数据库');
+addNode('n-api', 'API网关', 'business', '统一API入口');
+addNode('n-s3', '对象存储', 'data', 'S3兼容存储');
+addNode('n-redis', 'Redis缓存', 'data', '高性能缓存');
+addNode('n-auth', '认证服务', 'business', '用户认证授权');
+addNode('n-mq', '消息队列', 'business', '异步消息中间件');
+addNode('n-user', '用户服务', 'business', '用户管理核心服务');
+addNode('n-order', '订单服务', 'business', '订单处理服务');
+addNode('n-pay', '支付服务', 'business', '第三方支付集成');
+addNode('n-web', 'Web前端', 'presentation', '主站前端界面');
+addNode('n-admin', '管理后台', 'presentation', '内部管理界面');
+addNode('n-mobile', '移动端', 'presentation', '移动App后端代理');
+addNode('n-log', '日志中心', 'data', '集中日志收集');
+addNode('n-cdn', 'CDN', 'infrastructure', '内容分发网络');
+addNode('n-dns', 'DNS', 'infrastructure', '域名解析服务');
+
+function addConn(from, to, label, flowType) {
+  testConnections.push({ from: from, to: to, label: label || '', flowType: flowType || 'data' });
+}
+
+addConn('n-dns', 'n-web', '域名解析', 'control');
+addConn('n-cdn', 'n-web', '静态资源', 'control');
+addConn('n-web', 'n-api', 'HTTP请求', 'data');
+addConn('n-mobile', 'n-api', 'HTTP请求', 'data');
+addConn('n-api', 'n-auth', '验证请求', 'control');
+addConn('n-api', 'n-user', '用户查询', 'data');
+addConn('n-api', 'n-order', '订单操作', 'data');
+addConn('n-api', 'n-pay', '支付请求', 'control');
+addConn('n-api', 'n-mq', '消息投递', 'event');
+addConn('n-user', 'n-db', '用户数据', 'data');
+addConn('n-order', 'n-db', '订单数据', 'data');
+addConn('n-pay', 'n-db', '支付记录', 'data');
+addConn('n-auth', 'n-redis', '会话缓存', 'data');
+addConn('n-order', 'n-redis', '订单缓存', 'data');
+addConn('n-mq', 'n-log', '消息日志', 'event');
+addConn('n-db', 'n-log', '变更日志', 'event');
+addConn('n-s3', 'n-web', '静态文件', 'control');
+addConn('n-s3', 'n-mobile', '静态文件', 'control');
+addConn('n-admin', 'n-api', '管理请求', 'control');
+addConn('n-db', 'n-s3', '备份同步', 'data');
+
+testTags = {
+  tags: {}
+};
+Object.entries(layerColors).forEach(function(entry) {
+  testTags.tags[entry[0]] = { color: entry[1], label: layerLabels[entry[0]] };
+});
+
+// ============================================================
+//  Embedded test data (applied after viewer loads)
+// ============================================================
+
+window.__EMBEDDED_DATA__ = {
+  nodes: testNodes,
+  connections: testConnections,
+  ports: [],
+  tags: testTags
+};
+
+// ============================================================
+//  Functional tests
+// ============================================================
+
+function log(msg, type) {
+  var el = document.createElement('div');
+  el.className = 'log-line log-' + (type || 'info');
+  el.textContent = (type === 'pass' ? '✅ ' : type === 'fail' ? '❌ ' : 'ℹ️ ') + msg;
+  document.getElementById('testLog').appendChild(el);
+}
+
+function wait(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+async function runTests() {
+  var panel = document.getElementById('testResults');
+  var logEl = document.getElementById('testLog');
+  logEl.innerHTML = '';
+  panel.style.display = 'block';
+
+  log('开始 v0.1.24 功能测试...\n', 'info');
+
+  // Test 1: Viewer loaded
+  try {
+    if (typeof applyDimming === 'function') {
+      log('viewer.html已加载，全局函数可用', 'pass');
+    } else {
+      log('viewer.html未正确加载（applyDimming不可见）', 'fail');
+    }
+  } catch(e) {
+    log('viewer.html未加载: ' + e.message, 'fail');
+    return;
+  }
+
+  // Test 2: Fix 1 — continuous orbit check
+  try {
+    if (typeof _orbitEnabled !== 'undefined') {
+      log('环绕控制变量(_orbitEnabled)存在', 'pass');
+      log('_orbitEnabled = ' + _orbitEnabled, 'info');
+    } else {
+      log('_orbitEnabled未定义', 'fail');
+    }
+    if (typeof animate === 'function') {
+      log('animate循环函数存在', 'pass');
+    }
+    // Check that _levelLabel condition was removed
+    var source = animate.toString();
+    if (source.indexOf('_levelLabel') === -1 || source.indexOf('_orbitEnabled && !_userInteracting') >= 0) {
+      log('animate: 环绕条件已移除_levelLabel依赖', 'pass');
+    } else {
+      log('animate: 环绕条件仍然依赖_levelLabel', 'fail');
+    }
+  } catch(e) {
+    log('环绕检查异常: ' + e.message, 'fail');
+  }
+
+  // Test 3: Fix 2 — click/dblclick handlers
+  try {
+    if (typeof handleClick === 'function') {
+      log('handleClick函数存在', 'pass');
+    } else {
+      log('handleClick函数不存在', 'fail');
+    }
+    if (typeof handleDblClick === 'function') {
+      log('handleDblClick函数存在', 'pass');
+    } else {
+      log('handleDblClick函数不存在', 'fail');
+    }
+    if (typeof _clickTimer !== 'undefined') {
+      log('_clickTimer全局变量存在', 'pass');
+    }
+  } catch(e) {
+    log('双击/单击检查异常: ' + e.message, 'fail');
+  }
+
+  // Test 4: Test click isolation
+  try {
+    var clickCount = 0;
+    var dblClickCount = 0;
+    var origHighlight = highlightPathway;
+    var origSelect = selectUpstreamNode;
+
+    // Mock the functions to track calls
+    highlightPathway = function(nid) { clickCount++; };
+    selectUpstreamNode = function(nid) { dblClickCount++; };
+
+    // Simulate single click
+    handleClick('n-api');
+    await wait(400);
+    if (clickCount === 1) {
+      log('单击→highlightPathway触发 ✓', 'pass');
+    } else {
+      log('单击未触发highlightPathway (clickCount=' + clickCount + ')', 'fail');
+    }
+
+    // Reset
+    clickCount = 0;
+    dblClickCount = 0;
+
+    // Simulate double-click
+    handleClick('n-user');
+    handleDblClick('n-user');
+    await wait(100);
+    if (clickCount === 0 && dblClickCount === 1) {
+      log('双击→highlightPathway未触发, selectUpstreamNode触发 ✓', 'pass');
+      log('双击/单击事件隔离正常', 'pass');
+    } else {
+      log('双击隔离异常: click=' + clickCount + ', dblclick=' + dblClickCount, 'fail');
+    }
+
+    // Restore
+    highlightPathway = origHighlight;
+    selectUpstreamNode = origSelect;
+  } catch(e) {
+    log('双击/单击隔离测试异常: ' + e.message, 'fail');
+    highlightPathway = origHighlight;
+    selectUpstreamNode = origSelect;
+  }
+
+  // Test 5: Version
+  log('版本: ' + (document.title || 'unknown'), 'info');
+  if (document.title.indexOf('0.1.24') >= 0) {
+    log('版本号正确(0.1.24)', 'pass');
+  }
+
+  // Summary
+  log('\n--- 测试完成 ---', 'info');
+}
+
+// ============================================================
+//  Load viewer.html dynamically
+// ============================================================
+
+var xhr = new XMLHttpRequest();
+xhr.open('GET', './viewer.html?' + Date.now(), true);
+xhr.onload = function() {
+  var html = xhr.responseText;
+  // Extract script content and inline scripts
+  var scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
+  if (scripts) {
+    scripts.forEach(function(block) {
+      var code = block.replace(/<\/?script>/g, '');
+      try {
+        var s = document.createElement('script');
+        s.textContent = code;
+        document.body.appendChild(s);
+      } catch(e) {
+        console.error('Script eval error:', e);
+      }
+    });
+  }
+  // Extract CSS
+  var styles = html.match(/<style>([\s\S]*?)<\/style>/);
+  if (styles) {
+    var style = document.createElement('style');
+    style.textContent = styles[1];
+    document.head.appendChild(style);
+  }
+};
+xhr.onerror = function() {
+  document.getElementById('testLog').innerHTML = '<div class="log-line log-fail">❌ 加载 viewer.html 失败</div>';
+  document.getElementById('testResults').style.display = 'block';
+};
+xhr.send();
+
+// FPS display update
+setInterval(function() {
+  var fpsEl = document.getElementById('fps');
+  if (fpsEl) document.getElementById('testFps').textContent = fpsEl.textContent;
+  else document.getElementById('testFps').textContent = '—';
+}, 2000);
+</script>
+
+</body>
+</html>
