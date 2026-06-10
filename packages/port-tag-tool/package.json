@@ -1,0 +1,17 @@
+{
+  "name": "@hermes/port-tag-tool",
+  "version": "0.1.1",
+  "description": "MCP 端口标签工具 — 系统模块扫描、端口推导、标签管理、冲突检测",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./portRegistry": "./portRegistry.js",
+    "./tagRegistry": "./tagRegistry.js"
+  },
+  "bin": {
+    "port-tag": "./cli.js"
+  },
+  "keywords": ["mcp", "port", "tag", "registry", "visualization"],
+  "license": "MIT"
+}
