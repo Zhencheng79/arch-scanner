@@ -1,0 +1,51 @@
+{
+  "name": "system-3d-panorama",
+  "version": "0.1.17",
+  "description": "3D Panoramic Visualization for AI Agent System Architecture \u2014 Visualize nodes, connections, data flows in an interactive 3D space",
+  "keywords": [
+    "3d",
+    "visualization",
+    "architecture",
+    "react-three-fiber",
+    "ai-agent"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "homepage": "",
+  "bugs": {
+    "url": ""
+  },
+  "author": "",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.92.7",
+    "@react-three/fiber": "^8.15.12",
+    "@react-three/postprocessing": "^2.16.2",
+    "js-yaml": "^4.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "three": "^0.162.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.2.0"
+  },
+  "mcp": {
+    "entry": "./packages/port-tag-tool/mcp-server.js",
+    "tools": [
+      "scan_system",
+      "get_tags",
+      "get_node_ports",
+      "validate",
+      "summarize"
+    ]
+  }
+}

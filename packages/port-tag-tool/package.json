@@ -1,6 +1,6 @@
 {
   "name": "@hermes/port-tag-tool",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "MCP 端口标签工具 — 系统模块扫描、端口推导、标签管理、冲突检测",
   "type": "module",
   "main": "./index.js",
@@ -10,8 +10,22 @@
     "./tagRegistry": "./tagRegistry.js"
   },
   "bin": {
-    "port-tag": "./cli.js"
+    "port-tag": "cli.js"
   },
-  "keywords": ["mcp", "port", "tag", "registry", "visualization"],
-  "license": "MIT"
+  "keywords": [
+    "mcp",
+    "port",
+    "tag",
+    "registry",
+    "visualization"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "dependencies": {
+    "acorn": "^8.16.0",
+    "acorn-jsx": "^5.3.2"
+  }
 }
