@@ -403,6 +403,9 @@ function discoverModules(projectPath, fileList) {
       const childChineseDesc = fileChinese.chineseDesc || `${parentMod.chineseName}的子模块${childLabel}`;
       const childDescription = fileChinese.description || `File: ${basename(fileName)} in ${parentMod.relPath}`;
 
+      // Per-file imports/exports using extractImports (which uses AST with JSX support)
+      const { imports: fileImports_1, exports: fileExports_1 } = extractImports(fileName);
+
       childNodes.set(childId, {
         id: childId,
         label: childLabel,
@@ -410,13 +413,13 @@ function discoverModules(projectPath, fileList) {
         description: childDescription,
         chineseName: childChineseName,
         chineseDesc: childChineseDesc,
-        relPath: join(parentMod.relPath, fileName),
+        relPath: parentMod.relPath + '/' + basename(fileName),
         dirName: parentMod.dirName,
         fileCount: 1,
         files: [fileName],
         parent: parentModId,
-        imports: [],
-        exports: [],
+        imports: fileImports_1,
+        exports: fileExports_1,
       });
     }
   }
@@ -431,15 +434,155 @@ function discoverModules(projectPath, fileList) {
 
 // ===== 连接发现 =====
 
-function resolveModuleFromImport(importStr, modules) {
-  const clean = importStr.replace(/^\.\.?\//, '').replace(/\/[^/]*$/, '').replace(/\//g, '-').toLowerCase();
+function resolveModuleFromImport(importStr, modules, sourceModId, projectPath) {
+
+  // === Cross-directory relative import resolution (../) ===
+  // Must come BEFORE the clean direct-match because importStr like "../data/systemData"
+  // would be cleaned to "data" (a parent module), masking the intended child module "data--systemData".
+  if (importStr.startsWith("../") && sourceModId) {
+    const result = resolveCrossDirectoryImport(importStr, modules, sourceModId, projectPath);
+    if (result) return result;
+  }
+
+  // Try direct match after cleaning: ./foo -> foo, ../bar/baz -> bar-baz
+  const clean = importStr.replace(/^\.\.?\//, "").replace(/\/[^/]*$/, "").replace(/\//g, "-").toLowerCase();
+
+  // === V2 新增：子模块匹配 ===
+  // 如果 importStr 包含路径分隔符（/），最后一段可能是文件名
+  // 例如：../data/systemData → 最后一段是 systemData
+  const parts = importStr.replace(/^\.\.?\//, "").split("/");
+  if (parts.length >= 2) {
+    const parentName = parts[0].toLowerCase();
+    const childName = parts[parts.length - 1].replace(/\.\w+$/, "").toLowerCase();
+
+    // 先找父模块
+    let parentId = null;
+    for (const [id] of modules) {
+      if (id.toLowerCase() === parentName) { parentId = id; break; }
+    }
+
+    if (parentId) {
+      // 在父模块下找子模块：ID 格式为 "data--xxx"，文件路径包含 childName
+      for (const [id, mod] of modules) {
+        if (id.startsWith(parentId + "--")) {
+          // 检查模块的文件名是否匹配
+          if (mod.files && mod.files.length > 0) {
+            for (const f of mod.files) {
+              const baseName = f.split("/").pop().replace(/\.\w+$/, "").toLowerCase();
+              if (baseName === childName) return id;
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (modules.has(clean)) return clean;
+  // === Child module matching for same-directory relative imports (./) ===
+  // If sourceModId is e.g. "components--AccordionExpand" and import is "./Node3D",
+  // resolve against the parent directory's child nodes
+  if (sourceModId && importStr.startsWith('./')) {
+    const targetBase = importStr.replace(/^\.\//, '').replace(/\.[^.]+$/, '');
+    const targetId = targetBase.replace(/\//g, '-');
+
+    // Direct child match: check if any module ends with -- + targetId (case-insensitive)
+    for (const [id] of modules) {
+      if (id.toLowerCase().endsWith('--' + targetId.toLowerCase()) || id.toLowerCase() === targetId.toLowerCase()) return id;
+    }
+
+    // Try parent prefix + target (case-insensitive)
+    const parentPrefix = sourceModId.includes('--') ? sourceModId.split('--')[0] : sourceModId;
+    const lowerPrefix = parentPrefix.toLowerCase();
+    const lowerTargetId = targetId.toLowerCase();
+    for (const [id] of modules) {
+      const lowerId = id.toLowerCase();
+      if (lowerId === lowerPrefix + '--' + lowerTargetId) return id;
+    }
+  }
 
   // Try prefix/suffix match
   for (const [id, mod] of modules) {
     if (importStr.includes(mod.dirName)) return id;
     const importPath = importStr.replace(/^\.\.?\//, '');
     if (mod.relPath === importPath || mod.relPath.endsWith('/' + importPath) || importPath.endsWith(mod.relPath)) return id;
+  }
+
+  return null;
+}
+
+
+/**
+ * Resolve cross-directory relative imports (starting with ../).
+ *
+ * Key improvements over original code:
+ * 1. Uses sourceMod.relPath instead of dirname(sourceMod.files[0]) to compute the source directory,
+ *    because parent modules store only basenames in their files array.
+ * 2. When matching the resolved path, checks both child module files (which store absolute paths)
+ *    and child module relPath values.
+ */
+function resolveCrossDirectoryImport(importStr, modules, sourceModId, projectPath) {
+  
+  const sourceMod = modules.get(sourceModId);
+  if (!sourceMod) return null;
+
+  // Compute source directory using sourceMod.relPath (more reliable than files[0])
+  const sourceRelPath = sourceMod.relPath;
+  if (!sourceRelPath && (!sourceMod.files || sourceMod.files.length === 0)) return null;
+
+  let sourceDir;
+  if (sourceRelPath) {
+    // relPath is like "src/components" (parent) or "src/components/AccordionExpand.jsx" (child)
+    const sourceDirRel = sourceRelPath.includes("/") ? sourceRelPath.substring(0, sourceRelPath.lastIndexOf("/")) : ".";
+    sourceDir = projectPath ? projectPath + "/" + sourceDirRel : sourceDirRel;
+  } else {
+    // Fallback for older module entries that may not have relPath
+    const firstFile = sourceMod.files[0];
+    if (firstFile.startsWith("/")) {
+      sourceDir = firstFile.substring(0, firstFile.lastIndexOf("/"));
+    } else if (projectPath) {
+      const d = dirname(firstFile);
+      sourceDir = projectPath + "/" + (d === "." ? "" : d);
+    } else {
+      return null;
+    }
+  }
+
+  // Resolve ../ segments manually for robustness
+  const parts = importStr.split("/");
+  const dirParts = sourceDir.split("/");
+  for (const part of parts) {
+    if (part === "..") {
+      if (dirParts.length > 0) dirParts.pop();
+    } else if (part !== "." && part !== "") {
+      dirParts.push(part);
+    }
+  }
+    const resolvedPath = dirParts.join("/");
+
+  // Find matching module by comparing resolvedPath against module files (absolute paths) and relPath
+  for (const [id, mod] of modules) {
+    // Child modules store absolute paths in files
+    if (mod.files) {
+      for (const f of mod.files) {
+        const dotIdx = f.lastIndexOf(".");
+        const slashIdx = f.lastIndexOf("/");
+        const fNoExt = dotIdx > slashIdx ? f.substring(0, dotIdx) : f;
+        const rDotIdx = resolvedPath.lastIndexOf(".");
+        const rSlashIdx = resolvedPath.lastIndexOf("/");
+        const rNoExt = rDotIdx > rSlashIdx ? resolvedPath.substring(0, rDotIdx) : resolvedPath;
+                        if (fNoExt === rNoExt) return id;
+      }
+    }
+    // Match against mod.relPath (e.g. "src/data/tagRegistry.js")
+    if (mod.relPath) {
+      const rDotIdx = resolvedPath.lastIndexOf(".");
+      const rSlashIdx = resolvedPath.lastIndexOf("/");
+      const rNoExt = rDotIdx > rSlashIdx ? resolvedPath.substring(0, rDotIdx) : resolvedPath;
+      const mDotIdx = mod.relPath.lastIndexOf(".");
+      const mSlashIdx = mod.relPath.lastIndexOf("/");
+      const mNoExt = mDotIdx > mSlashIdx ? mod.relPath.substring(0, mDotIdx) : mod.relPath;
+      if (rNoExt.endsWith("/" + mNoExt) || rNoExt === mNoExt) return id;
+    }
   }
 
   return null;
@@ -509,7 +652,7 @@ function discoverConnections(projectPath, modules, pkg) {
       if (imp.startsWith('node:')) continue;
 
       // Internal module reference
-      const targetModId = resolveModuleFromImport(imp, modules);
+      const targetModId = resolveModuleFromImport(imp, modules, modId, projectPath);
       if (targetModId && targetModId !== modId) {
         const key = `${modId}->${targetModId}`;
         if (!seen.has(key)) {
