@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.15 — 恢复层配色+模块色边框辅助</title>
+<title>3D Monitor v0.1.40-node-spread.18 — 修复模块台面/箭头/详情面板渲染</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -2773,8 +2773,8 @@ function computeLayout(nodes) {
     });
 
     // v0.1.17: Assign X positions by group ordering
-    var groupSpacing = 2.5;     // spacing between groups (v0.1.40-node-spread.15)
-    var intraGroupSpacing = 1.1; // spacing within a group (v0.1.40-node-spread.15)
+    var groupSpacing = 2.5;     // spacing between groups (v0.1.40-node-spread.18)
+    var intraGroupSpacing = 1.1; // spacing within a group (v0.1.40-node-spread.18)
     var groupWidths = {};
     GROUP_X_ORDER.forEach(function(g) {
       var gb = groupBuckets[g] || [];
@@ -2805,7 +2805,7 @@ function computeLayout(nodes) {
       var groupZBase = GROUP_Z_OFFSETS[g] || 0;
 
       // v0.1.18: Multi-row layout — max 6 nodes per row, auto wrap on Z axis
-      var MAX_PER_ROW = 16; // v0.1.40-node-spread.15
+      var MAX_PER_ROW = 16; // v0.1.40-node-spread.18
       var rowCount = Math.ceil(gb.length / MAX_PER_ROW);
       var totalRows = rowCount;
 
@@ -2820,7 +2820,7 @@ function computeLayout(nodes) {
         var gx = offsetX + groupStarts[g] + colIndex * intraGroupSpacing;
 
         // Z: row depth offset — each new row shifts along Z axis
-        var rowZOffset = rowIndex * (NODE_SIZE_Z * 1.2); // v0.1.40-node-spread.15
+        var rowZOffset = rowIndex * (NODE_SIZE_Z * 1.2); // v0.1.40-node-spread.18
         var gz = groupZBase + rowZOffset + (Math.random() - 0.5) * 0.6;
 
         // v0.1.46: Y = layer center + random internal spread
@@ -2904,12 +2904,17 @@ function computeLayout(nodes) {
   });
 
 
-  // ─── v0.1.40-node-spread.09: Module clustering layout for presentation layer ───
+  // ─── v0.1.40-node-spread.18: Module clustering layout for all module-prefixed nodes ───
   window._moduleLayoutInfo = {};
-  var presBucket = layerBuckets['presentation'] || [];
-  if (presBucket.length > 0) {
-    var moduleMembers = {};
-    presBucket.forEach(function(n) {
+  var moduleMembers = {};
+  var moduleNodes = [];
+  // v0.1.40-node-spread.18: Collect all nodes with a detectable module prefix (not just presentation layer)
+  nodes.forEach(function(n) {
+    var mod = detectModule(n.id);
+    if (mod && mod !== 'other') moduleNodes.push(n);
+  });
+  if (moduleNodes.length > 0) {
+    moduleNodes.forEach(function(n) {
       var mod = detectModule(n.id);
       if (!moduleMembers[mod]) moduleMembers[mod] = [];
       moduleMembers[mod].push(n);
@@ -2942,7 +2947,7 @@ function computeLayout(nodes) {
 
   // ─── v0.1.40-node-spread.10: Module Y-layering ─────────────────────
   var moduleYLevels = {};
-  presBucket.forEach(function(n) {
+  moduleNodes.forEach(function(n) {
     var mod = detectModule(n.id);
     var idx = MODULE_Y_ORDER.indexOf(mod);
     if (idx === -1) idx = MODULE_Y_ORDER.indexOf('other');
@@ -3572,7 +3577,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
     mesh.add(edgeWire);
 
-    // v0.1.40-node-spread.15: Hub node detection
+    // v0.1.40-node-spread.18: Hub node detection
     var connCount = 0;
     if (dataConns) {
       dataConns.forEach(function(c) {
@@ -3736,7 +3741,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var cZ = (info.minZ + info.maxZ) / 2;
       var sX = info.maxX - info.minX + 5.0;
       var sZ = info.maxZ - info.minZ + 5.0;
-      var cY = info.avgY;
+      var cY = info.avgY - 1.8;
       var mc = info.color;
       var mc3 = new THREE.Color(mc);
       // Rounded rectangle shape
@@ -4811,7 +4816,7 @@ function animate() {
     fd.mesh.position.copy(pos);
   });
 
-  // v0.1.40-node-spread.15: Module flow arrows animation (moved from applyDimming)
+  // v0.1.40-node-spread.18: Module flow arrows animation (moved from applyDimming)
   _moduleFlowArrows.forEach(function(mfa) {
     mfa.progress += mfa.speed * delta;
     if (mfa.progress > 1.0) mfa.progress -= 1.0;
@@ -4819,7 +4824,7 @@ function animate() {
     mfa.mesh.position.copy(pt);
   });
 
-  // v0.1.40-node-spread.15: Hub node pulse animation
+  // v0.1.40-node-spread.18: Hub node pulse animation
   Object.keys(nodeMeshes).forEach(function(id) {
     var nm = nodeMeshes[id];
     if (nm.data && nm.data._isHub) {
@@ -4876,6 +4881,6 @@ if (embeddedData && embeddedData.nodes) {
 
 })();
 </script>
-<!-- 3d-monitor v0.1.40-node-spread.15 -->
+<!-- 3d-monitor v0.1.40-node-spread.18 -->
 </body>
 </html>
