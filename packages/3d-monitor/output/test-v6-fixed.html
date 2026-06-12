@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor — v2</title>
+<script>window.__EMBEDDED_DATA__ = {"nodes": [{"id": "zhaogongming", "label": "赵公明", "layer": "command", "chineseName": "主帅", "chineseDesc": "Hermes团队主帅，统筹调度整个投研团队，向各部门下发指令"}, {"id": "strategist", "label": "军师", "layer": "command", "chineseName": "参谋部", "chineseDesc": "参谋部，负责制定投资策略和实施方案"}, {"id": "x-commissioner", "label": "X专员", "layer": "command", "chineseName": "调度员", "chineseDesc": "系统部调度员，负责调度Codex CLI执行编程任务"}, {"id": "research", "label": "研究部", "layer": "analysis", "chineseName": "研究员", "chineseDesc": "研究部，负责行业分析和公司调研，产出调研发现"}, {"id": "analyst-a", "label": "分析师A", "layer": "analysis", "chineseName": "A角", "chineseDesc": "分析师A，对调研数据进行深度分析，产出分析报告"}, {"id": "analyst-b", "label": "分析师B", "layer": "analysis", "chineseName": "B角", "chineseDesc": "分析师B，对调研数据进行深度分析，产出分析报告（平行验证）"}, {"id": "team-lead", "label": "小队长", "layer": "management", "chineseName": "队长", "chineseDesc": "小队长，合成分析师A/B的报告，形成决策建议"}, {"id": "risk-control", "label": "风控部", "layer": "risk", "chineseName": "风控员", "chineseDesc": "风控部，审核决策建议，检查风险合规性"}, {"id": "knowledge", "label": "知识管理", "layer": "knowledge", "chineseName": "档案室", "chineseDesc": "知识管理部，归档研究成果，管理知识库"}, {"id": "codex-cli", "label": "Codex", "layer": "execution", "chineseName": "编程助手", "chineseDesc": "编程助手，执行代码编写、系统优化等编程任务"}, {"id": "data-collector", "label": "数据管家", "layer": "data", "chineseName": "数据采集", "chineseDesc": "数据管家，从外部数据源采集原始数据"}, {"id": "duckdb", "label": "数据仓库", "layer": "data", "chineseName": "DuckDB", "chineseDesc": "数据仓库，存储结构化数据，支持SQL查询"}, {"id": "hermes-web", "label": "投研管家", "layer": "frontend", "chineseName": "Web前端", "chineseDesc": "投研管家Web前端，展示持仓、报告、信号等数据"}], "connections": [{"from": "zhaogongming", "to": "strategist", "flowType": "control", "label": "战略指令"}, {"from": "zhaogongming", "to": "research", "flowType": "control", "label": "调研指令"}, {"from": "zhaogongming", "to": "x-commissioner", "flowType": "control", "label": "编程任务"}, {"from": "zhaogongming", "to": "risk-control", "flowType": "control", "label": "风控指令"}, {"from": "strategist", "to": "zhaogongming", "flowType": "data", "label": "方案交付"}, {"from": "research", "to": "analyst-a", "flowType": "data", "label": "调研发现"}, {"from": "research", "to": "analyst-b", "flowType": "data", "label": "调研发现"}, {"from": "analyst-a", "to": "team-lead", "flowType": "data", "label": "分析报告"}, {"from": "analyst-b", "to": "team-lead", "flowType": "data", "label": "分析报告"}, {"from": "team-lead", "to": "risk-control", "flowType": "control", "label": "决策指令"}, {"from": "risk-control", "to": "zhaogongming", "flowType": "data", "label": "风控结果"}, {"from": "x-commissioner", "to": "codex-cli", "flowType": "control", "label": "代码调度"}, {"from": "codex-cli", "to": "knowledge", "flowType": "data", "label": "结果归档"}, {"from": "data-collector", "to": "duckdb", "flowType": "data", "label": "数据存储"}, {"from": "duckdb", "to": "research", "flowType": "data", "label": "数据查询"}, {"from": "knowledge", "to": "research", "flowType": "data", "label": "知识同步"}, {"from": "duckdb", "to": "hermes-web", "flowType": "data", "label": "数据展示"}], "ports": [{"portId": "zhaogongming-out-conn-0", "nodeId": "zhaogongming", "type": "output", "color": "#F44336", "label": "发送: 战略指令", "connectedTo": "strategist"}, {"portId": "strategist-in-conn-0", "nodeId": "strategist", "type": "input", "color": "#4CAF50", "label": "接收: 战略指令", "connectedFrom": "zhaogongming"}, {"portId": "zhaogongming-out-conn-1", "nodeId": "zhaogongming", "type": "output", "color": "#F44336", "label": "发送: 调研指令", "connectedTo": "research"}, {"portId": "research-in-conn-1", "nodeId": "research", "type": "input", "color": "#4CAF50", "label": "接收: 调研指令", "connectedFrom": "zhaogongming"}, {"portId": "zhaogongming-out-conn-2", "nodeId": "zhaogongming", "type": "output", "color": "#F44336", "label": "发送: 编程任务", "connectedTo": "x-commissioner"}, {"portId": "x-commissioner-in-conn-2", "nodeId": "x-commissioner", "type": "input", "color": "#4CAF50", "label": "接收: 编程任务", "connectedFrom": "zhaogongming"}, {"portId": "zhaogongming-out-conn-3", "nodeId": "zhaogongming", "type": "output", "color": "#F44336", "label": "发送: 风控指令", "connectedTo": "risk-control"}, {"portId": "risk-control-in-conn-3", "nodeId": "risk-control", "type": "input", "color": "#4CAF50", "label": "接收: 风控指令", "connectedFrom": "zhaogongming"}, {"portId": "strategist-out-conn-4", "nodeId": "strategist", "type": "output", "color": "#F44336", "label": "发送: 方案交付", "connectedTo": "zhaogongming"}, {"portId": "zhaogongming-in-conn-4", "nodeId": "zhaogongming", "type": "input", "color": "#4CAF50", "label": "接收: 方案交付", "connectedFrom": "strategist"}, {"portId": "research-out-conn-5", "nodeId": "research", "type": "output", "color": "#F44336", "label": "发送: 调研发现", "connectedTo": "analyst-a"}, {"portId": "analyst-a-in-conn-5", "nodeId": "analyst-a", "type": "input", "color": "#4CAF50", "label": "接收: 调研发现", "connectedFrom": "research"}, {"portId": "research-out-conn-6", "nodeId": "research", "type": "output", "color": "#F44336", "label": "发送: 调研发现", "connectedTo": "analyst-b"}, {"portId": "analyst-b-in-conn-6", "nodeId": "analyst-b", "type": "input", "color": "#4CAF50", "label": "接收: 调研发现", "connectedFrom": "research"}, {"portId": "analyst-a-out-conn-7", "nodeId": "analyst-a", "type": "output", "color": "#F44336", "label": "发送: 分析报告", "connectedTo": "team-lead"}, {"portId": "team-lead-in-conn-7", "nodeId": "team-lead", "type": "input", "color": "#4CAF50", "label": "接收: 分析报告", "connectedFrom": "analyst-a"}, {"portId": "analyst-b-out-conn-8", "nodeId": "analyst-b", "type": "output", "color": "#F44336", "label": "发送: 分析报告", "connectedTo": "team-lead"}, {"portId": "team-lead-in-conn-8", "nodeId": "team-lead", "type": "input", "color": "#4CAF50", "label": "接收: 分析报告", "connectedFrom": "analyst-b"}, {"portId": "team-lead-out-conn-9", "nodeId": "team-lead", "type": "output", "color": "#F44336", "label": "发送: 决策指令", "connectedTo": "risk-control"}, {"portId": "risk-control-in-conn-9", "nodeId": "risk-control", "type": "input", "color": "#4CAF50", "label": "接收: 决策指令", "connectedFrom": "team-lead"}, {"portId": "risk-control-out-conn-10", "nodeId": "risk-control", "type": "output", "color": "#F44336", "label": "发送: 风控结果", "connectedTo": "zhaogongming"}, {"portId": "zhaogongming-in-conn-10", "nodeId": "zhaogongming", "type": "input", "color": "#4CAF50", "label": "接收: 风控结果", "connectedFrom": "risk-control"}, {"portId": "x-commissioner-out-conn-11", "nodeId": "x-commissioner", "type": "output", "color": "#F44336", "label": "发送: 代码调度", "connectedTo": "codex-cli"}, {"portId": "codex-cli-in-conn-11", "nodeId": "codex-cli", "type": "input", "color": "#4CAF50", "label": "接收: 代码调度", "connectedFrom": "x-commissioner"}, {"portId": "codex-cli-out-conn-12", "nodeId": "codex-cli", "type": "output", "color": "#F44336", "label": "发送: 结果归档", "connectedTo": "knowledge"}, {"portId": "knowledge-in-conn-12", "nodeId": "knowledge", "type": "input", "color": "#4CAF50", "label": "接收: 结果归档", "connectedFrom": "codex-cli"}, {"portId": "data-collector-out-conn-13", "nodeId": "data-collector", "type": "output", "color": "#F44336", "label": "发送: 数据存储", "connectedTo": "duckdb"}, {"portId": "duckdb-in-conn-13", "nodeId": "duckdb", "type": "input", "color": "#4CAF50", "label": "接收: 数据存储", "connectedFrom": "data-collector"}, {"portId": "duckdb-out-conn-14", "nodeId": "duckdb", "type": "output", "color": "#F44336", "label": "发送: 数据查询", "connectedTo": "research"}, {"portId": "research-in-conn-14", "nodeId": "research", "type": "input", "color": "#4CAF50", "label": "接收: 数据查询", "connectedFrom": "duckdb"}, {"portId": "knowledge-out-conn-15", "nodeId": "knowledge", "type": "output", "color": "#F44336", "label": "发送: 知识同步", "connectedTo": "research"}, {"portId": "research-in-conn-15", "nodeId": "research", "type": "input", "color": "#4CAF50", "label": "接收: 知识同步", "connectedFrom": "knowledge"}, {"portId": "duckdb-out-conn-16", "nodeId": "duckdb", "type": "output", "color": "#F44336", "label": "发送: 数据展示", "connectedTo": "hermes-web"}, {"portId": "hermes-web-in-conn-16", "nodeId": "hermes-web", "type": "input", "color": "#4CAF50", "label": "接收: 数据展示", "connectedFrom": "duckdb"}], "tags": {}};</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0a12;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+canvas{display:block}
+#tooltip{position:fixed;pointer-events:none;background:rgba(8,8,16,0.92);color:#e0e0e0;padding:8px 14px;border-radius:8px;font-size:13px;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;z-index:1000;max-width:280px;line-height:1.5;box-shadow:0 4px 24px rgba(0,0,0,0.6)}
+#tooltip .tt-name{color:#fff;font-weight:600;font-size:14px;margin-bottom:2px}
+#tooltip .tt-desc{color:#aaa;font-size:12px}
+#tooltip .tt-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin-top:4px;margin-right:4px}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,0.8)}
+#stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.4);pointer-events:none;font-family:'SF Mono','Fira Code',monospace;line-height:1.6}
+#stats b{color:#4FC3F7}
+#legend{position:fixed;bottom:20px;left:20px;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px)}
+#legend .row{display:flex;align-items:center;gap:8px}
+#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+.label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
+#nodeInfoPanel{position:fixed;top:20px;right:20px;z-index:100;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;min-width:280px;max-width:380px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;pointer-events:none;font-size:13px;color:#e0e0e0;line-height:1.6}
+#nodeInfoPanel .nip-name{color:#fff;font-weight:600;font-size:16px;margin-bottom:6px}
+#nodeInfoPanel .nip-desc{color:#aaa;font-size:13px;margin-bottom:8px}
+#nodeInfoPanel .nip-ext{display:flex;align-items:center;gap:6px;color:#4FC3F7;font-size:12px}
+#nodeInfoPanel .nip-ext .nip-badge{display:inline-block;background:rgba(79,195,247,0.15);border:1px solid rgba(79,195,247,0.3);border-radius:4px;padding:2px 8px;font-size:11px;color:#4FC3F7}
+#nodeInfoPanel .nip-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:8px 0}
+#nodeInfoPanel .nip-section{font-size:11px;color:#999;margin-bottom:4px;font-weight:500;letter-spacing:0.3px;text-transform:uppercase}
+#nodeInfoPanel .nip-port{display:flex;align-items:center;gap:6px;font-size:12px;padding:2px 0;line-height:1.4}
+#nodeInfoPanel .nip-port .nip-port-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+#nodeInfoPanel .nip-port .nip-port-label{color:#ccc}
+#nodeInfoPanel .nip-port .nip-port-conn{color:#777;font-size:11px;margin-left:auto;text-align:right}
+#nodeInfoPanel .nip-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin:2px 4px 2px 0;background:rgba(255,255,255,0.08);color:#aaa}
+#nodeInfoPanel .nip-layer{font-size:11px;color:#888;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="tooltip"></div>
+<div id="nodeInfoPanel"></div>
+<div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges</div>
+<div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点选中 · 双击空白脱选 · 悬停查看信息</div>
+<div id="legend">
+<div class="row"><span class="dot" style="background:#FFEB3B"></span>Command 层</div>
+<div class="row"><span class="dot" style="background:#00BCD4"></span>Data 层</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
+<span class="line-sample" style="background:#FFEB3B"></span>control
+<span class="line-sample" style="background:#00BCD4;margin-left:6px"></span>data
+<span class="line-sample" style="background:#E040FB;margin-left:6px"></span>event
+<span class="line-sample" style="background:#7B1FA2;margin-left:6px"></span>knowledge
+</div>
+</div>
+
+<!-- Three.js from CDN -->
+<!-- THREE_JS_INLINE -->
+<!-- OrbitControls -->
+<!-- ORBIT_CONTROLS_INLINE -->
+<!-- CSS2DRenderer -->
+<!-- CSS2D_RENDERER_INLINE -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  3D Topology Viewer v2 — Chip-style nodes, circuit board feel
+// ═══════════════════════════════════════════════════════════════════
+
+(function() {
+'use strict';
+
+var scene, camera, renderer, labelRenderer, controls;
+var nodeGroup, edgeGroup, portGroup;
+var flowDots = [];        // { mesh, edgeInfo, progress, speed }
+var flowDotsGroup;
+var nodeMeshes = {};      // nodeId -> { mesh, data, ports: [], edges: [] }
+var edgeLines = [];       // { line, glowLine, conn, fromId, toId }
+var portMeshes = {};      // portId -> mesh
+var raycaster, mouse, tooltipEl;
+var selectedNodeId = null;
+var clock = new THREE.Clock();
+var autoRotate = true;
+var autoRotateTimer = null;
+var autoRotateSpeed = 0.002;
+var _mouseDownPos = { x: 0, y: 0 };
+var _isDragging = false;
+var _dragThreshold = 5; // pixels for drag detection
+
+// ─── Layer config ──────────────────────────────────────────────────
+var LAYER_CONFIG = {
+  command:  { y: 6,  color: 0xFFEB3B, label: 'Command' },
+  control:  { y: 6,  color: 0xFFEB3B, label: 'Control' },
+  data:     { y: 3,  color: 0x00BCD4, label: 'Data' },
+  analysis: { y: 0,  color: 0x81C784, label: 'Analysis' },
+  frontend: { y: 0,  color: 0xFFB74D, label: 'Frontend' },
+  backend:  { y: 0,  color: 0x42A5F5, label: 'Backend' },
+  feature:  { y: 1,  color: 0x42A5F5, label: 'Feature' },
+  build:    { y: -1, color: 0x66BB6A, label: 'Build' },
+  config:   { y: -1, color: 0x9E9E9E, label: 'Config' },
+  infrastructure: { y: -2, color: 0x4A90D9, label: 'Infra' },
+  risk:     { y: 3,  color: 0xF44336, label: 'Risk' },
+  decision: { y: 6,  color: 0xCE93D8, label: 'Decision' },
+  external: { y: -2, color: 0xFF7043, label: 'External' },
+  management: { y: 4, color: 0xFFB74D, label: 'Management' },
+};
+
+var FLOW_COLORS = {
+  control:  0xFFEB3B,
+  data:     0x00BCD4,
+  event:    0xE040FB,
+  knowledge: 0x7B1FA2,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════════
+
+function init() {
+  tooltipEl = document.getElementById('tooltip');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a12);
+  scene.fog = new THREE.Fog(0x0a0a12, 25, 45);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(12, 8, 14);
+  camera.lookAt(0, 0, 0);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  document.body.appendChild(renderer.domElement);
+
+  // CSS2D Renderer for labels
+  labelRenderer = new THREE.CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  document.body.appendChild(labelRenderer.domElement);
+
+  // OrbitControls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+  controls.maxPolarAngle = Math.PI / 2.1;
+  controls.addEventListener('start', function() { autoRotate = false; if (autoRotateTimer) { clearTimeout(autoRotateTimer); autoRotateTimer = null; } });
+  controls.addEventListener('end', function() {
+    if (autoRotateTimer) clearTimeout(autoRotateTimer);
+    autoRotateTimer = setTimeout(function() {
+      autoRotate = true;
+      autoRotateTimer = null;
+    }, 6500);
+  });
+
+  // Raycaster
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Groups
+  nodeGroup = new THREE.Group();
+  edgeGroup = new THREE.Group();
+  portGroup = new THREE.Group();
+  flowDotsGroup = new THREE.Group();
+  scene.add(nodeGroup);
+  scene.add(edgeGroup);
+  scene.add(portGroup);
+  scene.add(flowDotsGroup);
+
+  // Lights
+  var ambient = new THREE.AmbientLight(0x404060, 0.6);
+  scene.add(ambient);
+  var dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+  var fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+  fillLight.position.set(-10, 5, -10);
+  scene.add(fillLight);
+  var rimLight = new THREE.DirectionalLight(0xff8844, 0.3);
+  rimLight.position.set(0, -10, 15);
+  scene.add(rimLight);
+
+  // Grid background (circuit board feel)
+  createGrid();
+
+  // Events
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('dblclick', onDblClick);
+  renderer.domElement.addEventListener('mousedown', onMouseDown);
+  renderer.domElement.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('resize', onResize);
+
+  // Start
+  animate();
+}
+
+// ─── Grid background ────────────────────────────────────────────────
+function createGrid() {
+  // Main ground grid
+  var gridHelper = new THREE.GridHelper(40, 40, 0x1a3a5a, 0x0d1f33);
+  gridHelper.position.y = -3;
+  scene.add(gridHelper);
+
+  // Secondary fine grid
+  var gridGeo = new THREE.BufferGeometry();
+  var step = 0.5;
+  var size = 20;
+  var points = [];
+  for (var i = -size; i <= size; i += step) {
+    points.push(-size, -3, i, size, -3, i);
+    points.push(i, -3, -size, i, -3, size);
+  }
+  var fineGrid = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(points, 3)),
+    new THREE.LineBasicMaterial({ color: 0x0d1f33, transparent: true, opacity: 0.3 })
+  );
+  scene.add(fineGrid);
+
+  // Circuit board dots at intersections
+  var dotGeo = new THREE.BufferGeometry();
+  var dotPositions = [];
+  for (var x = -size; x <= size; x += 1) {
+    for (var z = -size; z <= size; z += 1) {
+      dotPositions.push(x, -3, z);
+    }
+  }
+  dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
+  var dotMat = new THREE.PointsMaterial({
+    color: 0x1a4a6a,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.4,
+  });
+  var dots = new THREE.Points(dotGeo, dotMat);
+  scene.add(dots);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Layout — Layer-based stacking with horizontal grid
+// ═══════════════════════════════════════════════════════════════════
+
+function computeLayout(nodes) {
+  // Group nodes by layer
+  var layerMap = {};
+  var layerOrder = [];
+  nodes.forEach(function(n) {
+    var layer = n.layer || 'default';
+    if (!layerMap[layer]) {
+      layerMap[layer] = [];
+      layerOrder.push(layer);
+    }
+    layerMap[layer].push(n);
+  });
+
+  // Sort layers by Y height (highest first)
+  layerOrder.sort(function(a, b) {
+    var ya = (LAYER_CONFIG[a] || LAYER_CONFIG['default'] || { y: 0 }).y;
+    var yb = (LAYER_CONFIG[b] || LAYER_CONFIG['default'] || { y: 0 }).y;
+    return yb - ya;
+  });
+
+  var spacing = 3.5;
+  var positions = {};
+  // Track z-offset per y-level to spread overlapping layers apart
+  var yLevelZIndex = {};
+  var zSpacing = 3.0; // node depth is 1.2, so 3.0 center-to-center = 1.8 edge-to-edge
+
+  layerOrder.forEach(function(layer) {
+    var layerNodes = layerMap[layer];
+    var yPos = (LAYER_CONFIG[layer] || { y: 0 }).y;
+    var count = layerNodes.length;
+    var rowWidth = (count - 1) * spacing;
+
+    // Assign z-offset for this y-level (increment for each layer at same y)
+    if (yLevelZIndex[yPos] === undefined) yLevelZIndex[yPos] = 0;
+    var zOffset = yLevelZIndex[yPos] * zSpacing;
+    yLevelZIndex[yPos]++;
+
+    layerNodes.forEach(function(n, i) {
+      var xPos = -rowWidth / 2 + i * spacing;
+      positions[n.id] = { x: xPos, y: yPos, z: zOffset };
+    });
+  });
+
+  return positions;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Build Scene
+// ═══════════════════════════════════════════════════════════════════
+
+
+// ─── Helpers for pipe obstacle avoidance ──────────────────────────
+function getNodeBox(nodeId, positions) {
+  var pos = positions[nodeId];
+  if (!pos) return null;
+  var size = 1.2;
+  var margin = 0.08; // small margin for better collision detection
+  return {
+    minX: pos.x - size * 0.5 - margin,
+    maxX: pos.x + size * 0.5 + margin,
+    minY: pos.y - size * 0.3 - margin,
+    maxY: pos.y + size * 0.3 + margin,
+    minZ: pos.z - size * 0.5 - margin,
+    maxZ: pos.z + size * 0.5 + margin,
+  };
+}
+
+function pointInBox(px, py, pz, box) {
+  return px >= box.minX && px <= box.maxX &&
+         py >= box.minY && py <= box.maxY &&
+         pz >= box.minZ && pz <= box.maxZ;
+}
+
+function linePenetratesBox(x1, y1, z1, x2, y2, z2, box, steps) {
+  steps = steps || 10;
+  for (var i = 1; i < steps; i++) {
+    var t = i / steps;
+    var px = x1 + (x2 - x1) * t;
+    var py = y1 + (y2 - y1) * t;
+    var pz = z1 + (z2 - z1) * t;
+    if (pointInBox(px, py, pz, box)) return true;
+  }
+  return false;
+}
+
+function findObstacles(fromId, toId, nodeIds, positions) {
+  var fromPos = positions[fromId];
+  var toPos = positions[toId];
+  if (!fromPos || !toPos) return [];
+  var obstacles = [];
+  nodeIds.forEach(function(nid) {
+    if (nid === fromId || nid === toId) return;
+    var box = getNodeBox(nid, positions);
+    if (!box) return;
+    if (linePenetratesBox(fromPos.x, fromPos.y, fromPos.z, toPos.x, toPos.y, toPos.z, box, 24)) {
+      obstacles.push({ id: nid, box: box, pos: positions[nid] });
+    }
+  });
+  return obstacles;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Pipe-vs-Pipe Crossing Detection & Elevation
+// ═══════════════════════════════════════════════════════════════════
+// Detect crossing pipes in XZ plane and assign elevation offsets so
+// crossing pipes are vertically separated, mimicking PCB routing.
+var pipeElevations = {};  // "fromId->toId" -> base elevation offset
+var pipeCrossings = [];   // metadata about which pipes cross
+
+function computePipeCrossings(allConns, positions) {
+  pipeElevations = {};
+  pipeCrossings = [];
+
+  // Build segment list
+  var segs = [];
+  allConns.forEach(function(conn) {
+    var fp = positions[conn.from];
+    var tp = positions[conn.to];
+    if (!fp || !tp) return;
+    var key = conn.from + '->' + conn.to;
+    segs.push({
+      key: key, from: conn.from, to: conn.to,
+      fromPos: fp, toPos: tp,
+      dx: tp.x - fp.x, dz: tp.z - fp.z,
+    });
+  });
+
+  // Check every pair for XZ intersection
+  for (var i = 0; i < segs.length; i++) {
+    for (var j = i + 1; j < segs.length; j++) {
+      var a = segs[i], b = segs[j];
+      // Skip if they share an endpoint
+      if (a.from === b.from || a.from === b.to || a.to === b.from || a.to === b.to) continue;
+
+      // Line intersection in XZ plane
+      var x1 = a.fromPos.x, z1 = a.fromPos.z;
+      var x2 = a.toPos.x,   z2 = a.toPos.z;
+      var x3 = b.fromPos.x, z3 = b.fromPos.z;
+      var x4 = b.toPos.x,   z4 = b.toPos.z;
+
+      var denom = (x1 - x2) * (z3 - z4) - (z1 - z2) * (x3 - x4);
+      if (Math.abs(denom) < 0.0001) continue; // parallel
+
+      var t = ((x1 - x3) * (z3 - z4) - (z1 - z3) * (x3 - x4)) / denom;
+      var u = -((x1 - x2) * (z1 - z3) - (z1 - z2) * (x1 - x3)) / denom;
+
+      var m = 0.01;
+      if (t >= m && t <= 1 - m && u >= m && u <= 1 - m) {
+        var cx = x1 + t * (x2 - x1);
+        var cz = z1 + t * (z2 - z1);
+        pipeCrossings.push({
+          pipeA: a.key, pipeB: b.key,
+          crossX: cx, crossZ: cz,
+          a: a, b: b,
+          t: t, u: u,
+        });
+      }
+    }
+  }
+
+  // Assign elevation: pipes with more crossings ride higher
+  var crossingCount = {};
+  pipeCrossings.forEach(function(cr) {
+    crossingCount[cr.pipeA] = (crossingCount[cr.pipeA] || 0) + 1;
+    crossingCount[cr.pipeB] = (crossingCount[cr.pipeB] || 0) + 1;
+  });
+
+  allConns.forEach(function(conn) {
+    var key = conn.from + '->' + conn.to;
+    var cnt = crossingCount[key] || 0;
+    pipeElevations[key] = cnt * 0.3;
+  });
+
+  // For each crossing pair, ensure >= 0.5 vertical separation
+  pipeCrossings.forEach(function(cr) {
+    var elA = pipeElevations[cr.pipeA] || 0;
+    var elB = pipeElevations[cr.pipeB] || 0;
+    if (Math.abs(elA - elB) < 0.4) {
+      // Bump the one with more distance between its endpoints higher
+      var distA = cr.a.fromPos.distanceTo ? cr.a.fromPos.distanceTo(cr.a.toPos) : 0;
+      var distB = cr.b.fromPos.distanceTo ? cr.b.fromPos.distanceTo(cr.b.toPos) : 0;
+      if (distA > distB) {
+        pipeElevations[cr.pipeA] = Math.max(elA, elB) + 0.5;
+      } else {
+        pipeElevations[cr.pipeB] = Math.max(elA, elB) + 0.5;
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Improved Compute Avoidance Curve
+// ═══════════════════════════════════════════════════════════════════
+
+function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
+  var dist = p1.distanceTo(p2);
+  var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+  var pipeElevKey = (fromId || '') + '->' + (toId || '');
+  var baseElev = pipeElevations[pipeElevKey] || 0;
+
+  if (obstacles.length === 0) {
+    var curveHeight = Math.min(dist * 0.2, 2.5) + baseElev * 0.15;
+    // Add slight lateral spread based on fromId-toId hash
+    // so parallel pipes don't overlap
+    var hash = 0;
+    var keyStr = (fromId || '') + (toId || '');
+    for (var _hi = 0; _hi < keyStr.length; _hi++) hash = ((hash << 5) - hash) + keyStr.charCodeAt(_hi);
+    var latSpread = (hash % 7 - 3) * 0.12; // -0.36 to 0.36 lateral offset
+    var cp1 = new THREE.Vector3(
+      mid.x + (p1.z - p2.z) * 0.15 + latSpread,
+      mid.y + curveHeight + baseElev,
+      mid.z + (p2.x - p1.x) * 0.15 + latSpread
+    );
+    var cp2 = new THREE.Vector3(
+      mid.x + (p1.z - p2.z) * 0.08 + latSpread * 0.6,
+      mid.y + curveHeight * 0.7 + baseElev * 0.7,
+      mid.z + (p2.x - p1.x) * 0.08 + latSpread * 0.6
+    );
+    return new THREE.CubicBezierCurve3(p1, cp1, cp2, p2);
+  }
+
+  // ----- Iterative multi-waypoint router with improved obstacle avoidance -----
+  var waypoints = [];
+  var maxIter = 10;
+  var iter = 0;
+  var sampleRes = 28;
+  var NODE_RADIUS = 0.68;
+
+  while (iter < maxIter) {
+    var allPts = buildPathPoints(p1, p2, waypoints, sampleRes);
+    var curve = new THREE.CatmullRomCurve3(allPts);
+
+    // Check each obstacle with fine sampling
+    var blocked = false;
+    var blockedBy = null;
+    var blockBestIdx = -1;
+    obstacles.forEach(function(o) {
+      if (blocked) return;
+      var box = o.box;
+      // Sample more densely for intersection test
+      for (var si = 0; si < allPts.length; si++) {
+        if (pointInBox(allPts[si].x, allPts[si].y, allPts[si].z, box)) {
+          blocked = true;
+          blockedBy = o;
+          blockBestIdx = si;
+          break;
+        }
+      }
+    });
+
+    if (!blocked) return curve;
+
+    var bPos = blockedBy.pos;
+
+    // Project obstacle onto p1->p2 axis to find where it sits
+    var axis = new THREE.Vector3().subVectors(p2, p1);
+    var axisLen = axis.length();
+    if (axisLen < 0.01) axisLen = 0.01;
+    axis.normalize();
+    var projT = new THREE.Vector3().subVectors(bPos, p1).dot(axis) / axisLen;
+    projT = Math.max(0, Math.min(1, projT));
+
+    // Pick segment around the obstacle
+    var segIdx = Math.floor(projT * (allPts.length - 1));
+    segIdx = Math.max(1, Math.min(allPts.length - 2, segIdx));
+    var sp = allPts[segIdx - 1];
+    var ep = allPts[segIdx + 1];
+    if (!sp || !ep) { sp = allPts[Math.max(0, segIdx - 1)]; ep = allPts[Math.min(allPts.length - 1, segIdx + 1)]; }
+
+    // Compute push direction: horizontal perpendicular to the segment
+    var dir = new THREE.Vector3().subVectors(ep, sp);
+    dir.y = 0;
+    var dirLen = dir.length();
+    if (dirLen < 0.01) {
+      dir.set(1, 0, 0);
+    } else {
+      dir.divideScalar(dirLen);
+    }
+
+    var toObs = new THREE.Vector3().subVectors(bPos, sp);
+    toObs.y = 0;
+    var perp = new THREE.Vector3().crossVectors(dir, toObs);
+    perp.y = 0;
+    var perpLen = perp.length();
+    if (perpLen < 0.01) {
+      perp.set(0, 0, 1);
+    } else {
+      perp.divideScalar(perpLen);
+    }
+
+    // Push distance: proportional to obstacle size and centered-ness
+    var centerFactor = 1.0 - Math.abs(projT - 0.5) * 1.8;
+    centerFactor = Math.max(0.3, centerFactor);
+    var pushDist = 2.0 + centerFactor * 2.5;
+    var pushUp = 2.5 + baseElev + centerFactor * 1.5;
+
+    var wayPos = new THREE.Vector3().addVectors(sp, ep).multiplyScalar(0.5);
+    wayPos.x += perp.x * pushDist;
+    wayPos.y += pushUp;
+    wayPos.z += perp.z * pushDist;
+
+    // Keep away from obstacle center
+    var dw = wayPos.distanceTo(bPos);
+    var minDist = NODE_RADIUS * 2.2;
+    if (dw < minDist) {
+      var pushAway = new THREE.Vector3().subVectors(wayPos, bPos).normalize();
+      wayPos.x += pushAway.x * (minDist - dw);
+      wayPos.y += pushAway.y * (minDist - dw) * 0.5;
+      wayPos.z += pushAway.z * (minDist - dw);
+    }
+
+    // Clamp Y to reasonable range (arc over, not drill through)
+    var ceilY = Math.max(p1.y, p2.y) + 6.0 + baseElev;
+    var floorY = Math.min(p1.y, p2.y) - 2.0;
+    wayPos.y = Math.max(floorY, Math.min(ceilY, wayPos.y));
+
+    // Maintain order along path
+    var t = new THREE.Vector3().subVectors(wayPos, p1).dot(axis) / axisLen;
+    t = Math.max(0, Math.min(1, t));
+    var insertIdx = 0;
+    while (insertIdx < waypoints.length && t > waypoints[insertIdx].t) insertIdx++;
+    if (insertIdx < waypoints.length && Math.abs(t - waypoints[insertIdx].t) < 0.02) {
+      t += 0.03;
+    }
+    waypoints.splice(insertIdx, 0, { pos: wayPos, t: t });
+
+    iter++;
+  }
+
+  var allPts = buildPathPoints(p1, p2, waypoints, sampleRes);
+  return new THREE.CatmullRomCurve3(allPts);
+}
+
+// Helper: build point array for CatmullRom from p1, waypoints, p2
+function buildPathPoints(p1, p2, waypoints, samplesPerSeg) {
+  samplesPerSeg = samplesPerSeg || 16;
+  var pts = [p1];
+  waypoints.sort(function(a, b) { return a.t - b.t; });
+  waypoints.forEach(function(w) { pts.push(w.pos); });
+  pts.push(p2);
+  var tmpCurve = new THREE.CatmullRomCurve3(pts);
+  var total = tmpCurve.getPoints(samplesPerSeg * pts.length);
+  return total;
+}
+function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
+  // Clear
+  while (nodeGroup.children.length > 0) nodeGroup.remove(nodeGroup.children[0]);
+  while (edgeGroup.children.length > 0) edgeGroup.remove(edgeGroup.children[0]);
+  while (portGroup.children.length > 0) portGroup.remove(portGroup.children[0]);
+  while (flowDotsGroup.children.length > 0) flowDotsGroup.remove(flowDotsGroup.children[0]);
+  nodeMeshes = {};
+  edgeLines = [];
+  flowDots = [];
+  portMeshes = {};
+  selectedNodeId = null;
+  updateNodeInfoPanel(null);
+
+  if (!dataNodes || dataNodes.length === 0) return;
+
+  var positions = computeLayout(dataNodes);
+  var nodeMap = {}; // nodeId -> node data
+  window.nodeDataMap = nodeMap; // expose for panel name resolution
+
+  // ─── Build Nodes (Chip cubes) ──────────────────────────
+  dataNodes.forEach(function(n) {
+    nodeMap[n.id] = n;
+    var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
+    var layer = n.layer || 'default';
+    var layerCfg = LAYER_CONFIG[layer] || LAYER_CONFIG['default'] || { color: 0x888888 };
+    var chipColor = n.color ? new THREE.Color(n.color).getHex() : layerCfg.color;
+
+    var size = 1.2;
+    var geo = new THREE.BoxGeometry(size, size * 0.6, size);
+    var mat = new THREE.MeshStandardMaterial({
+      color: chipColor,
+      roughness: 0.4,
+      metalness: 0.6,
+      emissive: chipColor,
+      emissiveIntensity: 0.08,
+      transparent: true,
+      opacity: 0.92,
+    });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    // Chip detail lines on top
+    var lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
+    var lineGeo = new THREE.BufferGeometry();
+    var s = size * 0.4;
+    var yOff = size * 0.3 + 0.01;
+    var lPts = [];
+    for (var li = -s; li <= s; li += s * 0.5) {
+      lPts.push(li, yOff, -s, li, yOff, s);
+    }
+    for (var lj = -s; lj <= s; lj += s * 0.5) {
+      lPts.push(-s, yOff, lj, s, yOff, lj);
+    }
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lPts, 3));
+    var lines = new THREE.LineSegments(lineGeo, lineMat);
+    mesh.add(lines);
+
+    // Highlight border (edge glow)
+    var edgeMat = new THREE.LineBasicMaterial({
+      color: chipColor,
+      transparent: true,
+      opacity: 0.3,
+    });
+    var edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(size * 1.02, size * 0.62 * 1.02, size * 1.02));
+    var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
+    mesh.add(edgeWire);
+
+    // Store
+    mesh.userData.nodeId = n.id;
+    mesh.userData.isNode = true;
+    nodeMeshes[n.id] = { mesh: mesh, data: n, ports: [], edges: [] };
+    nodeGroup.add(mesh);
+
+    // Label (CSS2D)
+    var labelDiv = document.createElement('div');
+    labelDiv.className = 'label-2d';
+    labelDiv.textContent = n.chineseName || n.label || n.id;
+    var label = new THREE.CSS2DObject(labelDiv);
+    label.position.set(pos.x, pos.y + size * 0.6 + 0.4, pos.z);
+    nodeGroup.add(label);
+  });
+
+  // ─── Build Ports ───────────────────────────────────────
+  var portPositions = {}; // portId -> { x, y, z }
+
+  // Collect ports from both external dataPorts array and inline node.ports
+  var allPorts = [];
+  if (dataPorts) {
+    dataPorts.forEach(function(p) { allPorts.push(p); });
+  }
+  // Also collect ports defined directly on each node
+  dataNodes.forEach(function(n) {
+    if (n.ports && n.ports.length > 0) {
+      n.ports.forEach(function(p) {
+        // Ensure it has a nodeId reference
+        if (!p.nodeId) p.nodeId = n.id;
+        // Check if already added
+        var dup = false;
+        for (var pi = 0; pi < allPorts.length; pi++) {
+          if (allPorts[pi].portId === p.portId || (allPorts[pi].nodeId === p.nodeId && allPorts[pi].label === p.label && allPorts[pi].type === p.type)) {
+            dup = true;
+            break;
+          }
+        }
+        if (!dup) allPorts.push(p);
+      });
+    }
+  });
+
+  allPorts.forEach(function(p) {
+    var nodeId = p.nodeId;
+    var nm = nodeMeshes[nodeId];
+    if (!nm) return;
+    var pos = nm.mesh.position.clone();
+    var sz = 1.2;
+    var isOutput = p.type === 'output';
+    var portColor = isOutput ? 0xF44336 : 0x4CAF50;
+    var radius = 0.12;
+
+    // Determine edge position based on port index
+    var portsForNode = nm.ports;
+    portsForNode.push(p);
+    var idx = portsForNode.length - 1;
+    var total = portsForNode.length;
+
+    // Place around the chip edge
+    var angle = (idx / Math.max(total, 1)) * Math.PI * 2;
+    var edgeX = Math.cos(angle) * sz * 0.55;
+    var edgeZ = Math.sin(angle) * sz * 0.55;
+    var edgeY = (isOutput ? 1 : -1) * sz * 0.15;
+
+    pos.x += edgeX;
+    pos.y += edgeY;
+    pos.z += edgeZ;
+
+    portPositions[p.portId] = { x: pos.x, y: pos.y, z: pos.z };
+
+    // Port sphere
+    var sphereGeo = new THREE.SphereGeometry(radius, 12, 12);
+    var sphereMat = new THREE.MeshStandardMaterial({
+      color: portColor,
+      emissive: portColor,
+      emissiveIntensity: 0.5,
+      roughness: 0.3,
+      metalness: 0.2,
+    });
+    var sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.position.copy(pos);
+    sphere.userData.portId = p.portId;
+    sphere.userData.isPort = true;
+    sphere.userData.nodeId = nodeId;
+    portGroup.add(sphere);
+    portMeshes[p.portId] = sphere;
+
+    // Port glow ring
+    var ringGeo = new THREE.RingGeometry(radius * 0.8, radius * 1.8, 16);
+    var ringMat = new THREE.MeshBasicMaterial({
+      color: portColor,
+      transparent: true,
+      opacity: 0.2,
+      side: THREE.DoubleSide,
+    });
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(pos);
+    ring.lookAt(camera.position);
+    portGroup.add(ring);
+    sphere.userData.ring = ring;
+
+    // Store reference on node
+    nm.ports.push(p);
+  });
+
+  // ─── Build Edges ───────────────────────────────────────
+  // Compute pipe-vs-pipe crossings to assign elevation offsets
+  computePipeCrossings(dataConns, positions);
+
+  if (dataConns) {
+    dataConns.forEach(function(conn) {
+      var fromData = nodeMap[conn.from];
+      var toData = nodeMap[conn.to];
+      if (!fromData || !toData) return;
+
+      var fromPos = positions[conn.from] || { x: 0, y: 0, z: 0 };
+      var toPos = positions[conn.to] || { x: 0, y: 0, z: 0 };
+
+      var p1 = new THREE.Vector3(fromPos.x, fromPos.y, fromPos.z);
+      var p2 = new THREE.Vector3(toPos.x, toPos.y, toPos.z);
+
+      var flowType = conn.flowType || 'data';
+      var colorHex = FLOW_COLORS[flowType] || 0x888888;
+
+
+
+      // Compute obstacle avoidance
+      var nodeIdList = Object.keys(positions);
+      var obstacles = findObstacles(conn.from, conn.to, nodeIdList, positions);
+      var curve = computeAvoidanceCurve(p1, p2, obstacles, conn.from, conn.to);
+      var pts = curve.getPoints(24);
+
+      // Main glow tube (thicker pipe)
+      var tubeGeo = new THREE.TubeGeometry(curve, 20, 0.04, 8, false);
+      var glowMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.25,
+      });
+      var glowTube = new THREE.Mesh(tubeGeo, glowMat);
+      edgeGroup.add(glowTube);
+
+      // Core bright tube
+      var coreTubeGeo = new THREE.TubeGeometry(curve, 20, 0.022, 8, false);
+      var coreMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.6,
+      });
+      var coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
+      edgeGroup.add(coreTube);
+
+      // Store edge data
+      var edgeInfo = {
+        line: coreTube,
+        glowLine: glowTube,
+        glowTube: glowTube,
+        coreTube: coreTube,
+        conn: conn,
+        fromId: conn.from,
+        toId: conn.to,
+        curve: curve,
+        flowType: flowType,
+        colorHex: colorHex,
+      };
+      edgeLines.push(edgeInfo);
+
+      // Link to nodes
+      if (nodeMeshes[conn.from]) nodeMeshes[conn.from].edges.push(edgeInfo);
+      if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
+    });
+  }
+
+  document.getElementById('nodeCount').textContent = dataNodes.length;
+  document.getElementById('edgeCount').textContent = dataConns.length;
+
+  // ─── Build Flow Dots ──────────────────────────────
+  buildFlowDots();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── Build Flow Dots ────────────────────────────────────────────────
+function buildFlowDots() {
+  // Clear previous
+  while (flowDotsGroup.children.length > 0) {
+    var c = flowDotsGroup.children[0];
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+    flowDotsGroup.remove(c);
+  }
+  flowDots = [];
+
+  edgeLines.forEach(function(ei) {
+    // 每条管道放2个光点，间隔半个路径长度，初始进度随机化
+    var baseProgress = Math.random();
+    for (var i = 0; i < 2; i++) {
+      var prog = (baseProgress + i * 0.5) % 1.0;
+      var dotGeo = new THREE.SphereGeometry(0.13, 8, 8);
+      var dotMat = new THREE.MeshBasicMaterial({
+        color: ei.colorHex,
+        transparent: true,
+        opacity: 0.9,
+      });
+      var dot = new THREE.Mesh(dotGeo, dotMat);
+      var startPos = ei.curve.getPoint(prog);
+      dot.position.copy(startPos);
+      flowDotsGroup.add(dot);
+      flowDots.push({
+        mesh: dot,
+        edgeInfo: ei,
+        progress: prog,
+        baseSpeed: 0.2,
+        fastSpeed: 0.55,
+        speed: 0.2,
+      });
+    }
+  });
+}
+//  Interaction
+// ═══════════════════════════════════════════════════════════════════
+
+function getIntersects(event) {
+  var rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  // Collect all meshes
+  var allMeshes = [];
+  nodeGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isNode) allMeshes.push(c);
+  });
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isPort) allMeshes.push(c);
+  });
+  return raycaster.intersectObjects(allMeshes);
+}
+
+function onMouseMove(event) {
+  var intersects = getIntersects(event);
+  var found = null;
+
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      var nm = nodeMeshes[obj.userData.nodeId];
+      if (nm) {
+        found = nm.data;
+        break;
+      }
+    } else if (obj.userData.isPort) {
+      // Show parent node info
+      var pnm = nodeMeshes[obj.userData.nodeId];
+      if (pnm) {
+        found = pnm.data;
+        break;
+      }
+    }
+  }
+
+  if (found) {
+    var tt = tooltipEl;
+    tt.style.display = 'block';
+    tt.style.left = (event.clientX + 16) + 'px';
+    tt.style.top = (event.clientY - 10) + 'px';
+    var html = '<div class="tt-name">' + (found.chineseName || found.label || found.id) + '</div>';
+    if (found.label && found.label !== found.id) {
+      html += '<div class="tt-desc">' + found.label + '</div>';
+    }
+    if (found.layer) {
+      html += '<div><span class="tt-tag" style="background:' + (LAYER_CONFIG[found.layer] ? '#' + new THREE.Color(LAYER_CONFIG[found.layer].color).getHexString() : '#555') + '44;color:#ccc">' + found.layer + '</span></div>';
+    }
+    tt.innerHTML = html;
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    tooltipEl.style.display = 'none';
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+function onMouseDown(event) {
+  _mouseDownPos.x = event.clientX;
+  _mouseDownPos.y = event.clientY;
+  _isDragging = false;
+}
+
+function onMouseUp(event) {
+  var dx = event.clientX - _mouseDownPos.x;
+  var dy = event.clientY - _mouseDownPos.y;
+  if (Math.sqrt(dx*dx + dy*dy) > _dragThreshold) {
+    _isDragging = true;
+  } else {
+    _isDragging = false;
+  }
+}
+
+function onClick(event) {
+  // Fix 1: Ignore click if it was a drag (OrbitControls rotation)
+  if (_isDragging) {
+    _isDragging = false;
+    return;
+  }
+
+  var intersects = getIntersects(event);
+  var clickedNodeId = null;
+
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      clickedNodeId = obj.userData.nodeId;
+      break;
+    } else if (obj.userData.isPort) {
+      clickedNodeId = obj.userData.nodeId;
+      break;
+    }
+  }
+
+  if (!clickedNodeId) {
+    // Fix 1: No node clicked — preserve current selection state
+    return;
+  }
+
+  // Reset all nodes to default
+  Object.keys(nodeMeshes).forEach(function(id) {
+    var nm = nodeMeshes[id];
+    nm.mesh.material.emissiveIntensity = 0.08;
+  });
+
+  // Reset all edges
+  edgeLines.forEach(function(ei) {
+    if (ei.coreTube) ei.coreTube.material.opacity = 0.25;
+    if (ei.glowTube) ei.glowTube.material.opacity = 0.25;
+    if (ei.line) ei.line.material.opacity = 0.6;
+    if (ei.glowLine) ei.glowLine.material.opacity = 0.25;
+  });
+
+  // Reset all flow dots
+  flowDots.forEach(function(fd) {
+    fd.speed = fd.baseSpeed;
+    fd.mesh.material.opacity = 0.9;
+  });
+
+  // Select the clicked node
+  selectedNodeId = clickedNodeId;
+  var nm = nodeMeshes[clickedNodeId];
+  if (nm) {
+    nm.mesh.material.emissiveIntensity = 0.5;
+    updateNodeInfoPanel(nm.data);
+    // Highlight connected edges
+    nm.edges.forEach(function(ei) {
+      ei.line.material.opacity = 1.0;
+      if (ei.glowLine) ei.glowLine.material.opacity = 0.6;
+      if (ei.glowTube) ei.glowTube.material.opacity = 0.6;
+    });
+    // 选中节点——加速关联管道光点，暗淡非关联光点
+    nm.edges.forEach(function(ei) {
+      flowDots.forEach(function(fd) {
+        if (fd.edgeInfo === ei) {
+          fd.speed = fd.fastSpeed;
+          fd.mesh.material.opacity = 1.0;
+        }
+      });
+    });
+    flowDots.forEach(function(fd) {
+      var connected = false;
+      nm.edges.forEach(function(ei) {
+        if (fd.edgeInfo === ei) connected = true;
+      });
+      if (!connected) {
+        fd.mesh.material.opacity = 0.2;
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Node Info Panel (Fix 2)
+// ═══════════════════════════════════════════════════════════════════
+
+function updateNodeInfoPanel(nodeData) {
+  var panel = document.getElementById('nodeInfoPanel');
+  if (!nodeData) {
+    panel.style.display = 'none';
+    return;
+  }
+  // Get nodeMeshes entry so we can access ports stored on it
+  var nm = null;
+  if (selectedNodeId && nodeMeshes && nodeMeshes[selectedNodeId]) {
+    nm = nodeMeshes[selectedNodeId];
+  }
+  var name = nodeData.chineseName || nodeData.label || nodeData.id;
+  var desc = nodeData.chineseDesc || nodeData.description || '';
+  var layerName = nodeData.layer || '';
+  var html = '<div class="nip-name">' + name + '</div>';
+  // Layer info
+  if (layerName) {
+    html += '<div class="nip-layer">' + layerName + ' 层</div>';
+  }
+  // Description
+  if (desc) {
+    html += '<div class="nip-desc">' + desc + '</div>';
+  } else {
+    html += '<div class="nip-desc" style="color:#666;font-style:italic">暂无描述</div>';
+  }
+  // Tags
+  if (nodeData.tags && nodeData.tags.length > 0) {
+    html += '<hr class="nip-divider">';
+    html += '<div class="nip-section">🏷 标签</div>';
+    html += '<div>';
+    nodeData.tags.forEach(function(t) {
+      html += '<span class="nip-tag">' + t + '</span>';
+    });
+    html += '</div>';
+  }
+  // Ports
+  html += '<hr class="nip-divider">';
+  html += '<div class="nip-section">🔌 端口</div>';
+  // Read ports from nodeMeshes entry (nm.ports) since nodeData doesn't have them populated
+  var nmPorts = (nm && nm.ports && nm.ports.length > 0) ? nm.ports : null;
+  var portsToShow = nmPorts || nodeData.ports || [];
+  if (portsToShow.length > 0) {
+    // Output ports first (red)
+    var outputPorts = [];
+    var inputPorts = [];
+    portsToShow.forEach(function(p) {
+      if (p.type === 'output' || p.color === '#F44336') {
+        outputPorts.push(p);
+      } else {
+        inputPorts.push(p);
+      }
+    });
+    if (outputPorts.length > 0) {
+      html += '<div style="margin-bottom:4px">';
+      outputPorts.forEach(function(p) {
+        var portLabel = p.label || p.name || p.portId || '未命名';
+        var connInfo = '';
+        if (p.connectedTo) {
+          var targetName = p.connectedTo;
+          // try to resolve to chineseName
+          if (window.nodeDataMap && window.nodeDataMap[p.connectedTo]) {
+            targetName = window.nodeDataMap[p.connectedTo].chineseName || window.nodeDataMap[p.connectedTo].label || p.connectedTo;
+          }
+          connInfo = ' → ' + targetName;
+        }
+        // portLabel from data already has "发送: xxx" format
+        html += '<div class="nip-port"><span class="nip-port-dot" style="background:#F44336"></span><span class="nip-port-label">' + portLabel + '</span><span class="nip-port-conn">' + connInfo + '</span></div>';
+      });
+      html += '</div>';
+    }
+    if (inputPorts.length > 0) {
+      html += '<div>';
+      inputPorts.forEach(function(p) {
+        var portLabel = p.label || p.name || p.portId || '未命名';
+        var connInfo = '';
+        if (p.connectedFrom) {
+          var srcName = p.connectedFrom;
+          if (window.nodeDataMap && window.nodeDataMap[p.connectedFrom]) {
+            srcName = window.nodeDataMap[p.connectedFrom].chineseName || window.nodeDataMap[p.connectedFrom].label || p.connectedFrom;
+          }
+          connInfo = ' ← ' + srcName;
+        }
+        // portLabel from data already has "接收: xxx" format
+        html += '<div class="nip-port"><span class="nip-port-dot" style="background:#4CAF50"></span><span class="nip-port-label">' + portLabel + '</span><span class="nip-port-conn">' + connInfo + '</span></div>';
+      });
+      html += '</div>';
+    }
+  } else {
+    html += '<div style="color:#666;font-size:12px">暂无端口信息</div>';
+  }
+  // Submodules
+  if (nodeData.subModules && nodeData.subModules.length > 0) {
+    html += '<hr class="nip-divider">';
+    html += '<div class="nip-section">📦 子模块 (' + nodeData.subModules.length + ')</div>';
+  }
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Double-click handler (Fix 1) — deselect only on blank dblclick
+// ═══════════════════════════════════════════════════════════════════
+
+function onDblClick(event) {
+  if (!selectedNodeId) return;
+  var intersects = getIntersects(event);
+  var hitNode = false;
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode || obj.userData.isPort) {
+      hitNode = true;
+      break;
+    }
+  }
+  if (!hitNode) {
+    // Blank area double-click — deselect
+    selectedNodeId = null;
+    // Reset all nodes
+    Object.keys(nodeMeshes).forEach(function(id) {
+      var nm = nodeMeshes[id];
+      nm.mesh.material.emissiveIntensity = 0.08;
+    });
+    // Reset all edges
+    edgeLines.forEach(function(ei) {
+      if (ei.coreTube) ei.coreTube.material.opacity = 0.25;
+      if (ei.glowTube) ei.glowTube.material.opacity = 0.25;
+      if (ei.line) ei.line.material.opacity = 0.6;
+      if (ei.glowLine) ei.glowLine.material.opacity = 0.25;
+    });
+    // Reset all flow dots
+    flowDots.forEach(function(fd) {
+      fd.speed = fd.baseSpeed;
+      fd.mesh.material.opacity = 0.9;
+    });
+    updateNodeInfoPanel(null);
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Resize
+// ═══════════════════════════════════════════════════════════════════
+
+function onResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Stats
+// ═══════════════════════════════════════════════════════════════════
+
+var frameCount = 0;
+var lastFpsUpdate = 0;
+
+function updateStats() {
+  var now = performance.now();
+  frameCount++;
+  if (now - lastFpsUpdate >= 1000) {
+    document.getElementById('fps').textContent = frameCount;
+    frameCount = 0;
+    lastFpsUpdate = now;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Animation Loop
+// ═══════════════════════════════════════════════════════════════════
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Auto-rotate
+  if (autoRotate) {
+    var pivot = new THREE.Vector3(0, 0, 0);
+    var radius = camera.position.distanceTo(pivot);
+    var theta = Math.atan2(camera.position.x, camera.position.z);
+    theta += autoRotateSpeed;
+    camera.position.x = radius * Math.sin(theta);
+    camera.position.z = radius * Math.cos(theta);
+    camera.lookAt(pivot);
+    controls.update();
+  } else {
+    controls.update();
+  }
+
+  // Make port rings face camera
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.ring) {
+      c.userData.ring.lookAt(camera.position);
+    }
+  });
+
+  // Edge pulse animation
+  // 手动计算 delta（避免 clock.getDelta() 干扰 getElapsedTime）
+  var now = performance.now() / 1000;
+  if (animate._lastTime === undefined) animate._lastTime = now;
+  var delta = Math.min(now - animate._lastTime, 0.1);
+  animate._lastTime = now;
+
+  var t = clock.getElapsedTime();
+  edgeLines.forEach(function(ei, idx) {
+    var pulse = 0.5 + 0.3 * Math.sin(t * 0.8 + idx * 0.5);
+    if (ei.glowLine) ei.glowLine.material.opacity = 0.15 + 0.2 * pulse;
+    if (ei.glowTube) ei.glowTube.material.opacity = 0.15 + 0.2 * pulse;
+  });
+
+  // Flow dot animation
+  flowDots.forEach(function(fd) {
+    fd.progress += fd.speed * delta;
+    if (fd.progress > 1.0) fd.progress -= 1.0;
+    var pos = fd.edgeInfo.curve.getPoint(fd.progress);
+    fd.mesh.position.copy(pos);
+  });
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Start
+// ═══════════════════════════════════════════════════════════════════
+
+init();
+
+var embeddedData = window.__EMBEDDED_DATA__;
+if (embeddedData && embeddedData.nodes) {
+  buildScene(
+    embeddedData.nodes,
+    embeddedData.connections || [],
+    embeddedData.ports || [],
+    embeddedData.tags || {}
+  );
+  console.log('[3d-monitor] Loaded from embedded data: ' + embeddedData.nodes.length + ' nodes');
+} else {
+  console.warn('[3d-monitor] No embedded data found (window.__EMBEDDED_DATA__)');
+}
+
+})();
+</script>
+</body>
+</html>

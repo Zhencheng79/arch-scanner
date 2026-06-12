@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor — Flow Animation Test</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0a12;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+canvas{display:block}
+#tooltip{position:fixed;pointer-events:none;background:rgba(8,8,16,0.92);color:#e0e0e0;padding:8px 14px;border-radius:8px;font-size:13px;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;z-index:1000;max-width:280px;line-height:1.5;box-shadow:0 4px 24px rgba(0,0,0,0.6)}
+#tooltip .tt-name{color:#fff;font-weight:600;font-size:14px;margin-bottom:2px}
+#tooltip .tt-desc{color:#aaa;font-size:12px}
+#tooltip .tt-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin-top:4px;margin-right:4px}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,0.8)}
+#stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.4);pointer-events:none;font-family:'SF Mono','Fira Code',monospace;line-height:1.6}
+#stats b{color:#4FC3F7}
+#legend{position:fixed;bottom:60px;right:20px;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px)}
+#legend .row{display:flex;align-items:center;gap:8px}
+#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+.label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
+</style>
+</head>
+<body>
+<div id="tooltip"></div>
+<div id="stats"><b id="fps">0</b> FPS &middot; <b id="nodeCount">0</b> nodes &middot; <b id="edgeCount">0</b> edges</div>
+<div id="info">&#x1F5B1; 拖拽旋转 &middot; 滚轮缩放 &middot; 点击节点高亮管道 &middot; 悬停查看信息</div>
+<div id="legend">
+<div class="row"><span class="dot" style="background:#FFEB3B"></span>Command 层</div>
+<div class="row"><span class="dot" style="background:#00BCD4"></span>Data 层</div>
+<div class="row"><span class="dot" style="background:#81C784"></span>Analysis 层</div>
+<div class="row"><span class="dot" style="background:#FFB74D"></span>Frontend 层</div>
+<div class="row"><span class="dot" style="background:#F44336"></span>Risk 层</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
+<span class="line-sample" style="background:#FFEB3B"></span>control
+<span class="line-sample" style="background:#00BCD4;margin-left:6px"></span>data
+<span class="line-sample" style="background:#E040FB;margin-left:6px"></span>event
+<span class="line-sample" style="background:#7B1FA2;margin-left:6px"></span>knowledge
+</div>
+</div>
+
+<!-- Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- OrbitControls -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- CSS2DRenderer -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+
+<script>
+(function() {
+'use strict';
+
+var testNodes = [
+  { id: "cli", label: "cli", chineseName: "CLI 工具", layer: "command" },
+  { id: "mcp-server", label: "mcp-server", chineseName: "MCP 服务", layer: "command" },
+  { id: "dispatcher", label: "dispatcher", chineseName: "任务调度器", layer: "control" },
+  { id: "project-scan", label: "project-scan", chineseName: "项目扫描器", layer: "control" },
+  { id: "tag-registry", label: "tag-registry", chineseName: "标签注册中心", layer: "control" },
+  { id: "port-registry", label: "port-registry", chineseName: "端口注册中心", layer: "data" },
+  { id: "hermes-data", label: "hermes-data", chineseName: "Hermes 数据层", layer: "data" },
+  { id: "system-data", label: "system-data", chineseName: "系统数据层", layer: "data" },
+  { id: "analyst", label: "analyst", chineseName: "分析引擎", layer: "analysis" },
+  { id: "research", label: "research", chineseName: "调研模块", layer: "analysis" },
+  { id: "strategy", label: "strategy", chineseName: "策略引擎", layer: "analysis" },
+  { id: "3d-monitor", label: "3d-monitor", chineseName: "3D 监控面板", layer: "frontend" },
+  { id: "viewer-core", label: "viewer-core", chineseName: "Viewer 核心", layer: "frontend" },
+  { id: "knowledge-base", label: "knowledge-base", chineseName: "知识库", layer: "backend" },
+  { id: "risk-control", label: "risk-control", chineseName: "风控引擎", layer: "risk" },
+  { id: "decision-engine", label: "decision-engine", chineseName: "决策引擎", layer: "decision" },
+];
+
+var testConns = [
+  // control
+  { from: "cli", to: "dispatcher", flowType: "control" },
+  { from: "cli", to: "project-scan", flowType: "control" },
+  { from: "mcp-server", to: "dispatcher", flowType: "control" },
+  { from: "dispatcher", to: "project-scan", flowType: "control" },
+  { from: "dispatcher", to: "tag-registry", flowType: "control" },
+  { from: "project-scan", to: "tag-registry", flowType: "control" },
+
+  // data
+  { from: "tag-registry", to: "port-registry", flowType: "data" },
+  { from: "port-registry", to: "hermes-data", flowType: "data" },
+  { from: "hermes-data", to: "system-data", flowType: "data" },
+  { from: "dispatcher", to: "hermes-data", flowType: "data" },
+  { from: "project-scan", to: "system-data", flowType: "data" },
+  { from: "tag-registry", to: "hermes-data", flowType: "data" },
+
+  // event
+  { from: "hermes-data", to: "analyst", flowType: "event" },
+  { from: "system-data", to: "research", flowType: "event" },
+  { from: "analyst", to: "strategy", flowType: "event" },
+  { from: "research", to: "strategy", flowType: "event" },
+  { from: "port-registry", to: "3d-monitor", flowType: "event" },
+
+  // knowledge
+  { from: "analyst", to: "knowledge-base", flowType: "knowledge" },
+  { from: "research", to: "knowledge-base", flowType: "knowledge" },
+  { from: "strategy", to: "knowledge-base", flowType: "knowledge" },
+  { from: "decision-engine", to: "risk-control", flowType: "knowledge" },
+  { from: "knowledge-base", to: "viewer-core", flowType: "knowledge" },
+  { from: "knowledge-base", to: "3d-monitor", flowType: "knowledge" },
+
+  // cross-layer
+  { from: "risk-control", to: "dispatcher", flowType: "event" },
+  { from: "strategy", to: "3d-monitor", flowType: "data" },
+  { from: "cli", to: "knowledge-base", flowType: "knowledge" },
+];
+
+var testPorts = [];
+testNodes.forEach(function(n) {
+  testPorts.push({ portId: n.id + "-in-1",  nodeId: n.id, type: "input" });
+  testPorts.push({ portId: n.id + "-in-2",  nodeId: n.id, type: "input" });
+  testPorts.push({ portId: n.id + "-out-1", nodeId: n.id, type: "output" });
+  testPorts.push({ portId: n.id + "-out-2", nodeId: n.id, type: "output" });
+});
+
+var testTags = {};
+testNodes.forEach(function(n) {
+  testTags[n.id] = [n.layer, "active"];
+});
+
+var scene, camera, renderer, labelRenderer, controls;
+var nodeGroup, edgeGroup, portGroup;
+var flowDots = [];
+var flowDotsGroup;
+var nodeMeshes = {};
+var edgeLines = [];
+var portMeshes = {};
+var raycaster, mouse, tooltipEl;
+var selectedNodeId = null;
+var clock = new THREE.Clock();
+var autoRotate = true;
+var autoRotateTimer = null;
+var autoRotateSpeed = 0.002;
+
+var LAYER_CONFIG = {
+  command:  { y: 6,  color: 0xFFEB3B, label: 'Command' },
+  control:  { y: 6,  color: 0xFFEB3B, label: 'Control' },
+  data:     { y: 3,  color: 0x00BCD4, label: 'Data' },
+  analysis: { y: 0,  color: 0x81C784, label: 'Analysis' },
+  frontend: { y: 0,  color: 0xFFB74D, label: 'Frontend' },
+  backend:  { y: 0,  color: 0x42A5F5, label: 'Backend' },
+  feature:  { y: 1,  color: 0x42A5F5, label: 'Feature' },
+  build:    { y: -1, color: 0x66BB6A, label: 'Build' },
+  config:   { y: -1, color: 0x9E9E9E, label: 'Config' },
+  infrastructure: { y: -2, color: 0x4A90D9, label: 'Infra' },
+  risk:     { y: 3,  color: 0xF44336, label: 'Risk' },
+  decision: { y: 6,  color: 0xCE93D8, label: 'Decision' },
+  external: { y: -2, color: 0xFF7043, label: 'External' },
+  management: { y: 4, color: 0xFFB74D, label: 'Management' },
+};
+
+var FLOW_COLORS = {
+  control:  0xFFEB3B,
+  data:     0x00BCD4,
+  event:    0xE040FB,
+  knowledge: 0x7B1FA2,
+};
+
+function init() {
+  tooltipEl = document.getElementById('tooltip');
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a12);
+  scene.fog = new THREE.Fog(0x0a0a12, 25, 45);
+
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(12, 8, 14);
+  camera.lookAt(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  document.body.appendChild(renderer.domElement);
+
+  labelRenderer = new THREE.CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  document.body.appendChild(labelRenderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+  controls.maxPolarAngle = Math.PI / 2.1;
+  controls.addEventListener('start', function() { autoRotate = false; if (autoRotateTimer) { clearTimeout(autoRotateTimer); autoRotateTimer = null; } });
+  controls.addEventListener('end', function() {
+    if (autoRotateTimer) clearTimeout(autoRotateTimer);
+    autoRotateTimer = setTimeout(function() {
+      autoRotate = true;
+      autoRotateTimer = null;
+    }, 6500);
+  });
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  nodeGroup = new THREE.Group();
+  edgeGroup = new THREE.Group();
+  portGroup = new THREE.Group();
+  flowDotsGroup = new THREE.Group();
+  scene.add(nodeGroup);
+  scene.add(edgeGroup);
+  scene.add(portGroup);
+  scene.add(flowDotsGroup);
+
+  var ambient = new THREE.AmbientLight(0x404060, 0.6);
+  scene.add(ambient);
+  var dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+  var fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+  fillLight.position.set(-10, 5, -10);
+  scene.add(fillLight);
+  var rimLight = new THREE.DirectionalLight(0xff8844, 0.3);
+  rimLight.position.set(0, -10, 15);
+  scene.add(rimLight);
+
+  createGridBackground();
+
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('click', onClick);
+  window.addEventListener('resize', onResize);
+}
+
+function createGridBackground() {
+  var gridGroup = new THREE.Group();
+  var gridMat = new THREE.LineBasicMaterial({ color: 0x1a1a2e, transparent: true, opacity: 0.4 });
+
+  for (var i = -10; i <= 10; i++) {
+    var pts1 = [new THREE.Vector3(i, -2.5, -10), new THREE.Vector3(i, -2.5, 10)];
+    var g1 = new THREE.BufferGeometry().setFromPoints(pts1);
+    gridGroup.add(new THREE.Line(g1, gridMat));
+    var pts2 = [new THREE.Vector3(-10, -2.5, i), new THREE.Vector3(10, -2.5, i)];
+    var g2 = new THREE.BufferGeometry().setFromPoints(pts2);
+    gridGroup.add(new THREE.Line(g2, gridMat));
+  }
+  scene.add(gridGroup);
+}
+
+function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
+  var nodeMap = {};
+  var positions = {};
+
+  // ─── Determine X positions ───────────────────────────
+  dataNodes.forEach(function(n, idx) {
+    nodeMap[n.id] = n;
+    var total = dataNodes.length;
+    var angle = (idx / total) * Math.PI * 2;
+    var radius = 7;
+    var layerCfg = LAYER_CONFIG[n.layer] || { y: 0, color: 0x888888 };
+    positions[n.id] = {
+      x: radius * Math.cos(angle),
+      y: layerCfg.y,
+      z: radius * Math.sin(angle),
+    };
+  });
+
+  // ─── Build Nodes ─────────────────────────────────────
+  var chipGeo = new THREE.BoxGeometry(1.2, 0.15, 1.2);
+
+  dataNodes.forEach(function(n) {
+    var pos = positions[n.id];
+    var layerCfg = LAYER_CONFIG[n.layer] || { y: 0, color: 0x888888 };
+    var color = layerCfg.color;
+
+    var chipMat = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: color,
+      emissiveIntensity: 0.08,
+      roughness: 0.3,
+      metalness: 0.7,
+    });
+    var mesh = new THREE.Mesh(chipGeo.clone(), chipMat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.castShadow = true;
+    mesh.userData.isNode = true;
+    mesh.userData.nodeId = n.id;
+    nodeMeshes[n.id] = { mesh: mesh, data: n, ports: [], edges: [] };
+    nodeGroup.add(mesh);
+
+    var labelDiv = document.createElement('div');
+    labelDiv.className = 'label-2d';
+    labelDiv.textContent = n.chineseName || n.label || n.id;
+    var label = new THREE.CSS2DObject(labelDiv);
+    label.position.set(pos.x, pos.y + 1.2, pos.z);
+    nodeGroup.add(label);
+  });
+
+  // ─── Build Ports ─────────────────────────────────────
+  if (dataPorts) {
+    dataPorts.forEach(function(p) {
+      var nm = nodeMeshes[p.nodeId];
+      if (!nm) return;
+      var pos = nm.mesh.position.clone();
+      var sz = 1.2;
+      var isOutput = p.type === 'output';
+      var portColor = isOutput ? 0xF44336 : 0x4CAF50;
+      var radius = 0.12;
+      var portsForNode = nm.ports;
+      portsForNode.push(p);
+      var idx = portsForNode.length - 1;
+      var total = portsForNode.length;
+      var angle = (idx / Math.max(total, 1)) * Math.PI * 2;
+      var edgeX = Math.cos(angle) * sz * 0.55;
+      var edgeZ = Math.sin(angle) * sz * 0.55;
+      var edgeY = (isOutput ? 1 : -1) * sz * 0.15;
+      pos.x += edgeX;
+      pos.y += edgeY;
+      pos.z += edgeZ;
+
+      var sphereGeo = new THREE.SphereGeometry(radius, 12, 12);
+      var sphereMat = new THREE.MeshStandardMaterial({
+        color: portColor,
+        emissive: portColor,
+        emissiveIntensity: 0.5,
+        roughness: 0.3,
+        metalness: 0.2,
+      });
+      var sphere = new THREE.Mesh(sphereGeo, sphereMat);
+      sphere.position.copy(pos);
+      sphere.userData.portId = p.portId;
+      sphere.userData.isPort = true;
+      sphere.userData.nodeId = p.nodeId;
+      portGroup.add(sphere);
+      portMeshes[p.portId] = sphere;
+
+      var ringGeo = new THREE.RingGeometry(radius * 0.8, radius * 1.8, 16);
+      var ringMat = new THREE.MeshBasicMaterial({
+        color: portColor,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+      });
+      var ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.copy(pos);
+      ring.lookAt(camera.position);
+      portGroup.add(ring);
+      sphere.userData.ring = ring;
+    });
+  }
+
+  // ─── Build Edges ─────────────────────────────────────
+  if (dataConns) {
+    dataConns.forEach(function(conn) {
+      var fromPos = positions[conn.from] || { x: 0, y: 0, z: 0 };
+      var toPos = positions[conn.to] || { x: 0, y: 0, z: 0 };
+      var p1 = new THREE.Vector3(fromPos.x, fromPos.y, fromPos.z);
+      var p2 = new THREE.Vector3(toPos.x, toPos.y, toPos.z);
+      var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+      var flowType = conn.flowType || 'data';
+      var colorHex = FLOW_COLORS[flowType] || 0x888888;
+      var dist = p1.distanceTo(p2);
+      var curveHeight = Math.min(dist * 0.2, 2.0);
+      var isSameLayer = (fromPos.y === toPos.y);
+      var curveDir = isSameLayer ? 1 : (toPos.y > fromPos.y ? 1 : -1);
+      var cp1 = new THREE.Vector3(
+        mid.x + (fromPos.z - toPos.z) * 0.15,
+        mid.y + curveHeight * curveDir,
+        mid.z + (toPos.x - fromPos.x) * 0.15
+      );
+      var curve = new THREE.QuadraticBezierCurve3(p1, cp1, p2);
+      var pts = curve.getPoints(24);
+
+      var glowGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      var glowMat = new THREE.LineBasicMaterial({
+        color: colorHex, transparent: true, opacity: 0.25,
+      });
+      var glowLine = new THREE.Line(glowGeo, glowMat);
+      edgeGroup.add(glowLine);
+
+      var coreMat = new THREE.LineBasicMaterial({
+        color: colorHex, transparent: true, opacity: 0.6,
+      });
+      var coreLine = new THREE.Line(glowGeo.clone(), coreMat);
+      coreLine.position.y = 0.01;
+      edgeGroup.add(coreLine);
+
+      var edgeInfo = {
+        line: coreLine, glowLine: glowLine,
+        conn: conn, fromId: conn.from, toId: conn.to,
+        curve: curve, flowType: flowType, colorHex: colorHex,
+      };
+      edgeLines.push(edgeInfo);
+      if (nodeMeshes[conn.from]) nodeMeshes[conn.from].edges.push(edgeInfo);
+      if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
+    });
+  }
+
+  document.getElementById('nodeCount').textContent = dataNodes.length;
+  document.getElementById('edgeCount').textContent = dataConns.length;
+
+  buildFlowDots();
+}
+
+// ─── Build Flow Dots ────────────────────────────────────────────────
+function buildFlowDots() {
+  while (flowDotsGroup.children.length > 0) {
+    var c = flowDotsGroup.children[0];
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+    flowDotsGroup.remove(c);
+  }
+  flowDots = [];
+
+  edgeLines.forEach(function(ei) {
+    var baseProgress = Math.random();
+    for (var i = 0; i < 2; i++) {
+      var prog = (baseProgress + i * 0.5) % 1.0;
+      var dotGeo = new THREE.SphereGeometry(0.13, 8, 8);
+      var dotMat = new THREE.MeshBasicMaterial({
+        color: ei.colorHex,
+        transparent: true,
+        opacity: 0.9,
+      });
+      var dot = new THREE.Mesh(dotGeo, dotMat);
+      var startPos = ei.curve.getPoint(prog);
+      dot.position.copy(startPos);
+      flowDotsGroup.add(dot);
+      flowDots.push({
+        mesh: dot,
+        edgeInfo: ei,
+        progress: prog,
+        baseSpeed: 0.2,
+        fastSpeed: 0.55,
+        speed: 0.2,
+      });
+    }
+  });
+}
+
+//  Interaction
+function getIntersects(event) {
+  var rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  var allMeshes = [];
+  nodeGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isNode) allMeshes.push(c);
+  });
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isPort) allMeshes.push(c);
+  });
+  return raycaster.intersectObjects(allMeshes);
+}
+
+function onMouseMove(event) {
+  var intersects = getIntersects(event);
+  var found = null;
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      var nm = nodeMeshes[obj.userData.nodeId];
+      if (nm) { found = nm.data; break; }
+    } else if (obj.userData.isPort) {
+      var pnm = nodeMeshes[obj.userData.nodeId];
+      if (pnm) { found = pnm.data; break; }
+    }
+  }
+  if (found) {
+    var tt = tooltipEl;
+    tt.style.display = 'block';
+    tt.style.left = (event.clientX + 16) + 'px';
+    tt.style.top = (event.clientY - 10) + 'px';
+    var html = '<div class="tt-name">' + (found.chineseName || found.label || found.id) + '</div>';
+    if (found.label && found.label !== found.id) {
+      html += '<div class="tt-desc">' + found.label + '</div>';
+    }
+    if (found.layer) {
+      var lc = LAYER_CONFIG[found.layer];
+      html += '<div><span class="tt-tag" style="background:' + (lc ? '#' + new THREE.Color(lc.color).getHexString() : '#555') + '44;color:#ccc">' + found.layer + '</span></div>';
+    }
+    tt.innerHTML = html;
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    tooltipEl.style.display = 'none';
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+function onClick(event) {
+  var intersects = getIntersects(event);
+  var clickedNodeId = null;
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) { clickedNodeId = obj.userData.nodeId; break; }
+    else if (obj.userData.isPort) { clickedNodeId = obj.userData.nodeId; break; }
+  }
+  Object.keys(nodeMeshes).forEach(function(id) {
+    nodeMeshes[id].mesh.material.emissiveIntensity = 0.08;
+  });
+  edgeLines.forEach(function(ei) {
+    ei.line.material.opacity = 0.6;
+    ei.glowLine.material.opacity = 0.25;
+  });
+  flowDots.forEach(function(fd) {
+    fd.speed = fd.baseSpeed;
+    fd.mesh.material.opacity = 0.9;
+  });
+  if (clickedNodeId) {
+    selectedNodeId = clickedNodeId;
+    var nm = nodeMeshes[clickedNodeId];
+    if (nm) {
+      nm.mesh.material.emissiveIntensity = 0.5;
+      nm.edges.forEach(function(ei) {
+        ei.line.material.opacity = 1.0;
+        ei.glowLine.material.opacity = 0.6;
+      });
+      nm.edges.forEach(function(ei) {
+        flowDots.forEach(function(fd) {
+          if (fd.edgeInfo === ei) {
+            fd.speed = fd.fastSpeed;
+            fd.mesh.material.opacity = 1.0;
+          }
+        });
+      });
+      flowDots.forEach(function(fd) {
+        var connected = false;
+        nm.edges.forEach(function(ei) {
+          if (fd.edgeInfo === ei) connected = true;
+        });
+        if (!connected) {
+          fd.mesh.material.opacity = 0.2;
+        }
+      });
+    }
+  } else {
+    selectedNodeId = null;
+  }
+}
+
+// Resize
+function onResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+}
+
+// Stats
+var frameCount = 0;
+var lastFpsUpdate = 0;
+function updateStats() {
+  var now = performance.now();
+  frameCount++;
+  if (now - lastFpsUpdate >= 1000) {
+    document.getElementById('fps').textContent = frameCount;
+    frameCount = 0;
+    lastFpsUpdate = now;
+  }
+}
+
+// Animation Loop
+function animate() {
+  requestAnimationFrame(animate);
+  if (autoRotate) {
+    var pivot = new THREE.Vector3(0, 0, 0);
+    var radius = camera.position.distanceTo(pivot);
+    var theta = Math.atan2(camera.position.x, camera.position.z);
+    theta += autoRotateSpeed;
+    camera.position.x = radius * Math.sin(theta);
+    camera.position.z = radius * Math.cos(theta);
+    camera.lookAt(pivot);
+    controls.update();
+  } else {
+    controls.update();
+  }
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.ring) {
+      c.userData.ring.lookAt(camera.position);
+    }
+  });
+  var now = performance.now() / 1000;
+  if (animate._lastTime === undefined) animate._lastTime = now;
+  var delta = Math.min(now - animate._lastTime, 0.1);
+  animate._lastTime = now;
+  var t = clock.getElapsedTime();
+  edgeLines.forEach(function(ei, idx) {
+    var pulse = 0.5 + 0.3 * Math.sin(t * 0.8 + idx * 0.5);
+    ei.glowLine.material.opacity = 0.15 + 0.2 * pulse;
+  });
+  flowDots.forEach(function(fd) {
+    fd.progress += fd.speed * delta;
+    if (fd.progress > 1.0) fd.progress -= 1.0;
+    var pos = fd.edgeInfo.curve.getPoint(fd.progress);
+    fd.mesh.position.copy(pos);
+  });
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  updateStats();
+}
+
+init();
+buildScene(testNodes, testConns, testPorts, testTags);
+animate();
+console.log('[test-flow-animation] Running with ' + testNodes.length + ' nodes, ' + testConns.length + ' connections');
+})();
+</script>
+</body>
+</html>

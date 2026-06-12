@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor v0.1.9 — 自适应排布</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0a12;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+canvas{display:block}
+#tooltip{position:fixed;pointer-events:none;background:rgba(8,8,16,0.92);color:#e0e0e0;padding:8px 14px;border-radius:8px;font-size:13px;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;z-index:1000;max-width:280px;line-height:1.5;box-shadow:0 4px 24px rgba(0,0,0,0.6)}
+#tooltip .tt-name{color:#fff;font-weight:600;font-size:14px;margin-bottom:2px}
+#tooltip .tt-desc{color:#aaa;font-size:12px}
+#tooltip .tt-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin-top:4px;margin-right:4px}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,0.8)}
+#stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.4);pointer-events:none;font-family:'SF Mono','Fira Code',monospace;line-height:1.6}
+#stats b{color:#4FC3F7}
+#legend{position:fixed;bottom:20px;left:20px;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px)}
+#legend .row{display:flex;align-items:center;gap:8px}
+#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+.label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
+.pipe-label-3d{position:absolute;pointer-events:none;font-size:11px;font-weight:600;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 12px rgba(0,0,0,0.98),0 0 24px rgba(0,0,0,0.8),0 0 40px rgba(0,0,0,0.6);white-space:nowrap;z-index:4;letter-spacing:0.5px;padding:2px 8px;border-radius:8px;border:1px solid;background:rgba(8,8,16,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#nodeInfoPanel{position:fixed;top:20px;right:20px;z-index:100;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;min-width:280px;max-width:380px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;pointer-events:none;font-size:13px;color:#e0e0e0;line-height:1.6}
+#nodeInfoPanel .nip-name{color:#fff;font-weight:600;font-size:16px;margin-bottom:6px}
+#nodeInfoPanel .nip-desc{color:#aaa;font-size:13px;margin-bottom:8px}
+#nodeInfoPanel .nip-ext{display:flex;align-items:center;gap:6px;color:#4FC3F7;font-size:12px}
+#nodeInfoPanel .nip-ext .nip-badge{display:inline-block;background:rgba(79,195,247,0.15);border:1px solid rgba(79,195,247,0.3);border-radius:4px;padding:2px 8px;font-size:11px;color:#4FC3F7}
+#nodeInfoPanel .nip-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:8px 0}
+#nodeInfoPanel .nip-section{font-size:11px;color:#999;margin-bottom:4px;font-weight:500;letter-spacing:0.3px;text-transform:uppercase}
+#nodeInfoPanel .nip-port{display:flex;align-items:center;gap:6px;font-size:12px;padding:2px 0;line-height:1.4}
+#nodeInfoPanel .nip-port .nip-port-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+#nodeInfoPanel .nip-port .nip-port-label{color:#ccc}
+#nodeInfoPanel .nip-port .nip-port-conn{color:#777;font-size:11px;margin-left:auto;text-align:right}
+#nodeInfoPanel .nip-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin:2px 4px 2px 0;background:rgba(255,255,255,0.08);color:#aaa}
+#nodeInfoPanel .nip-layer{font-size:11px;color:#888;margin-bottom:6px}
+/* Link diagram styles */
+#nodeInfoPanel .link-diagram{display:flex;flex-direction:column;gap:6px;padding:4px 0}
+#nodeInfoPanel .ld-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#nodeInfoPanel .ld-node-box{font-size:12px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap}
+#nodeInfoPanel .ld-upstream-node{background:rgba(79,195,247,0.15);border:1px solid rgba(79,195,247,0.3);color:#4FC3F7}
+#nodeInfoPanel .ld-current-node{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;font-size:14px}
+#nodeInfoPanel .ld-downstream-node{background:rgba(255,167,38,0.15);border:1px solid rgba(255,167,38,0.3);color:#FFA726}
+#nodeInfoPanel .ld-port-box{font-size:11px;color:#ccc;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.06);white-space:nowrap}
+#nodeInfoPanel .ld-flow-badge{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap}
+#nodeInfoPanel .ld-arrow{display:flex;align-items:center;gap:0;flex-shrink:0}
+#nodeInfoPanel .ld-arrow-right{flex-direction:row}
+#nodeInfoPanel .ld-pipe-line{width:20px;height:2px;border-radius:1px}
+#nodeInfoPanel .ld-arrow-head{width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid}
+#nodeInfoPanel .ld-upstream{justify-content:flex-start}
+#nodeInfoPanel .ld-downstream{justify-content:flex-start}
+#nodeInfoPanel .ld-current{justify-content:center;margin:4px 0}
+/* Vertical link diagram styles */
+#nodeInfoPanel .ld-row{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;justify-content:flex-start}
+#nodeInfoPanel .ld-row-center{justify-content:center}
+#nodeInfoPanel .ld-row-indent{padding-left:18px}
+#nodeInfoPanel .ld-row-gap{margin-top:2px}
+#nodeInfoPanel .ld-arrow-down{flex-direction:column;align-items:center}
+#nodeInfoPanel .ld-pipe-line-v{width:2px;height:12px;border-radius:1px}
+#nodeInfoPanel .ld-arrow-head-v{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid}
+#nodeInfoPanel .ld-port-out{border:1px solid}
+#nodeInfoPanel .ld-port-in{border:1px solid}
+#nodeInfoPanel .nip-desc-text{font-size:11px;color:#999;text-align:center;line-height:1.3}
+</style>
+</head>
+<body>
+<div id="tooltip"></div>
+<div id="nodeInfoPanel"></div>
+<div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges · 层数: <b id="layerCount">5</b>层</div>
+<div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点选中 · 双击空白脱选 · 悬停查看信息</div>
+<div id="legend">
+<div class="row"><span class="dot" style="background:#4A90D9"></span>基础设施层</div>
+<div class="row"><span class="dot" style="background:#00BCD4"></span>数据层</div>
+<div class="row"><span class="dot" style="background:#66BB6A"></span>业务逻辑层</div>
+<div class="row"><span class="dot" style="background:#FFB74D"></span>展示层</div>
+<div class="row"><span class="dot" style="background:#FF7043"></span>外部依赖层</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
+<span class="line-sample" style="background:#4FC3F7"></span>control
+<span class="line-sample" style="background:#00BCD4;margin-left:6px"></span>data
+<span class="line-sample" style="background:#E040FB;margin-left:6px"></span>event
+<span class="line-sample" style="background:#7B1FA2;margin-left:6px"></span>knowledge
+</div>
+</div>
+
+<!-- Three.js from CDN -->
+<!-- THREE_JS_INLINE -->
+<!-- OrbitControls -->
+<!-- ORBIT_CONTROLS_INLINE -->
+<!-- CSS2DRenderer -->
+<!-- CSS2D_RENDERER_INLINE -->
+
+<script>window.__EMBEDDED_DATA__ = {"nodes":[{"id":"project-root","label":"system-3d-panorama","layer":"infrastructure","description":"3D Panoramic Visualization for AI Agent System Architecture — Visualize nodes, connections, data flows in an interactive 3D space","chineseName":"系统3D全景","chineseDesc":"3D Panoramic Visualization for AI Agent System Architecture — Visualize nodes, connections, data flows in an interactive 3D space","color":"#4CAF50","geometryType":"sphere","status":"Active","position":[0,0,-4]},{"id":".hermes","label":".Hermes","layer":"infrastructure","description":"Module: .hermes (1 source files)","chineseName":".Hermes","chineseDesc":".Hermes模块","color":"#4A90D9","geometryType":"box","status":"Active","position":[-8,-4.5,-0.27004300443895773]},{"id":"plugins","label":"Plugins","layer":"infrastructure","description":"Build Plugins — Vite build-time plugins for injection and optimization","chineseName":"构建插件","chineseDesc":"Vite构建插件，负责构建时注入和优化","color":"#4A90D9","geometryType":"box","status":"Active","position":[-8,-1.5,0.2285548906540498]},{"id":"public","label":"Public","layer":"frontend","description":"Module: public (1 source files)","chineseName":"Public","chineseDesc":"Public模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-9,8.112542624640628]},{"id":"server","label":"Server","layer":"infrastructure","description":"MCP Server — Standardized MCP protocol server","chineseName":"MCP服务端","chineseDesc":"MCP协议服务端，提供标准化接口","color":"#4A90D9","geometryType":"box","status":"Active","position":[-8,1.5,-0.061906564158744]},{"id":"src","label":"Src","layer":"frontend","description":"3D Panorama Frontend — Three.js-based architecture visualization","chineseName":"3D全景前端","chineseDesc":"3D全景展示前端，基于Three.js渲染架构可视化","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-6,8.025288266091593]},{"id":"packages-3d-monitor","label":"3d Monitor","layer":"infrastructure","description":"Module: packages/3d-monitor (1 source files)","chineseName":"3d Monitor","chineseDesc":"3d Monitor模块","color":"#4A90D9","geometryType":"box","status":"Active","position":[-8,4.5,-0.296030987794802]},{"id":"packages-port-tag-tool","label":"Port Tag Tool","layer":"agent","description":"Port Tag Tool — Core sensor that scans project directory structures, generates ports and tags","chineseName":"端口标签工具","chineseDesc":"核心传感器工具，扫描项目目录结构、生成端口和标签","color":"#4CAF50","geometryType":"box","status":"Active","position":[0,0,4.1011665345791695]},{"id":"components","label":"Components","layer":"frontend","description":"3D Render Components — Three.js scene rendering components","chineseName":"3D渲染组件","chineseDesc":"Three.js 3D场景渲染组件集合","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,-3,8.16184692226634]},{"id":"data","label":"Data","layer":"frontend","description":"Data Loader — MCP data loading adapter for sensor scan results","chineseName":"数据加载层","chineseDesc":"MCP数据加载适配层，加载传感器扫描结果","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,0,7.9627445214109915]},{"id":"examples","label":"Examples","layer":"frontend","description":"Example Data — Frontend demo data and configurations","chineseName":"示例数据","chineseDesc":"前端示例数据和演示配置","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,3,8.160877618252016]},{"id":"mcp","label":"Mcp","layer":"frontend","description":"Frontend MCP Adapter","chineseName":"MCP前端适配","chineseDesc":"前端MCP协议适配模块","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,6,7.866710033385971]},{"id":"utils","label":"Utils","layer":"frontend","description":"Frontend Utility Functions","chineseName":"前端工具函数","chineseDesc":"前端通用工具函数和帮助方法","color":"#FFB74D","geometryType":"box","status":"Active","position":[8,9,8.195880039667099]},{"id":"packages-port-tag-tool--cli","label":"Cli","layer":"agent","description":"CLI Entry — Command-line interface for scan/tags/ports actions","chineseName":"命令行入口","chineseDesc":"CLI命令行入口，支持scan/tags/ports等操作","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-1,4.401166534579169]},{"id":"packages-port-tag-tool--hermesExampleData","label":"HermesExampleData","layer":"agent","description":"Hermes Example Data","chineseName":"示例数据","chineseDesc":"Hermes系统内置示例数据","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-2,4.401166534579169]},{"id":"packages-port-tag-tool--index","label":"Index","layer":"agent","description":"Module Entry — port-tag-tool package entry point","chineseName":"模块入口","chineseDesc":"port-tag-tool模块导出入口","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-3,4.401166534579169]},{"id":"packages-port-tag-tool--mcp-server","label":"Mcp Server","layer":"agent","description":"MCP Server — Exposes standardized tool interfaces via MCP protocol","chineseName":"MCP服务器","chineseDesc":"MCP协议服务器，对外暴露标准化工具接口","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-4,4.401166534579169]},{"id":"packages-port-tag-tool--portRegistry","label":"PortRegistry","layer":"agent","description":"Port Registry — Port registration and management engine","chineseName":"端口注册表","chineseDesc":"端口注册与管理引擎，计算入口/出口端口","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-5,4.401166534579169]},{"id":"packages-port-tag-tool--projectScanner","label":"ProjectScanner","layer":"agent","description":"Project Scanner — Heuristic sensor that discovers modules and dependencies","chineseName":"项目扫描器","chineseDesc":"启发式项目扫描传感器，发现模块和依赖","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-6,4.401166534579169]},{"id":"packages-port-tag-tool--tagRegistry","label":"TagRegistry","layer":"agent","description":"Tag Registry — Tag definition and management engine","chineseName":"标签注册表","chineseDesc":"标签定义与管理引擎，自动贴标签","color":"#4CAF50","geometryType":"box","status":"Active","_parentId":"packages-port-tag-tool","position":[0,-7,4.401166534579169]},{"id":"components--AccordionExpand","label":"AccordionExpand","layer":"frontend","description":"File: AccordionExpand.jsx in src/components","chineseName":"AccordionExpand","chineseDesc":"3D渲染组件的子模块AccordionExpand","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-4,8.461846922266341]},{"id":"components--BillboardText","label":"BillboardText","layer":"frontend","description":"File: BillboardText.jsx in src/components","chineseName":"BillboardText","chineseDesc":"3D渲染组件的子模块BillboardText","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-5,8.461846922266341]},{"id":"components--ConnectionLine","label":"ConnectionLine","layer":"frontend","description":"File: ConnectionLine.jsx in src/components","chineseName":"ConnectionLine","chineseDesc":"3D渲染组件的子模块ConnectionLine","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-6,8.461846922266341]},{"id":"components--ErrorBoundary","label":"ErrorBoundary","layer":"frontend","description":"File: ErrorBoundary.jsx in src/components","chineseName":"ErrorBoundary","chineseDesc":"3D渲染组件的子模块ErrorBoundary","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-7,8.461846922266341]},{"id":"components--HoverLabel","label":"HoverLabel","layer":"frontend","description":"File: HoverLabel.jsx in src/components","chineseName":"HoverLabel","chineseDesc":"3D渲染组件的子模块HoverLabel","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-8,8.461846922266341]},{"id":"components--InfoPanel","label":"InfoPanel","layer":"frontend","description":"File: InfoPanel.jsx in src/components","chineseName":"InfoPanel","chineseDesc":"3D渲染组件的子模块InfoPanel","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-9,8.461846922266341]},{"id":"components--NebulaLink","label":"NebulaLink","layer":"frontend","description":"File: NebulaLink.jsx in src/components","chineseName":"NebulaLink","chineseDesc":"3D渲染组件的子模块NebulaLink","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-10,8.461846922266341]},{"id":"components--Node3D","label":"Node3D","layer":"frontend","description":"File: Node3D.jsx in src/components","chineseName":"Node3D","chineseDesc":"3D渲染组件的子模块Node3D","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-11,8.461846922266341]},{"id":"components--PortMarker","label":"PortMarker","layer":"frontend","description":"File: PortMarker.jsx in src/components","chineseName":"PortMarker","chineseDesc":"3D渲染组件的子模块PortMarker","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-12,8.461846922266341]},{"id":"components--SubRegion","label":"SubRegion","layer":"frontend","description":"File: SubRegion.jsx in src/components","chineseName":"SubRegion","chineseDesc":"3D渲染组件的子模块SubRegion","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"components","position":[8,-13,8.461846922266341]},{"id":"data--mcpLoader","label":"McpLoader","layer":"frontend","description":"File: mcpLoader.js in src/data","chineseName":"McpLoader","chineseDesc":"数据加载层的子模块McpLoader","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"data","position":[8,-1,8.262744521410992]},{"id":"data--portRegistry","label":"PortRegistry","layer":"frontend","description":"Port Registry — Port registration and management engine","chineseName":"端口注册表","chineseDesc":"端口注册与管理引擎，计算入口/出口端口","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"data","position":[8,-2,8.262744521410992]},{"id":"data--systemData","label":"SystemData","layer":"frontend","description":"File: systemData.js in src/data","chineseName":"SystemData","chineseDesc":"数据加载层的子模块SystemData","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"data","position":[8,-3,8.262744521410992]},{"id":"data--tagRegistry","label":"TagRegistry","layer":"frontend","description":"File: tagRegistry.py in src/data","chineseName":"TagRegistry","chineseDesc":"数据加载层的子模块TagRegistry","color":"#FFB74D","geometryType":"box","status":"Active","_parentId":"data","position":[8,-4,8.262744521410992]},{"id":"dep-@react-three/drei","label":"@react-three/drei","layer":"external","description":"External dependency: @react-three/drei@^9.92.7","chineseName":"@react-three/drei","chineseDesc":"外部依赖: @react-three/drei@^9.92.7","color":"#FF7043","geometryType":"box","status":"External","position":[14.199713303740282,0,13.7618496355135]},{"id":"dep-@react-three/fiber","label":"@react-three/fiber","layer":"external","description":"External dependency: @react-three/fiber@^8.15.12","chineseName":"@react-three/fiber","chineseDesc":"外部依赖: @react-three/fiber@^8.15.12","color":"#FF7043","geometryType":"box","status":"External","position":[15.58728957227504,0,12.013230040683993]},{"id":"dep-@react-three/postprocessing","label":"@react-three/postprocessing","layer":"external","description":"External dependency: @react-three/postprocessing@^2.16.2","chineseName":"@react-three/postprocessing","chineseDesc":"外部依赖: @react-three/postprocessing@^2.16.2","color":"#FF7043","geometryType":"box","status":"External","position":[16.75028416427085,0,13.08429422030531]},{"id":"dep-js-yaml","label":"js-yaml","layer":"external","description":"External dependency: js-yaml@^4.2.0","chineseName":"js-yaml","chineseDesc":"外部依赖: js-yaml@^4.2.0","color":"#FF7043","geometryType":"box","status":"External","position":[17.078979481775605,0,12.87581507136997]},{"id":"dep-react","label":"react","layer":"external","description":"External dependency: react@^18.2.0","chineseName":"react","chineseDesc":"外部依赖: react@^18.2.0","color":"#FF7043","geometryType":"box","status":"External","position":[17.07251745501344,0,12.55570011128657]},{"id":"dep-react-dom","label":"react-dom","layer":"external","description":"External dependency: react-dom@^18.2.0","chineseName":"react-dom","chineseDesc":"外部依赖: react-dom@^18.2.0","color":"#FF7043","geometryType":"box","status":"External","position":[17.305866931113997,0,13.337221781930566]},{"id":"dep-three","label":"three","layer":"external","description":"External dependency: three@^0.162.0","chineseName":"three","chineseDesc":"外部依赖: three@^0.162.0","color":"#FF7043","geometryType":"box","status":"External","position":[14.724642832847167,0,12.562361684565843]},{"id":"dep-@vitejs/plugin-react","label":"@vitejs/plugin-react","layer":"external","description":"External dependency: @vitejs/plugin-react@^4.2.1","chineseName":"@vitejs/plugin-react","chineseDesc":"外部依赖: @vitejs/plugin-react@^4.2.1","color":"#FF7043","geometryType":"box","status":"External","position":[14.345509494633006,0,13.82316657877891]},{"id":"dep-vite","label":"vite","layer":"external","description":"External dependency: vite@^5.2.0","chineseName":"vite","chineseDesc":"外部依赖: vite@^5.2.0","color":"#FF7043","geometryType":"box","status":"External","position":[14.55399378137372,0,13.960168732235616]}],"connections":[{"id":"conn-server-packages-port-tag-tool","from":"server","to":"packages-port-tag-tool","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-server-dep-js-yaml","from":"server","to":"dep-js-yaml","flowType":"data","label":"js-yaml","color":"#FF7043"},{"id":"conn-src-dep-react","from":"src","to":"dep-react","flowType":"data","label":"react","color":"#FF7043"},{"id":"conn-src-dep-@react-three/fiber","from":"src","to":"dep-@react-three/fiber","flowType":"data","label":"@react-three/fiber","color":"#FF7043"},{"id":"conn-src-dep-@react-three/drei","from":"src","to":"dep-@react-three/drei","flowType":"data","label":"@react-three/drei","color":"#FF7043"},{"id":"conn-src-dep-three","from":"src","to":"dep-three","flowType":"data","label":"three","color":"#FF7043"},{"id":"conn-src-data","from":"src","to":"data","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-src-dep-react-dom","from":"src","to":"dep-react-dom","flowType":"data","label":"react-dom","color":"#FF7043"},{"id":"conn-packages-3d-monitor-dep-three","from":"packages-3d-monitor","to":"dep-three","flowType":"data","label":"three","color":"#FF7043"},{"id":"conn-packages-port-tag-tool-packages-port-tag-tool--portRegistry","from":"packages-port-tag-tool","to":"packages-port-tag-tool--portRegistry","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-packages-port-tag-tool-packages-port-tag-tool--tagRegistry","from":"packages-port-tag-tool","to":"packages-port-tag-tool--tagRegistry","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-packages-port-tag-tool-packages-port-tag-tool--hermesExampleData","from":"packages-port-tag-tool","to":"packages-port-tag-tool--hermesExampleData","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-packages-port-tag-tool-packages-port-tag-tool--projectScanner","from":"packages-port-tag-tool","to":"packages-port-tag-tool--projectScanner","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-packages-port-tag-tool-packages-port-tag-tool--index","from":"packages-port-tag-tool","to":"packages-port-tag-tool--index","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-components-dep-react","from":"components","to":"dep-react","flowType":"data","label":"react","color":"#FF7043"},{"id":"conn-components-dep-@react-three/fiber","from":"components","to":"dep-@react-three/fiber","flowType":"data","label":"@react-three/fiber","color":"#FF7043"},{"id":"conn-components-dep-@react-three/drei","from":"components","to":"dep-@react-three/drei","flowType":"data","label":"@react-three/drei","color":"#FF7043"},{"id":"conn-components-dep-three","from":"components","to":"dep-three","flowType":"data","label":"three","color":"#FF7043"},{"id":"conn-components-data","from":"components","to":"data","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-components-utils","from":"components","to":"utils","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-components-examples","from":"components","to":"examples","flowType":"data","label":"import","color":"#00BCD4"},{"id":"conn-data-packages-port-tag-tool--projectScanner","from":"data","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"mcpLoader -> projectScanner","color":"#FF5722"},{"id":"conn-data-dep-three","from":"data","to":"dep-three","flowType":"data","label":"three","color":"#FF7043"},{"id":"conn-examples-dep-three","from":"examples","to":"dep-three","flowType":"data","label":"three","color":"#FF7043"},{"id":"conn-utils-dep-three","from":"utils","to":"dep-three","flowType":"data","label":"three","color":"#FF7043"},{"id":"conn-packages-port-tag-tool--cli-packages-port-tag-tool--projectScanner","from":"packages-port-tag-tool--cli","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"cli -> scanner/registries","color":"#FF5722"},{"id":"conn-packages-port-tag-tool--mcp-server-packages-port-tag-tool--projectScanner","from":"packages-port-tag-tool--mcp-server","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"mcp-server -> projectScanner","color":"#FF5722"},{"id":"conn-data--mcpLoader-packages-port-tag-tool--projectScanner","from":"data--mcpLoader","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"mcpLoader -> projectScanner","color":"#FF5722"},{"id":"conn-data--portRegistry-packages-port-tag-tool--projectScanner","from":"data--portRegistry","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"mcpLoader -> projectScanner","color":"#FF5722"},{"id":"conn-data--systemData-packages-port-tag-tool--projectScanner","from":"data--systemData","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"mcpLoader -> projectScanner","color":"#FF5722"},{"id":"conn-data--tagRegistry-packages-port-tag-tool--projectScanner","from":"data--tagRegistry","to":"packages-port-tag-tool--projectScanner","flowType":"control","label":"mcpLoader -> projectScanner","color":"#FF5722"}],"ports":{"stats":{"nodes":25,"ports":62,"connections":62},"nodePorts":{"server":{"inputs":[],"outputs":[{"id":"port-server-out-0","nodeId":"server","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"right","globalIndex":0,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-server-out-1","nodeId":"server","direction":"out","type":"default","label":"js-yaml","color":"#FF7043","shape":"circle","index":1,"position":"right","globalIndex":1,"position3d":[-0.84,7.200923178986436e-17,0.1],"portRadius":0.15,"connectionId":null}]},"src":{"inputs":[],"outputs":[{"id":"port-src-out-0","nodeId":"src","direction":"out","type":"default","label":"react","color":"#FF7043","shape":"circle","index":0,"position":"right","globalIndex":2,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-src-out-1","nodeId":"src","direction":"out","type":"default","label":"@react-three/fiber","color":"#FF7043","shape":"circle","index":1,"position":"right","globalIndex":3,"position3d":[0.4200000000000001,0.5092229374252498,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-src-out-2","nodeId":"src","direction":"out","type":"default","label":"@react-three/drei","color":"#FF7043","shape":"circle","index":2,"position":"right","globalIndex":4,"position3d":[-0.4199999999999998,0.5092229374252499,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-src-out-3","nodeId":"src","direction":"out","type":"default","label":"three","color":"#FF7043","shape":"circle","index":3,"position":"right","globalIndex":5,"position3d":[-0.84,7.200923178986436e-17,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-src-out-4","nodeId":"src","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":4,"position":"right","globalIndex":6,"position3d":[-0.4200000000000004,-0.5092229374252498,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-src-out-5","nodeId":"src","direction":"out","type":"default","label":"react-dom","color":"#FF7043","shape":"circle","index":5,"position":"right","globalIndex":7,"position3d":[0.4200000000000001,-0.5092229374252498,0.1],"portRadius":0.15,"connectionId":null}]},"packages-3d-monitor":{"inputs":[],"outputs":[{"id":"port-packages-3d-monitor-out-0","nodeId":"packages-3d-monitor","direction":"out","type":"default","label":"three","color":"#FF7043","shape":"circle","index":0,"position":"right","globalIndex":8,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"packages-port-tag-tool":{"inputs":[{"id":"port-packages-port-tag-tool-in-0","nodeId":"packages-port-tag-tool","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":14,"position3d":[0.4200000000000001,-0.5092229374252498,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[{"id":"port-packages-port-tag-tool-out-0","nodeId":"packages-port-tag-tool","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"right","globalIndex":9,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool-out-1","nodeId":"packages-port-tag-tool","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":1,"position":"right","globalIndex":10,"position3d":[0.25957427527495586,0.5592212315815502,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool-out-2","nodeId":"packages-port-tag-tool","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":2,"position":"right","globalIndex":11,"position3d":[-0.6795742752749557,0.3456177283479742,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool-out-3","nodeId":"packages-port-tag-tool","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":3,"position":"right","globalIndex":12,"position3d":[-0.6795742752749558,-0.3456177283479741,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool-out-4","nodeId":"packages-port-tag-tool","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":4,"position":"right","globalIndex":13,"position3d":[0.2595742752749557,-0.5592212315815502,0.1],"portRadius":0.15,"connectionId":null}]},"components":{"inputs":[],"outputs":[{"id":"port-components-out-0","nodeId":"components","direction":"out","type":"default","label":"react","color":"#FF7043","shape":"circle","index":0,"position":"right","globalIndex":15,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-components-out-1","nodeId":"components","direction":"out","type":"default","label":"@react-three/fiber","color":"#FF7043","shape":"circle","index":1,"position":"right","globalIndex":16,"position3d":[0.5237314335613362,0.4597169116912015,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-components-out-2","nodeId":"components","direction":"out","type":"default","label":"@react-three/drei","color":"#FF7043","shape":"circle","index":2,"position":"right","globalIndex":17,"position3d":[-0.18691758452330404,0.5732576123629123,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-components-out-3","nodeId":"components","direction":"out","type":"default","label":"three","color":"#FF7043","shape":"circle","index":3,"position":"right","globalIndex":18,"position3d":[-0.756813849038032,0.2551236386011242,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-components-out-4","nodeId":"components","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":4,"position":"right","globalIndex":19,"position3d":[-0.7568138490380321,-0.2551236386011241,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-components-out-5","nodeId":"components","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":5,"position":"right","globalIndex":20,"position3d":[-0.18691758452330426,-0.5732576123629123,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-components-out-6","nodeId":"components","direction":"out","type":"llm-request","label":"import","color":"#00BCD4","shape":"circle","index":6,"position":"right","globalIndex":21,"position3d":[0.523731433561336,-0.4597169116912015,0.1],"portRadius":0.15,"connectionId":null}]},"data":{"inputs":[{"id":"port-data-in-0","nodeId":"data","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":24,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-data-in-1","nodeId":"data","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":1,"position":"left","globalIndex":25,"position3d":[-1.5430549669256648e-16,-0.588,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[{"id":"port-data-out-0","nodeId":"data","direction":"out","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":22,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null},{"id":"port-data-out-1","nodeId":"data","direction":"out","type":"default","label":"three","color":"#FF7043","shape":"circle","index":1,"position":"right","globalIndex":23,"position3d":[-0.84,7.200923178986436e-17,0.1],"portRadius":0.15,"connectionId":null}]},"examples":{"inputs":[{"id":"port-examples-in-0","nodeId":"examples","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":27,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[{"id":"port-examples-out-0","nodeId":"examples","direction":"out","type":"default","label":"three","color":"#FF7043","shape":"circle","index":0,"position":"right","globalIndex":26,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"utils":{"inputs":[{"id":"port-utils-in-0","nodeId":"utils","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":29,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[{"id":"port-utils-out-0","nodeId":"utils","direction":"out","type":"default","label":"three","color":"#FF7043","shape":"circle","index":0,"position":"right","globalIndex":28,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"packages-port-tag-tool--cli":{"inputs":[],"outputs":[{"id":"port-packages-port-tag-tool--cli-out-0","nodeId":"packages-port-tag-tool--cli","direction":"out","type":"default","label":"cli -> scanner/registries","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":30,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"packages-port-tag-tool--mcp-server":{"inputs":[],"outputs":[{"id":"port-packages-port-tag-tool--mcp-server-out-0","nodeId":"packages-port-tag-tool--mcp-server","direction":"out","type":"default","label":"mcp-server -> projectScanner","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":31,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"data--mcpLoader":{"inputs":[],"outputs":[{"id":"port-data--mcpLoader-out-0","nodeId":"data--mcpLoader","direction":"out","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":32,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"data--portRegistry":{"inputs":[],"outputs":[{"id":"port-data--portRegistry-out-0","nodeId":"data--portRegistry","direction":"out","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":33,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"data--systemData":{"inputs":[],"outputs":[{"id":"port-data--systemData-out-0","nodeId":"data--systemData","direction":"out","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":34,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"data--tagRegistry":{"inputs":[],"outputs":[{"id":"port-data--tagRegistry-out-0","nodeId":"data--tagRegistry","direction":"out","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":0,"position":"right","globalIndex":35,"position3d":[0.84,0,0.1],"portRadius":0.15,"connectionId":null}]},"dep-js-yaml":{"inputs":[{"id":"port-dep-js-yaml-in-0","nodeId":"dep-js-yaml","direction":"in","type":"default","label":"js-yaml","color":"#FF7043","shape":"circle","index":0,"position":"left","globalIndex":36,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"dep-react":{"inputs":[{"id":"port-dep-react-in-0","nodeId":"dep-react","direction":"in","type":"default","label":"react","color":"#FF7043","shape":"circle","index":0,"position":"left","globalIndex":37,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-react-in-1","nodeId":"dep-react","direction":"in","type":"default","label":"react","color":"#FF7043","shape":"circle","index":1,"position":"left","globalIndex":38,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"dep-@react-three/fiber":{"inputs":[{"id":"port-dep-@react-three/fiber-in-0","nodeId":"dep-@react-three/fiber","direction":"in","type":"default","label":"@react-three/fiber","color":"#FF7043","shape":"circle","index":0,"position":"left","globalIndex":39,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-@react-three/fiber-in-1","nodeId":"dep-@react-three/fiber","direction":"in","type":"default","label":"@react-three/fiber","color":"#FF7043","shape":"circle","index":1,"position":"left","globalIndex":40,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"dep-@react-three/drei":{"inputs":[{"id":"port-dep-@react-three/drei-in-0","nodeId":"dep-@react-three/drei","direction":"in","type":"default","label":"@react-three/drei","color":"#FF7043","shape":"circle","index":0,"position":"left","globalIndex":41,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-@react-three/drei-in-1","nodeId":"dep-@react-three/drei","direction":"in","type":"default","label":"@react-three/drei","color":"#FF7043","shape":"circle","index":1,"position":"left","globalIndex":42,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"dep-three":{"inputs":[{"id":"port-dep-three-in-0","nodeId":"dep-three","direction":"in","type":"default","label":"three","color":"#FF7043","shape":"circle","index":0,"position":"left","globalIndex":43,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-three-in-1","nodeId":"dep-three","direction":"in","type":"default","label":"three","color":"#FF7043","shape":"circle","index":1,"position":"left","globalIndex":44,"position3d":[0.4200000000000001,0.5092229374252498,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-three-in-2","nodeId":"dep-three","direction":"in","type":"default","label":"three","color":"#FF7043","shape":"circle","index":2,"position":"left","globalIndex":45,"position3d":[-0.4199999999999998,0.5092229374252499,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-three-in-3","nodeId":"dep-three","direction":"in","type":"default","label":"three","color":"#FF7043","shape":"circle","index":3,"position":"left","globalIndex":46,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-three-in-4","nodeId":"dep-three","direction":"in","type":"default","label":"three","color":"#FF7043","shape":"circle","index":4,"position":"left","globalIndex":47,"position3d":[-0.4200000000000004,-0.5092229374252498,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-dep-three-in-5","nodeId":"dep-three","direction":"in","type":"default","label":"three","color":"#FF7043","shape":"circle","index":5,"position":"left","globalIndex":48,"position3d":[0.4200000000000001,-0.5092229374252498,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"dep-react-dom":{"inputs":[{"id":"port-dep-react-dom-in-0","nodeId":"dep-react-dom","direction":"in","type":"default","label":"react-dom","color":"#FF7043","shape":"circle","index":0,"position":"left","globalIndex":49,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"packages-port-tag-tool--portRegistry":{"inputs":[{"id":"port-packages-port-tag-tool--portRegistry-in-0","nodeId":"packages-port-tag-tool--portRegistry","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":50,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"packages-port-tag-tool--tagRegistry":{"inputs":[{"id":"port-packages-port-tag-tool--tagRegistry-in-0","nodeId":"packages-port-tag-tool--tagRegistry","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":51,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"packages-port-tag-tool--hermesExampleData":{"inputs":[{"id":"port-packages-port-tag-tool--hermesExampleData-in-0","nodeId":"packages-port-tag-tool--hermesExampleData","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":52,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"packages-port-tag-tool--projectScanner":{"inputs":[{"id":"port-packages-port-tag-tool--projectScanner-in-0","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":53,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-1","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":1,"position":"left","globalIndex":54,"position3d":[0.5939696961966999,0.41577878733768986,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-2","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"cli -> scanner/registries","color":"#FF5722","shape":"circle","index":2,"position":"left","globalIndex":55,"position3d":[5.143516556418883e-17,0.588,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-3","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"mcp-server -> projectScanner","color":"#FF5722","shape":"circle","index":3,"position":"left","globalIndex":56,"position3d":[-0.5939696961966998,0.4157787873376899,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-4","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":4,"position":"left","globalIndex":57,"position3d":[-0.84,7.200923178986436e-17,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-5","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":5,"position":"left","globalIndex":58,"position3d":[-0.5939696961967,-0.41577878733768986,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-6","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":6,"position":"left","globalIndex":59,"position3d":[-1.5430549669256648e-16,-0.588,-0.1],"portRadius":0.15,"connectionId":null},{"id":"port-packages-port-tag-tool--projectScanner-in-7","nodeId":"packages-port-tag-tool--projectScanner","direction":"in","type":"default","label":"mcpLoader -> projectScanner","color":"#FF5722","shape":"circle","index":7,"position":"left","globalIndex":60,"position3d":[0.5939696961966997,-0.41577878733769,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]},"packages-port-tag-tool--index":{"inputs":[{"id":"port-packages-port-tag-tool--index-in-0","nodeId":"packages-port-tag-tool--index","direction":"in","type":"llm-response","label":"import","color":"#00BCD4","shape":"circle","index":0,"position":"left","globalIndex":61,"position3d":[0.84,0,-0.1],"portRadius":0.15,"connectionId":null}],"outputs":[]}}},"tags":{"definitions":[{"id":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","description":"赵公明通过外部API向各模块下发高层战略指令","flowType":"control","format":"JSON/REST","context":"泡茶：水管→水桶（水源到暂存）","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","example":{"from":"zhaogongming","to":"strategy","command":"deep_analysis","target":"002415","priority":"high","params":{"industry":"consumer-electronics"}},"color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)"},{"id":"tag-dispatcher-research-command","label":"调研指令","shortLabel":"调研","description":"调度器向调研员发起调研任务","flowType":"control","format":"JSON/REST","context":"泡茶：水桶→烧水壶","transform":"任务调度(Dispatcher)→具体调研指令(JSON/REST)→调研员","example":{"from":"zhaogongming","to":"research","task":"industry_analysis","team":"consumer-electronics","depth":"deep","deadline":"2024-06-15"},"color":"#FFEB3B","transportContent":"调研任务 JSON: { task, team, depth, deadline }","sourceLabel":"发送: 调研指令(JSON/REST)","targetLabel":"接收: 调研指令(JSON/REST)"},{"id":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","description":"调研员向分析师传递初步调研结果","flowType":"data","format":"Markdown/Report","context":"泡茶：烧水壶→茶海","transform":"原始调研数据→结构化Markdown发现→分析师","example":{"from":"research","to":"analyst-a","source":"annual_report","findings":["market_share_35%","revenue_growth_12%"],"confidence":0.85,"evidence":["report_pg42","filing_8k"]},"color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)"},{"id":"tag-analyst-lead-report","label":"分析报告","shortLabel":"报告","description":"分析师向队长提交完整分析报告","flowType":"data","format":"Markdown/Report","context":"泡茶：茶海→茶杯","transform":"结构化发现(分析师)→深度分析报告→队长","example":{"from":"analyst-a","to":"team-lead","ticker":"002415","fair_value":32.5,"rating":"BUY","risk_level":"medium","reasoning":"Strong_moat_and_growth"},"color":"#00BCD4","transportContent":"完整分析报告 Markdown: { ticker, fair_value, rating, risk_level, reasoning }","sourceLabel":"发送: 分析报告(Markdown)","targetLabel":"接收: 分析报告(Markdown)"},{"id":"tag-lead-risk-decision","label":"决策指令","shortLabel":"决策","description":"队长向风控员发送最终决策需要风控审核","flowType":"control","format":"JSON/REST","context":"泡茶：茶杯→人","transform":"分析报告(队长)→可执行决策→风控员","example":{"from":"team-lead","to":"risk-controller","action":"BUY","ticker":"002415","quantity":1000,"price_limit":33,"strategy":"limit_order"},"color":"#FFEB3B","transportContent":"决策指令 JSON: { action, ticker, quantity, price_limit, strategy }","sourceLabel":"发送: 决策指令(JSON/REST)","targetLabel":"接收: 决策指令(JSON/REST)"},{"id":"tag-risk-zhao-result","label":"风控结果","shortLabel":"结果","description":"风控员向赵公明返回审核结果","flowType":"control","format":"JSON/REST","transform":"风控审核(风控员)→审核结果(JSON)→赵公明","example":{"from":"risk-controller","to":"zhaogongming","task_id":"t_xxxxx","status":"approved","risk_score":2.5,"notes":"Within_risk_tolerance"},"color":"#FFEB3B","transportContent":"审核结果 JSON: { task_id, status, risk_score, notes }","sourceLabel":"发送: 审核结果(JSON/REST)","targetLabel":"接收: 审核结果(JSON/REST)"},{"id":"tag-system-broadcast","label":"系统广播","shortLabel":"广播","description":"系统级事件广播，通知各模块状态变更","flowType":"event","format":"JSON/PubSub","context":"泡茶：水沸信号","transform":"系统状态事件→JSON广播(PubSub)→所有订阅模块","example":{"event":"system_ready","timestamp":"2024-01-01T00:00:00Z","modules":["duckdb","ccswitch","api-server"]},"color":"#E040FB","transportContent":"系统事件广播 JSON/PubSub: { event, timestamp, modules[] }","sourceLabel":"发送: 系统事件(PubSub)","targetLabel":"接收: 系统事件(PubSub)"},{"id":"tag-data-query","label":"数据查询","shortLabel":"查询","description":"向数据仓库发起结构化查询","flowType":"data","format":"SQL/JSON","context":"泡茶：取茶叶","transform":"查询需求(模块)→SQL语句(DuckDB)→数据仓库","example":{"from":"research","query":"SELECT * FROM signals WHERE date > now() - 7d","limit":100},"color":"#00BCD4","transportContent":"SQL 查询: { query, limit }","sourceLabel":"发送: 数据查询(SQL/JSON)","targetLabel":"接收: 数据查询(SQL/JSON)"},{"id":"tag-data-result","label":"数据查询结果","shortLabel":"结果","description":"DuckDB 数据仓库返回查询结果集","flowType":"data","format":"JSON/CSV","context":"泡茶：茶叶入壶","transform":"SQL 查询→JSON 结果行→请求模块","example":{"rows":42,"columns":["ticker","value","date"],"data":[{"ticker":"002415","value":32.5,"date":"2024-06-01"}]},"color":"#00BCD4","transportContent":"查询结果 JSON/CSV: { rows, columns[], data[] }","sourceLabel":"发送: 查询结果(JSON/CSV)","targetLabel":"接收: 查询结果(JSON/CSV)"},{"id":"tag-external-webhook","label":"外部 Webhook 事件","shortLabel":"事件","description":"外部系统通过 Webhook 触发平台内部事件","flowType":"event","format":"JSON/Webhook","transform":"HTTP POST 请求→JSON 内部事件→路由分发","example":{"source":"github","action":"push","repo":"hermes","ref":"refs/heads/main","commits":[{"id":"abc123","message":"fix: bug"}]},"color":"#E040FB","transportContent":"Webhook 事件 JSON: { source, action, repo, ref, commits[] }","sourceLabel":"发送: Webhook 事件(JSON/HTTP)","targetLabel":"接收: Webhook 事件(JSON/HTTP)"},{"id":"tag-zhao-strategy-command","label":"战略指令下发","shortLabel":"战略","description":"赵公明向战略部下发高层战略分析指令","flowType":"control","format":"JSON/REST","transform":"自然语言(主公)→结构化JSON指令(API)→战略任务(Strategy)","example":{"from":"zhaogongming","to":"strategy","command":"industry_scan","target_industry":"consumer-electronics","priority":"high","deadline":"7d"},"color":"#FFEB3B","transportContent":"战略指令 JSON: { command, target_industry, priority, deadline }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)"},{"id":"tag-zhao-system-command","label":"系统开发指令","shortLabel":"开发","description":"赵公明向系统部下发系统开发/维护指令","flowType":"control","format":"JSON/REST","transform":"自然语言(主公)→结构化JSON指令(API)→开发任务(System)","example":{"from":"zhaogongming","to":"system","command":"deploy_service","service":"api-server","version":"v2.1.0","env":"production"},"color":"#FFEB3B","transportContent":"开发指令 JSON: { command, service, version, env }","sourceLabel":"发送: 开发指令(JSON/REST)","targetLabel":"接收: 开发指令(JSON/REST)"},{"id":"tag-zhao-operations-command","label":"运营指令","shortLabel":"运营","description":"赵公明向运营部下发育维/监控指令","flowType":"control","format":"JSON/REST","transform":"自然语言(主公)→结构化JSON指令(API)→运营任务(Operations)","example":{"from":"zhaogongming","to":"operations","command":"health_check","target":"gateway","interval":"5m"},"color":"#FFEB3B","transportContent":"运营指令 JSON: { command, target, interval }","sourceLabel":"发送: 运营指令(JSON/REST)","targetLabel":"接收: 运营指令(JSON/REST)"},{"id":"tag-strategy-zhao-report","label":"战略分析报告","shortLabel":"战略报告","description":"战略部向赵公明提交战略分析结果","flowType":"data","format":"Markdown/Report","transform":"原始市场数据→战略分析(Markdown)→赵公明","example":{"from":"strategy","to":"zhaogongming","report_type":"industry_landscape","summary":"AI_healthcare_growing_30%_YoY","confidence":0.9},"color":"#00BCD4","transportContent":"战略分析报告 Markdown: { report_type, summary, confidence }","sourceLabel":"发送: 战略分析(Markdown)","targetLabel":"接收: 战略分析(Markdown)"},{"id":"tag-system-zhao-report","label":"系统状态报告","shortLabel":"状态","description":"系统部向赵公明报告系统运行状态","flowType":"data","format":"Markdown/Report","transform":"系统监控数据→状态报告(Markdown)→赵公明","example":{"from":"system","to":"zhaogongming","services":["api-server","gateway","duckdb"],"all_green":true,"incidents":[]},"color":"#00BCD4","transportContent":"系统状态报告 Markdown: { services[], all_green, incidents[] }","sourceLabel":"发送: 系统状态(Markdown)","targetLabel":"接收: 系统状态(Markdown)"},{"id":"tag-ops-zhao-report","label":"运营报告","shortLabel":"运营报告","description":"运营部向赵公明汇报运营数据","flowType":"data","format":"Markdown/Report","transform":"运营监控数据→运营报告(Markdown)→赵公明","example":{"from":"operations","to":"zhaogongming","api_requests":15234,"avg_latency":342,"error_rate":0.02},"color":"#00BCD4","transportContent":"运营报告 Markdown: { api_requests, avg_latency, error_rate }","sourceLabel":"发送: 运营报告(Markdown)","targetLabel":"接收: 运营报告(Markdown)"},{"id":"tag-knowledge-sync","label":"知识同步","shortLabel":"同步","description":"系统部向知识库同步配置/文档更新","flowType":"data","format":"Markdown/JSON","transform":"配置变化→同步文档(Markdown/JSON)→知识库","example":{"from":"system","to":"obsidian","action":"sync","path":"docs/infrastructure/","files":["api-server.md","gateway.md"]},"color":"#7B1FA2","transportContent":"知识同步文档 Markdown/JSON: { action, path, files[] }","sourceLabel":"发送: 知识同步(Markdown/JSON)","targetLabel":"接收: 知识同步(Markdown/JSON)"},{"id":"tag-knowledge-result","label":"知识查询结果","shortLabel":"知识","description":"知识库返回查询结果","flowType":"data","format":"Markdown/JSON","transform":"查询→知识库检索→结果文档","color":"#7B1FA2","transportContent":"知识检索结果 Markdown/JSON","sourceLabel":"发送: 知识结果(Markdown/JSON)","targetLabel":"接收: 知识结果(Markdown/JSON)"},{"id":"tag-external-request","label":"外部请求路由","shortLabel":"路由","description":"网关/消息队列向API服务转发外部请求","flowType":"control","format":"JSON/HTTP","transform":"外部请求→网关路由→内部API服务","color":"#4CAF50","transportContent":"外部请求 JSON/HTTP: { method, path, headers, body }","sourceLabel":"发送: 外部请求(JSON/HTTP)","targetLabel":"接收: 外部请求(JSON/HTTP)"},{"id":"tag-config-update","label":"配置更新","shortLabel":"配置","description":"系统部向各服务下发配置更新","flowType":"config","format":"JSON","transform":"配置变更→下发JSON配置→服务实例","color":"#9C27B0","transportContent":"配置更新 JSON: { service, key, value }","sourceLabel":"发送: 配置更新(JSON)","targetLabel":"接收: 配置更新(JSON)"},{"id":"tag-cache-request","label":"缓存请求","shortLabel":"缓存","description":"API服务向Redis发起缓存读写","flowType":"data","format":"Redis Protocol","transform":"业务请求→Redis命令→缓存数据","color":"#26C6DA","transportContent":"Redis 命令: { command, key, value?, ttl? }","sourceLabel":"发送: 缓存请求(Redis)","targetLabel":"接收: 缓存请求(Redis)"},{"id":"tag-event-message","label":"事件消息","shortLabel":"消息","description":"服务间通过消息队列传递异步事件","flowType":"event","format":"JSON/AMQP","transform":"服务事件→AMQP消息→订阅服务","color":"#E040FB","transportContent":"事件消息 JSON/AMQP: { event, payload, timestamp }","sourceLabel":"发送: 事件消息(AMQP)","targetLabel":"接收: 事件消息(AMQP)"},{"id":"tag-event-publish","label":"事件发布","shortLabel":"发布","description":"API服务向消息队列发布业务事件","flowType":"event","format":"JSON/AMQP","transform":"业务事件→AMQP发布→消息队列路由","color":"#E040FB","transportContent":"业务事件 JSON/AMQP: { event_type, payload, timestamp }","sourceLabel":"发送: 事件发布(AMQP)","targetLabel":"接收: 事件发布(AMQP)"},{"id":"tag-report-submit","label":"报告提交","shortLabel":"报告","description":"各部门向赵公明提交工作报告","flowType":"data","format":"Markdown/Report","transform":"部门工作成果→Markdown报告→赵公明","color":"#00BCD4","transportContent":"工作报告 Markdown","sourceLabel":"发送: 工作报告(Markdown)","targetLabel":"接收: 工作报告(Markdown)"}],"index":{"tag-agent-analyst-findings":{"tagId":"tag-agent-analyst-findings","label":"调研发现","flowType":"data","color":"#00BCD4","fromNodes":["server","src","packages-3d-monitor","packages-port-tag-tool","components","data","examples","utils"],"toNodes":["packages-port-tag-tool","dep-js-yaml","dep-react","dep-@react-three/fiber","dep-@react-three/drei","dep-three","data","dep-react-dom","packages-port-tag-tool--portRegistry","packages-port-tag-tool--tagRegistry","packages-port-tag-tool--hermesExampleData","packages-port-tag-tool--projectScanner","packages-port-tag-tool--index","utils","examples"],"transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","format":"原始调研数据→结构化Markdown发现→分析师"},"tag-external-agent-command":{"tagId":"tag-external-agent-command","label":"战略指令下发","flowType":"control","color":"#FFEB3B","fromNodes":["data","packages-port-tag-tool--cli","packages-port-tag-tool--mcp-server","data--mcpLoader","data--portRegistry","data--systemData","data--tagRegistry"],"toNodes":["packages-port-tag-tool--projectScanner"],"transportContent":"高层战略指令 JSON: { command, target, priority, params }","format":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)"}},"portLabels":[{"connectionId":"conn-server-packages-port-tag-tool","from":"server","to":"packages-port-tag-tool","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-server-dep-js-yaml","from":"server","to":"dep-js-yaml","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-src-dep-react","from":"src","to":"dep-react","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-src-dep-@react-three/fiber","from":"src","to":"dep-@react-three/fiber","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-src-dep-@react-three/drei","from":"src","to":"dep-@react-three/drei","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-src-dep-three","from":"src","to":"dep-three","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-src-data","from":"src","to":"data","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-src-dep-react-dom","from":"src","to":"dep-react-dom","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-3d-monitor-dep-three","from":"packages-3d-monitor","to":"dep-three","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-port-tag-tool-packages-port-tag-tool--portRegistry","from":"packages-port-tag-tool","to":"packages-port-tag-tool--portRegistry","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-port-tag-tool-packages-port-tag-tool--tagRegistry","from":"packages-port-tag-tool","to":"packages-port-tag-tool--tagRegistry","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-port-tag-tool-packages-port-tag-tool--hermesExampleData","from":"packages-port-tag-tool","to":"packages-port-tag-tool--hermesExampleData","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-port-tag-tool-packages-port-tag-tool--projectScanner","from":"packages-port-tag-tool","to":"packages-port-tag-tool--projectScanner","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-port-tag-tool-packages-port-tag-tool--index","from":"packages-port-tag-tool","to":"packages-port-tag-tool--index","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-dep-react","from":"components","to":"dep-react","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-dep-@react-three/fiber","from":"components","to":"dep-@react-three/fiber","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-dep-@react-three/drei","from":"components","to":"dep-@react-three/drei","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-dep-three","from":"components","to":"dep-three","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-data","from":"components","to":"data","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-utils","from":"components","to":"utils","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-components-examples","from":"components","to":"examples","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-data-packages-port-tag-tool--projectScanner","from":"data","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"},{"connectionId":"conn-data-dep-three","from":"data","to":"dep-three","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-examples-dep-three","from":"examples","to":"dep-three","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-utils-dep-three","from":"utils","to":"dep-three","tagId":"tag-agent-analyst-findings","label":"调研发现","shortLabel":"发现","flowType":"data","color":"#00BCD4","transportContent":"Markdown 结构报告: { source, findings[], confidence, evidence[] }","sourceLabel":"发送: 调研发现(Markdown)","targetLabel":"接收: 调研发现(Markdown)","transform":"原始调研数据→结构化Markdown发现→分析师","description":"调研员向分析师传递初步调研结果"},{"connectionId":"conn-packages-port-tag-tool--cli-packages-port-tag-tool--projectScanner","from":"packages-port-tag-tool--cli","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"},{"connectionId":"conn-packages-port-tag-tool--mcp-server-packages-port-tag-tool--projectScanner","from":"packages-port-tag-tool--mcp-server","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"},{"connectionId":"conn-data--mcpLoader-packages-port-tag-tool--projectScanner","from":"data--mcpLoader","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"},{"connectionId":"conn-data--portRegistry-packages-port-tag-tool--projectScanner","from":"data--portRegistry","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"},{"connectionId":"conn-data--systemData-packages-port-tag-tool--projectScanner","from":"data--systemData","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"},{"connectionId":"conn-data--tagRegistry-packages-port-tag-tool--projectScanner","from":"data--tagRegistry","to":"packages-port-tag-tool--projectScanner","tagId":"tag-external-agent-command","label":"战略指令下发","shortLabel":"指令","flowType":"control","color":"#FFEB3B","transportContent":"高层战略指令 JSON: { command, target, priority, params }","sourceLabel":"发送: 战略指令(JSON/REST)","targetLabel":"接收: 战略指令(JSON/REST)","transform":"自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)","description":"赵公明通过外部API向各模块下发高层战略指令"}]},"flowTypes":{"data":["调研发现"],"control":["战略指令下发"]},"conflicts":[],"source":"project-scan","projectPath":"/Users/zhencheng/projects/hermes-3d-panorama","quality":{"totalDirectoriesScanned":33,"totalFilesFound":112,"totalNodesGenerated":43,"totalConnectionsGenerated":31,"moduleIds":[".hermes","plugins","public","server","src","packages-3d-monitor","packages-port-tag-tool","components","data","examples","mcp","utils","packages-port-tag-tool--cli","packages-port-tag-tool--hermesExampleData","packages-port-tag-tool--index","packages-port-tag-tool--mcp-server","packages-port-tag-tool--portRegistry","packages-port-tag-tool--projectScanner","packages-port-tag-tool--tagRegistry","components--AccordionExpand","components--BillboardText","components--ConnectionLine","components--ErrorBoundary","components--HoverLabel","components--InfoPanel","components--NebulaLink","components--Node3D","components--PortMarker","components--SubRegion","data--mcpLoader","data--portRegistry","data--systemData","data--tagRegistry"],"hasPackageJson":true,"hasReadme":true,"hasRequirementsTxt":false,"buildTools":["vite"]},"buildTools":["vite"]};</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  3D Topology Viewer v2 — Chip-style nodes, circuit board feel
+// ═══════════════════════════════════════════════════════════════════
+
+(function() {
+'use strict';
+
+var scene, camera, renderer, labelRenderer, controls;
+var nodeGroup, edgeGroup, portGroup;
+var flowDots = [];        // { mesh, edgeInfo, progress, speed }
+var flowDotsGroup;
+var nodeMeshes = {};      // nodeId -> { mesh, data, ports: [], edges: [] }
+var edgeLines = [];       // { line, glowLine, conn, fromId, toId }
+var portMeshes = {};      // portId -> mesh
+var raycaster, mouse, tooltipEl;
+var selectedNodeId = null;
+var clock = new THREE.Clock();
+var autoRotate = false;
+var autoRotateTimer = null;
+var autoRotateSpeed = 0.002;
+// --- Three-level idle reset ---
+var idleResetLevel = 0;
+var idleTimer = null;
+var idleTimeNoReset = 0;
+var IDLE_RESET_LEVELS = [
+  { threshold: 10000, snap: 0.3, rotateSpeed: 0.001, label: 'small'  },
+  { threshold: 20000, snap: 0.6, rotateSpeed: 0.002, label: 'medium' },
+  { threshold: 30000, snap: 1.0, rotateSpeed: 0.004, label: 'full'   },
+];
+var _resetTargetCamPos = null;
+var _resetTargetLookAt = null;
+var _resetLerpFactor = 0.02;
+var _mouseDownPos = { x: 0, y: 0 };
+var _isDragging = false;
+var _dragThreshold = 5; // pixels for drag detection
+
+// ─── Layer config (v0.1.9 — 5-layer adaptive) ──────────────────────────────────
+var LAYER_CONFIG = {
+  infrastructure: { y: 0, color: 0x4A90D9, label: '基础设施层' },
+  data:           { y: 1, color: 0x00BCD4, label: '数据层' },
+  business:       { y: 2, color: 0x66BB6A, label: '业务逻辑层' },
+  presentation:   { y: 3, color: 0xFFB74D, label: '展示层' },
+  external:       { y: 4, color: 0xFF7043, label: '外部依赖层' },
+};
+
+// Alias map: old layer names -> new 5-layer keys (backward compat)
+var LAYER_ALIAS = {
+  agent:     'business',
+  command:   'infrastructure',
+  control:  'infrastructure',
+  frontend: 'presentation',
+  backend:  'business',
+  analysis: 'data',
+  build:    'infrastructure',
+  config:   'infrastructure',
+  feature:  'business',
+  risk:     'data',
+  decision: 'business',
+  management: 'presentation',
+};
+
+// ─── Infer layer from node identity (v0.1.9) ──────────────────────
+function inferLayer(node) {
+  var id = (node.id || '').toLowerCase();
+  var tags = (node.tags || []).map(function(t) { return t.toLowerCase(); });
+  var allText = id + ' ' + tags.join(' ');
+
+  // Check from highest (external) to lowest (infrastructure) priority
+  if (/dep-|^external|third.?party|vendor|react|axios|lodash|three/.test(allText)) {
+    return 'external';
+  }
+  if (/component|view|ui|widget|screen|layout|icon|style|css/.test(allText)) {
+    return 'presentation';
+  }
+  if (/page|route|service|controller|logic|middleware|handler|provider/.test(allText)) {
+    return 'business';
+  }
+  if (/api|client|store|data|hook|database|db|model|schema/.test(allText)) {
+    return 'data';
+  }
+  // Default: infrastructure
+  return 'infrastructure';
+}
+
+/**
+ * Resolve the effective layer key for a node.
+ * 1) If n.layer exists, try LAYER_ALIAS mapping.
+ * 2) Otherwise fall back to inferLayer().
+ */
+function resolveLayer(n) {
+  if (n.layer && LAYER_ALIAS[n.layer]) return LAYER_ALIAS[n.layer];
+  if (n.layer && LAYER_CONFIG[n.layer]) return n.layer;
+  return inferLayer(n);
+}
+
+/**
+ * Resolve the effective color for a node.
+ */
+function resolveLayerColor(n) {
+  var lk = resolveLayer(n);
+  var cfg = LAYER_CONFIG[lk];
+  return cfg ? cfg.color : (n.color ? new THREE.Color(n.color).getHex() : 0x888888);
+}
+
+var FLOW_COLORS = {
+  control:  0xFFEB3B,
+  data:     0x00BCD4,
+  event:    0xE040FB,
+  knowledge: 0x7B1FA2,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════════
+
+function init() {
+  tooltipEl = document.getElementById('tooltip');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a12);
+  scene.fog = new THREE.Fog(0x0a0a12, 25, 45);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(12, 8, 14);
+  camera.lookAt(0, 0, 0);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  document.body.appendChild(renderer.domElement);
+
+  // CSS2D Renderer for labels
+  labelRenderer = new THREE.CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  document.body.appendChild(labelRenderer.domElement);
+
+  // OrbitControls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+  controls.maxPolarAngle = Math.PI / 2.1;
+  controls.addEventListener('start', function() { onUserInteraction(); });
+  controls.addEventListener('end', function() {
+    onUserInteraction();
+  });
+
+  // Raycaster
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Groups
+  nodeGroup = new THREE.Group();
+  edgeGroup = new THREE.Group();
+  portGroup = new THREE.Group();
+  flowDotsGroup = new THREE.Group();
+  scene.add(nodeGroup);
+  scene.add(edgeGroup);
+  scene.add(portGroup);
+  scene.add(flowDotsGroup);
+
+  // Lights
+  var ambient = new THREE.AmbientLight(0x404060, 0.6);
+  scene.add(ambient);
+  var dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+  var fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+  fillLight.position.set(-10, 5, -10);
+  scene.add(fillLight);
+  var rimLight = new THREE.DirectionalLight(0xff8844, 0.3);
+  rimLight.position.set(0, -10, 15);
+  scene.add(rimLight);
+
+
+  // Events
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('dblclick', onDblClick);
+  renderer.domElement.addEventListener('mousedown', onMouseDown);
+  renderer.domElement.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('resize', onResize);
+
+  // Start
+  animate();
+}
+
+// --- Idle reset helpers ---
+function onUserInteraction() {
+  idleTimeNoReset = 0;
+  idleResetLevel = 0;
+  _resetTargetCamPos = null;
+  _resetTargetLookAt = null;
+  autoRotate = false;
+  if (autoRotateTimer) { clearTimeout(autoRotateTimer); autoRotateTimer = null; }
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+  startIdleTimer();
+}
+
+function startIdleTimer() {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(function() {
+    idleTimer = null;
+    idleTimeNoReset += 100;
+    var nextLevel = 0;
+    for (var _li = 0; _li < IDLE_RESET_LEVELS.length; _li++) {
+      if (idleTimeNoReset >= IDLE_RESET_LEVELS[_li].threshold) nextLevel = _li + 1;
+    }
+    if (nextLevel > idleResetLevel) {
+      idleResetLevel = nextLevel;
+      triggerIdleReset(idleResetLevel);
+    }
+    if (idleResetLevel < 3) { startIdleTimer(); } else { startIdleTimer(); }
+  }, 100);
+}
+
+function triggerIdleReset(level) {
+  if (level < 1 || level > 3) return;
+  var cfg = IDLE_RESET_LEVELS[level - 1];
+  var center = new THREE.Vector3(0, 0, 0);
+  if (selectedNodeId && nodeMeshes[selectedNodeId]) center.copy(nodeMeshes[selectedNodeId].mesh.position);
+  var curPos = camera.position.clone();
+  var idealDist = 12 + level * 2;
+  var theta = Math.atan2(curPos.x - center.x, curPos.z - center.z) + level * 0.15;
+  var targetPos = new THREE.Vector3(
+    center.x + idealDist * Math.sin(theta),
+    center.y + 6 + level * 1.5,
+    center.z + idealDist * Math.cos(theta)
+  );
+  _resetTargetCamPos = new THREE.Vector3().lerpVectors(curPos, targetPos, cfg.snap);
+  _resetTargetLookAt = center.clone();
+  _resetLerpFactor = 0.03 + level * 0.01;
+  autoRotate = true;
+  autoRotateSpeed = cfg.rotateSpeed;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  Layout — Layer-based stacking with horizontal grid
+// ═══════════════════════════════════════════════════════════════════
+
+function computeLayout(nodes) {
+  var LAYERS = {
+    infrastructure: { y: 0, color: 0x4A90D9, label: '基础设施层' },
+    data:           { y: 1, color: 0x00BCD4, label: '数据层' },
+    business:       { y: 2, color: 0x66BB6A, label: '业务逻辑层' },
+    presentation:   { y: 3, color: 0xFFB74D, label: '展示层' },
+    external:       { y: 4, color: 0xFF7043, label: '外部依赖层' },
+  };
+
+  // 1. Infer layer for each node
+  var layerBuckets = {};
+  var layerKeys = ['infrastructure', 'data', 'business', 'presentation', 'external'];
+  layerKeys.forEach(function(k) { layerBuckets[k] = []; });
+
+  nodes.forEach(function(n) {
+    var lk = resolveLayer(n);
+    if (!layerBuckets[lk]) layerBuckets[lk] = [];
+    layerBuckets[lk].push(n);
+  });
+
+  var positions = {};
+  var MAX_PER_ROW = 15;
+
+  layerKeys.forEach(function(lk) {
+    var bucket = layerBuckets[lk] || [];
+    var count = bucket.length;
+    if (count === 0) return;
+
+    var yPos = LAYERS[lk].y;
+
+    // Determine spacing based on node count
+    var spacing;
+    if (count < 10) {
+      spacing = 3.0;
+    } else {
+      spacing = 20 / count;
+    }
+    spacing = Math.max(1.2, Math.min(spacing, 3.0));
+
+    var actualSpacing = count > 30 ? 2.0 : spacing;
+
+    bucket.forEach(function(n, i) {
+      var rowIdx = count > 30 ? Math.floor(i / MAX_PER_ROW) : 0;
+      var colIdx = i % MAX_PER_ROW;
+      var rowCount = count > 30 ? Math.min(MAX_PER_ROW, count - rowIdx * MAX_PER_ROW) : count;
+
+      var xPos = -(rowCount - 1) * actualSpacing / 2 + colIdx * actualSpacing;
+      var zOffset = rowIdx * 3.0;
+
+      // Tiny random jitter to prevent perfect overlap
+      var jitterZ = (Math.random() - 0.5) * 0.5;
+      var jitterX = (Math.random() - 0.5) * 0.3;
+
+      positions[n.id] = {
+        x: xPos + jitterX,
+        y: yPos,
+        z: zOffset + jitterZ
+      };
+    });
+  });
+
+  return positions;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Build Scene
+// ═══════════════════════════════════════════════════════════════════
+
+
+// ─── Helpers for pipe obstacle avoidance ──────────────────────────
+function getNodeBox(nodeId, positions) {
+  var pos = positions[nodeId];
+  if (!pos) return null;
+  var size = 1.2;
+  var margin = 0.08; // small margin for better collision detection
+  return {
+    minX: pos.x - size * 0.5 - margin,
+    maxX: pos.x + size * 0.5 + margin,
+    minY: pos.y - size * 0.3 - margin,
+    maxY: pos.y + size * 0.3 + margin,
+    minZ: pos.z - size * 0.5 - margin,
+    maxZ: pos.z + size * 0.5 + margin,
+  };
+}
+
+function pointInBox(px, py, pz, box) {
+  return px >= box.minX && px <= box.maxX &&
+         py >= box.minY && py <= box.maxY &&
+         pz >= box.minZ && pz <= box.maxZ;
+}
+
+function linePenetratesBox(x1, y1, z1, x2, y2, z2, box, steps) {
+  steps = steps || 10;
+  for (var i = 1; i < steps; i++) {
+    var t = i / steps;
+    var px = x1 + (x2 - x1) * t;
+    var py = y1 + (y2 - y1) * t;
+    var pz = z1 + (z2 - z1) * t;
+    if (pointInBox(px, py, pz, box)) return true;
+  }
+  return false;
+}
+
+function findObstacles(fromId, toId, nodeIds, positions) {
+  var fromPos = positions[fromId];
+  var toPos = positions[toId];
+  if (!fromPos || !toPos) return [];
+  var obstacles = [];
+  nodeIds.forEach(function(nid) {
+    if (nid === fromId || nid === toId) return;
+    var box = getNodeBox(nid, positions);
+    if (!box) return;
+    if (linePenetratesBox(fromPos.x, fromPos.y, fromPos.z, toPos.x, toPos.y, toPos.z, box, 24)) {
+      obstacles.push({ id: nid, box: box, pos: positions[nid] });
+    }
+  });
+  return obstacles;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Pipe-vs-Pipe Crossing Detection & Elevation
+// ═══════════════════════════════════════════════════════════════════
+// Detect crossing pipes in XZ plane and assign elevation offsets so
+// crossing pipes are vertically separated, mimicking PCB routing.
+var pipeElevations = {};  // "fromId->toId" -> base elevation offset
+var pipeCrossings = [];   // metadata about which pipes cross
+
+function computePipeCrossings(allConns, positions) {
+  pipeElevations = {};
+  pipeCrossings = [];
+
+  // Build segment list
+  var segs = [];
+  allConns.forEach(function(conn) {
+    var fp = positions[conn.from];
+    var tp = positions[conn.to];
+    if (!fp || !tp) return;
+    var key = conn.from + '->' + conn.to;
+    segs.push({
+      key: key, from: conn.from, to: conn.to,
+      fromPos: fp, toPos: tp,
+      dx: tp.x - fp.x, dz: tp.z - fp.z,
+    });
+  });
+
+  // Check every pair for XZ intersection
+  for (var i = 0; i < segs.length; i++) {
+    for (var j = i + 1; j < segs.length; j++) {
+      var a = segs[i], b = segs[j];
+      // Skip if they share an endpoint
+      if (a.from === b.from || a.from === b.to || a.to === b.from || a.to === b.to) continue;
+
+      // Line intersection in XZ plane
+      var x1 = a.fromPos.x, z1 = a.fromPos.z;
+      var x2 = a.toPos.x,   z2 = a.toPos.z;
+      var x3 = b.fromPos.x, z3 = b.fromPos.z;
+      var x4 = b.toPos.x,   z4 = b.toPos.z;
+
+      var denom = (x1 - x2) * (z3 - z4) - (z1 - z2) * (x3 - x4);
+      if (Math.abs(denom) < 0.0001) continue; // parallel
+
+      var t = ((x1 - x3) * (z3 - z4) - (z1 - z3) * (x3 - x4)) / denom;
+      var u = -((x1 - x2) * (z1 - z3) - (z1 - z2) * (x1 - x3)) / denom;
+
+      var m = 0.01;
+      if (t >= m && t <= 1 - m && u >= m && u <= 1 - m) {
+        var cx = x1 + t * (x2 - x1);
+        var cz = z1 + t * (z2 - z1);
+        pipeCrossings.push({
+          pipeA: a.key, pipeB: b.key,
+          crossX: cx, crossZ: cz,
+          a: a, b: b,
+          t: t, u: u,
+        });
+      }
+    }
+  }
+
+  // Assign elevation: pipes with more crossings ride higher
+  var crossingCount = {};
+  pipeCrossings.forEach(function(cr) {
+    crossingCount[cr.pipeA] = (crossingCount[cr.pipeA] || 0) + 1;
+    crossingCount[cr.pipeB] = (crossingCount[cr.pipeB] || 0) + 1;
+  });
+
+  allConns.forEach(function(conn) {
+    var key = conn.from + '->' + conn.to;
+    var cnt = crossingCount[key] || 0;
+    pipeElevations[key] = cnt * 0.3;
+  });
+
+  // For each crossing pair, ensure >= 0.5 vertical separation
+  pipeCrossings.forEach(function(cr) {
+    var elA = pipeElevations[cr.pipeA] || 0;
+    var elB = pipeElevations[cr.pipeB] || 0;
+    if (Math.abs(elA - elB) < 0.4) {
+      // Bump the one with more distance between its endpoints higher
+      var distA = cr.a.fromPos.distanceTo ? cr.a.fromPos.distanceTo(cr.a.toPos) : 0;
+      var distB = cr.b.fromPos.distanceTo ? cr.b.fromPos.distanceTo(cr.b.toPos) : 0;
+      if (distA > distB) {
+        pipeElevations[cr.pipeA] = Math.max(elA, elB) + 0.5;
+      } else {
+        pipeElevations[cr.pipeB] = Math.max(elA, elB) + 0.5;
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Improved Compute Avoidance Curve
+// ═══════════════════════════════════════════════════════════════════
+
+function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
+  var dist = p1.distanceTo(p2);
+  var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+  var pipeElevKey = (fromId || '') + '->' + (toId || '');
+  var baseElev = pipeElevations[pipeElevKey] || 0;
+
+  if (obstacles.length === 0) {
+    var curveHeight = Math.min(dist * 0.2, 2.5) + baseElev * 0.15;
+    // Add slight lateral spread based on fromId-toId hash
+    // so parallel pipes don't overlap
+    var hash = 0;
+    var keyStr = (fromId || '') + (toId || '');
+    for (var _hi = 0; _hi < keyStr.length; _hi++) hash = ((hash << 5) - hash) + keyStr.charCodeAt(_hi);
+    var latSpread = (hash % 7 - 3) * 0.12; // -0.36 to 0.36 lateral offset
+    var cp1 = new THREE.Vector3(
+      mid.x + (p1.z - p2.z) * 0.15 + latSpread,
+      mid.y + curveHeight + baseElev,
+      mid.z + (p2.x - p1.x) * 0.15 + latSpread
+    );
+    var cp2 = new THREE.Vector3(
+      mid.x + (p1.z - p2.z) * 0.08 + latSpread * 0.6,
+      mid.y + curveHeight * 0.7 + baseElev * 0.7,
+      mid.z + (p2.x - p1.x) * 0.08 + latSpread * 0.6
+    );
+    return new THREE.CubicBezierCurve3(p1, cp1, cp2, p2);
+  }
+
+  // ----- Iterative multi-waypoint router with improved obstacle avoidance -----
+  var waypoints = [];
+  var maxIter = 10;
+  var iter = 0;
+  var sampleRes = 28;
+  var NODE_RADIUS = 0.68;
+
+  while (iter < maxIter) {
+    var allPts = buildPathPoints(p1, p2, waypoints, sampleRes);
+    var curve = new THREE.CatmullRomCurve3(allPts);
+
+    // Check each obstacle with fine sampling
+    var blocked = false;
+    var blockedBy = null;
+    var blockBestIdx = -1;
+    obstacles.forEach(function(o) {
+      if (blocked) return;
+      var box = o.box;
+      // Sample more densely for intersection test
+      for (var si = 0; si < allPts.length; si++) {
+        if (pointInBox(allPts[si].x, allPts[si].y, allPts[si].z, box)) {
+          blocked = true;
+          blockedBy = o;
+          blockBestIdx = si;
+          break;
+        }
+      }
+    });
+
+    if (!blocked) return curve;
+
+    var bPos = blockedBy.pos;
+
+    // Project obstacle onto p1->p2 axis to find where it sits
+    var axis = new THREE.Vector3().subVectors(p2, p1);
+    var axisLen = axis.length();
+    if (axisLen < 0.01) axisLen = 0.01;
+    axis.normalize();
+    var projT = new THREE.Vector3().subVectors(bPos, p1).dot(axis) / axisLen;
+    projT = Math.max(0, Math.min(1, projT));
+
+    // Pick segment around the obstacle
+    var segIdx = Math.floor(projT * (allPts.length - 1));
+    segIdx = Math.max(1, Math.min(allPts.length - 2, segIdx));
+    var sp = allPts[segIdx - 1];
+    var ep = allPts[segIdx + 1];
+    if (!sp || !ep) { sp = allPts[Math.max(0, segIdx - 1)]; ep = allPts[Math.min(allPts.length - 1, segIdx + 1)]; }
+
+    // Compute push direction: horizontal perpendicular to the segment
+    var dir = new THREE.Vector3().subVectors(ep, sp);
+    dir.y = 0;
+    var dirLen = dir.length();
+    if (dirLen < 0.01) {
+      dir.set(1, 0, 0);
+    } else {
+      dir.divideScalar(dirLen);
+    }
+
+    var toObs = new THREE.Vector3().subVectors(bPos, sp);
+    toObs.y = 0;
+    var perp = new THREE.Vector3().crossVectors(dir, toObs);
+    perp.y = 0;
+    var perpLen = perp.length();
+    if (perpLen < 0.01) {
+      perp.set(0, 0, 1);
+    } else {
+      perp.divideScalar(perpLen);
+    }
+
+    // Push distance: proportional to obstacle size and centered-ness
+    var centerFactor = 1.0 - Math.abs(projT - 0.5) * 1.8;
+    centerFactor = Math.max(0.3, centerFactor);
+    var pushDist = 2.0 + centerFactor * 2.5;
+    var pushUp = 2.5 + baseElev + centerFactor * 1.5;
+
+    var wayPos = new THREE.Vector3().addVectors(sp, ep).multiplyScalar(0.5);
+    wayPos.x += perp.x * pushDist;
+    wayPos.y += pushUp;
+    wayPos.z += perp.z * pushDist;
+
+    // Keep away from obstacle center
+    var dw = wayPos.distanceTo(bPos);
+    var minDist = NODE_RADIUS * 2.2;
+    if (dw < minDist) {
+      var pushAway = new THREE.Vector3().subVectors(wayPos, bPos).normalize();
+      wayPos.x += pushAway.x * (minDist - dw);
+      wayPos.y += pushAway.y * (minDist - dw) * 0.5;
+      wayPos.z += pushAway.z * (minDist - dw);
+    }
+
+    // Clamp Y to reasonable range (arc over, not drill through)
+    var ceilY = Math.max(p1.y, p2.y) + 6.0 + baseElev;
+    var floorY = Math.min(p1.y, p2.y) - 2.0;
+    wayPos.y = Math.max(floorY, Math.min(ceilY, wayPos.y));
+
+    // Maintain order along path
+    var t = new THREE.Vector3().subVectors(wayPos, p1).dot(axis) / axisLen;
+    t = Math.max(0, Math.min(1, t));
+    var insertIdx = 0;
+    while (insertIdx < waypoints.length && t > waypoints[insertIdx].t) insertIdx++;
+    if (insertIdx < waypoints.length && Math.abs(t - waypoints[insertIdx].t) < 0.02) {
+      t += 0.03;
+    }
+    waypoints.splice(insertIdx, 0, { pos: wayPos, t: t });
+
+    iter++;
+  }
+
+  var allPts = buildPathPoints(p1, p2, waypoints, sampleRes);
+  return new THREE.CatmullRomCurve3(allPts);
+}
+
+// Helper: build point array for CatmullRom from p1, waypoints, p2
+function buildPathPoints(p1, p2, waypoints, samplesPerSeg) {
+  samplesPerSeg = samplesPerSeg || 16;
+  var pts = [p1];
+  waypoints.sort(function(a, b) { return a.t - b.t; });
+  waypoints.forEach(function(w) { pts.push(w.pos); });
+  pts.push(p2);
+  var tmpCurve = new THREE.CatmullRomCurve3(pts);
+  var total = tmpCurve.getPoints(samplesPerSeg * pts.length);
+  return total;
+}
+function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
+  // Clear
+  while (nodeGroup.children.length > 0) nodeGroup.remove(nodeGroup.children[0]);
+  while (edgeGroup.children.length > 0) edgeGroup.remove(edgeGroup.children[0]);
+  while (portGroup.children.length > 0) portGroup.remove(portGroup.children[0]);
+  while (flowDotsGroup.children.length > 0) flowDotsGroup.remove(flowDotsGroup.children[0]);
+  nodeMeshes = {};
+  edgeLines = [];
+  flowDots = [];
+  portMeshes = {};
+  selectedNodeId = null;
+  updateNodeInfoPanel(null);
+
+  if (!dataNodes || dataNodes.length === 0) return;
+
+  var positions = computeLayout(dataNodes);
+  var nodeMap = {}; // nodeId -> node data
+  window.nodeDataMap = nodeMap; // expose for panel name resolution
+
+  // ─── Build Nodes (Chip cubes) ──────────────────────────
+  dataNodes.forEach(function(n) {
+    nodeMap[n.id] = n;
+    var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
+    var layerKey = resolveLayer(n);
+    var layerCfg = LAYER_CONFIG[layerKey] || { color: 0x888888 };
+    var chipColor = resolveLayerColor(n);
+    n.layer = layerKey; // stamp back for downstream
+
+    var size = 1.2;
+    var geo = new THREE.BoxGeometry(size, size * 0.6, size);
+    var mat = new THREE.MeshStandardMaterial({
+      color: chipColor,
+      roughness: 0.4,
+      metalness: 0.6,
+      emissive: chipColor,
+      emissiveIntensity: 0.08,
+      transparent: true,
+      opacity: 0.92,
+    });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    // Chip detail lines on top
+    var lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
+    var lineGeo = new THREE.BufferGeometry();
+    var s = size * 0.4;
+    var yOff = size * 0.3 + 0.01;
+    var lPts = [];
+    for (var li = -s; li <= s; li += s * 0.5) {
+      lPts.push(li, yOff, -s, li, yOff, s);
+    }
+    for (var lj = -s; lj <= s; lj += s * 0.5) {
+      lPts.push(-s, yOff, lj, s, yOff, lj);
+    }
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lPts, 3));
+    var lines = new THREE.LineSegments(lineGeo, lineMat);
+    mesh.add(lines);
+
+    // Highlight border (edge glow)
+    var edgeMat = new THREE.LineBasicMaterial({
+      color: chipColor,
+      transparent: true,
+      opacity: 0.3,
+    });
+    var edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(size * 1.02, size * 0.62 * 1.02, size * 1.02));
+    var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
+    mesh.add(edgeWire);
+
+    // Store
+    mesh.userData.nodeId = n.id;
+    mesh.userData.isNode = true;
+    nodeMeshes[n.id] = { mesh: mesh, data: n, ports: [], edges: [] };
+    nodeGroup.add(mesh);
+
+    // Label (CSS2D)
+    var labelDiv = document.createElement('div');
+    labelDiv.className = 'label-2d';
+    labelDiv.textContent = n.chineseName || n.label || n.id;
+    var label = new THREE.CSS2DObject(labelDiv);
+    label.position.set(pos.x, pos.y + size * 0.6 + 0.4, pos.z);
+    nodeGroup.add(label);
+  });
+
+  // ─── Build Ports ───────────────────────────────────────
+  var portPositions = {}; // portId -> { x, y, z }
+
+  // Collect ports from both external dataPorts array and inline node.ports
+  var allPorts = [];
+  if (dataPorts) {
+    dataPorts.forEach(function(p) { allPorts.push(p); });
+  }
+  // Also collect ports defined directly on each node
+  dataNodes.forEach(function(n) {
+    if (n.ports && n.ports.length > 0) {
+      n.ports.forEach(function(p) {
+        // Ensure it has a nodeId reference
+        if (!p.nodeId) p.nodeId = n.id;
+        // Check if already added
+        var dup = false;
+        for (var pi = 0; pi < allPorts.length; pi++) {
+          if (allPorts[pi].portId === p.portId || (allPorts[pi].nodeId === p.nodeId && allPorts[pi].label === p.label && allPorts[pi].type === p.type)) {
+            dup = true;
+            break;
+          }
+        }
+        if (!dup) allPorts.push(p);
+      });
+    }
+  });
+
+  allPorts.forEach(function(p) {
+    var nodeId = p.nodeId;
+    var nm = nodeMeshes[nodeId];
+    if (!nm) return;
+    var pos = nm.mesh.position.clone();
+    var sz = 1.2;
+    var isOutput = p.type === 'output';
+    var portColor = isOutput ? 0xF44336 : 0x4CAF50;
+    var radius = 0.12;
+
+    // Determine edge position based on port index
+    var portsForNode = nm.ports;
+    portsForNode.push(p);
+    var idx = portsForNode.length - 1;
+    var total = portsForNode.length;
+
+    // Place around the chip edge
+    var angle = (idx / Math.max(total, 1)) * Math.PI * 2;
+    var edgeX = Math.cos(angle) * sz * 0.55;
+    var edgeZ = Math.sin(angle) * sz * 0.55;
+    var edgeY = (isOutput ? 1 : -1) * sz * 0.15;
+
+    pos.x += edgeX;
+    pos.y += edgeY;
+    pos.z += edgeZ;
+
+    portPositions[p.portId] = { x: pos.x, y: pos.y, z: pos.z };
+
+    // Port sphere
+    var sphereGeo = new THREE.SphereGeometry(radius, 12, 12);
+    var sphereMat = new THREE.MeshStandardMaterial({
+      color: portColor,
+      emissive: portColor,
+      emissiveIntensity: 0.5,
+      roughness: 0.3,
+      metalness: 0.2,
+    });
+    var sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.position.copy(pos);
+    sphere.userData.portId = p.portId;
+    sphere.userData.isPort = true;
+    sphere.userData.nodeId = nodeId;
+    portGroup.add(sphere);
+    portMeshes[p.portId] = sphere;
+
+    // Port glow ring
+    var ringGeo = new THREE.RingGeometry(radius * 0.8, radius * 1.8, 16);
+    var ringMat = new THREE.MeshBasicMaterial({
+      color: portColor,
+      transparent: true,
+      opacity: 0.2,
+      side: THREE.DoubleSide,
+    });
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(pos);
+    ring.lookAt(camera.position);
+    portGroup.add(ring);
+    sphere.userData.ring = ring;
+
+    // Store reference on node
+  });
+
+  // ─── Build Edges ───────────────────────────────────────
+  // Compute pipe-vs-pipe crossings to assign elevation offsets
+  computePipeCrossings(dataConns, positions);
+
+  if (dataConns) {
+    dataConns.forEach(function(conn) {
+      var fromData = nodeMap[conn.from];
+      var toData = nodeMap[conn.to];
+      if (!fromData || !toData) return;
+
+      // FIX 4: Connect output port -> input port
+      var fromPortId = conn.fromPort || null;
+      var toPortId = conn.toPort || null;
+      if (!fromPortId && nodeMeshes[conn.from] && nodeMeshes[conn.from].ports) {
+        var fports = nodeMeshes[conn.from].ports;
+        for (var _fi = 0; _fi < fports.length; _fi++) { if (fports[_fi].type === 'output') { fromPortId = fports[_fi].portId; break; } }
+      }
+      if (!toPortId && nodeMeshes[conn.to] && nodeMeshes[conn.to].ports) {
+        var tports = nodeMeshes[conn.to].ports;
+        for (var _ti = 0; _ti < tports.length; _ti++) { if (tports[_ti].type !== 'output') { toPortId = tports[_ti].portId; break; } }
+      }
+      var fromPos, toPos;
+      if (fromPortId && portPositions[fromPortId]) fromPos = portPositions[fromPortId];
+      else fromPos = positions[conn.from] || { x: 0, y: 0, z: 0 };
+      if (toPortId && portPositions[toPortId]) toPos = portPositions[toPortId];
+      else toPos = positions[conn.to] || { x: 0, y: 0, z: 0 };
+
+      var p1 = new THREE.Vector3(fromPos.x, fromPos.y, fromPos.z);
+      var p2 = new THREE.Vector3(toPos.x, toPos.y, toPos.z);
+
+      var flowType = conn.flowType || 'data';
+      var colorHex = FLOW_COLORS[flowType] || 0x888888;
+
+
+
+      // Compute obstacle avoidance
+      var nodeIdList = Object.keys(positions);
+      var obstacles = findObstacles(conn.from, conn.to, nodeIdList, positions);
+      var curve = computeAvoidanceCurve(p1, p2, obstacles, conn.from, conn.to);
+      var pts = curve.getPoints(24);
+
+      // Main glow tube (thicker pipe)
+      var tubeGeo = new THREE.TubeGeometry(curve, 20, 0.04, 8, false);
+      var glowMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.25,
+      });
+      var glowTube = new THREE.Mesh(tubeGeo, glowMat);
+      edgeGroup.add(glowTube);
+
+      // Core bright tube
+      var coreTubeGeo = new THREE.TubeGeometry(curve, 20, 0.022, 8, false);
+      var coreMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.6,
+      });
+      var coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
+      edgeGroup.add(coreTube);
+
+      // Store edge data
+      var edgeInfo = {
+        line: coreTube,
+        glowLine: glowTube,
+        glowTube: glowTube,
+        coreTube: coreTube,
+        conn: conn,
+        fromId: conn.from,
+        toId: conn.to,
+        curve: curve,
+        flowType: flowType,
+        colorHex: colorHex,
+      };
+      edgeLines.push(edgeInfo);
+
+      // Create CSS2D text label at mid-point of pipe
+      var midPoint = curve.getPoint(0.5);
+      var labelDiv = document.createElement('div');
+      labelDiv.className = 'pipe-label-3d';
+      labelDiv.textContent = conn.label || '';
+      // Flow type color
+      var labelColor = '#' + new THREE.Color(colorHex).getHexString();
+      labelDiv.style.borderColor = labelColor;
+      labelDiv.style.color = labelColor;
+      var labelObj = new THREE.CSS2DObject(labelDiv);
+      labelObj.position.set(midPoint.x, midPoint.y, midPoint.z);
+      edgeGroup.add(labelObj);
+
+      // Link to nodes
+      if (nodeMeshes[conn.from]) nodeMeshes[conn.from].edges.push(edgeInfo);
+      if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
+    });
+  }
+
+  document.getElementById('nodeCount').textContent = dataNodes.length;
+  document.getElementById('edgeCount').textContent = dataConns.length;
+  // Count active layers
+  var activeLayers = {};
+  dataNodes.forEach(function(n) { activeLayers[resolveLayer(n)] = true; });
+  document.getElementById('layerCount').textContent = Object.keys(activeLayers).length;
+
+  // ─── Build Flow Dots ──────────────────────────────
+  buildFlowDots();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── Build Flow Dots ────────────────────────────────────────────────
+function buildFlowDots() {
+  // Clear previous
+  while (flowDotsGroup.children.length > 0) {
+    var c = flowDotsGroup.children[0];
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+    flowDotsGroup.remove(c);
+  }
+  flowDots = [];
+
+  edgeLines.forEach(function(ei) {
+    // 每条管道放2个光点，间隔半个路径长度，初始进度随机化
+    var baseProgress = Math.random();
+    for (var i = 0; i < 2; i++) {
+      var prog = (baseProgress + i * 0.5) % 1.0;
+      var dotGeo = new THREE.SphereGeometry(0.13, 8, 8);
+      var dotMat = new THREE.MeshBasicMaterial({
+        color: ei.colorHex,
+        transparent: true,
+        opacity: 0.9,
+      });
+      var dot = new THREE.Mesh(dotGeo, dotMat);
+      var startPos = ei.curve.getPoint(prog);
+      dot.position.copy(startPos);
+      flowDotsGroup.add(dot);
+      flowDots.push({
+        mesh: dot,
+        edgeInfo: ei,
+        progress: prog,
+        baseSpeed: 0.2,
+        fastSpeed: 0.55,
+        speed: 0.2,
+      });
+    }
+  });
+}
+//  Interaction
+// ═══════════════════════════════════════════════════════════════════
+
+function getIntersects(event) {
+  var rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  // Collect all meshes
+  var allMeshes = [];
+  nodeGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isNode) allMeshes.push(c);
+  });
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isPort) allMeshes.push(c);
+  });
+  return raycaster.intersectObjects(allMeshes);
+}
+
+function onMouseMove(event) {
+  var intersects = getIntersects(event);
+  var found = null;
+
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      var nm = nodeMeshes[obj.userData.nodeId];
+      if (nm) {
+        found = nm.data;
+        break;
+      }
+    } else if (obj.userData.isPort) {
+      // Show parent node info
+      var pnm = nodeMeshes[obj.userData.nodeId];
+      if (pnm) {
+        found = pnm.data;
+        break;
+      }
+    }
+  }
+
+  if (found) {
+    var tt = tooltipEl;
+    tt.style.display = 'block';
+    tt.style.left = (event.clientX + 16) + 'px';
+    tt.style.top = (event.clientY - 10) + 'px';
+    var html = '<div class="tt-name">' + (found.chineseName || found.label || found.id) + '</div>';
+    if (found.label && found.label !== found.id) {
+      html += '<div class="tt-desc">' + found.label + '</div>';
+    }
+    var lk = resolveLayer(found);
+    var lCfg = LAYER_CONFIG[lk];
+    html += '<div><span class="tt-tag" style="background:#' + (lCfg ? new THREE.Color(lCfg.color).getHexString() : '555') + '44;color:#ccc">' + (lCfg ? lCfg.label : lk) + '</span></div>';
+    tt.innerHTML = html;
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    tooltipEl.style.display = 'none';
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+function onMouseDown(event) {
+  _mouseDownPos.x = event.clientX;
+  _mouseDownPos.y = event.clientY;
+  _isDragging = false;
+}
+
+function onMouseUp(event) {
+  var dx = event.clientX - _mouseDownPos.x;
+  var dy = event.clientY - _mouseDownPos.y;
+  if (Math.sqrt(dx*dx + dy*dy) > _dragThreshold) {
+    _isDragging = true;
+  } else {
+    _isDragging = false;
+  }
+}
+
+function onClick(event) {
+  // Fix 1: Ignore click if it was a drag (OrbitControls rotation)
+  if (_isDragging) {
+    _isDragging = false;
+    return;
+  }
+
+  var intersects = getIntersects(event);
+  var clickedNodeId = null;
+
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      clickedNodeId = obj.userData.nodeId;
+      break;
+    } else if (obj.userData.isPort) {
+      clickedNodeId = obj.userData.nodeId;
+      break;
+    }
+  }
+
+  if (!clickedNodeId) {
+    // Fix 1: No node clicked — preserve current selection state
+    return;
+  }
+
+  // Reset all nodes to default
+  Object.keys(nodeMeshes).forEach(function(id) {
+    var nm = nodeMeshes[id];
+    nm.mesh.material.emissiveIntensity = 0.08;
+  });
+
+  // Reset all edges
+  edgeLines.forEach(function(ei) {
+    if (ei.coreTube) ei.coreTube.material.opacity = 0.25;
+    if (ei.glowTube) ei.glowTube.material.opacity = 0.25;
+    if (ei.line) ei.line.material.opacity = 0.6;
+    if (ei.glowLine) ei.glowLine.material.opacity = 0.25;
+  });
+
+  // Reset all flow dots
+  flowDots.forEach(function(fd) {
+    fd.speed = fd.baseSpeed;
+    fd.mesh.material.opacity = 0.9;
+  });
+
+  // Select the clicked node
+  onUserInteraction();
+  selectedNodeId = clickedNodeId;
+  var nm = nodeMeshes[clickedNodeId];
+  if (nm) {
+    nm.mesh.material.emissiveIntensity = 0.5;
+    updateNodeInfoPanel(nm.data);
+    // Highlight connected edges
+    nm.edges.forEach(function(ei) {
+      ei.line.material.opacity = 1.0;
+      if (ei.glowLine) ei.glowLine.material.opacity = 0.6;
+      if (ei.glowTube) ei.glowTube.material.opacity = 0.6;
+    });
+    // 选中节点——加速关联管道光点，暗淡非关联光点
+    nm.edges.forEach(function(ei) {
+      flowDots.forEach(function(fd) {
+        if (fd.edgeInfo === ei) {
+          fd.speed = fd.fastSpeed;
+          fd.mesh.material.opacity = 1.0;
+        }
+      });
+    });
+    flowDots.forEach(function(fd) {
+      var connected = false;
+      nm.edges.forEach(function(ei) {
+        if (fd.edgeInfo === ei) connected = true;
+      });
+      if (!connected) {
+        fd.mesh.material.opacity = 0.2;
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Node Info Panel (Fix 2)
+// ═══════════════════════════════════════════════════════════════════
+
+function updateNodeInfoPanel(nodeData) {
+  var panel = document.getElementById('nodeInfoPanel');
+  if (!nodeData) { panel.style.display = 'none'; return; }
+  var nm = null;
+  if (selectedNodeId && nodeMeshes && nodeMeshes[selectedNodeId]) nm = nodeMeshes[selectedNodeId];
+  var name = nodeData.chineseName || nodeData.label || nodeData.id;
+  var desc = nodeData.chineseDesc || nodeData.description || '';
+  var layerName = nodeData.layer || '';
+  var nodeId = selectedNodeId;
+
+  function getNodeDisplayName(nid) {
+    var nd = window.nodeDataMap && window.nodeDataMap[nid];
+    return nd ? (nd.chineseName || nd.label || nid) : nid;
+  }
+
+  var upstream = [], downstream = [];
+  if (window.nodeDataMap && edgeLines) {
+    edgeLines.forEach(function(ei) {
+      var conn = ei.conn; if (!conn) return;
+      if (conn.to === nodeId) upstream.push({ fromNodeId: conn.from, connLabel: conn.label || '', flowType: conn.flowType || 'data' });
+      if (conn.from === nodeId) downstream.push({ toNodeId: conn.to, connLabel: conn.label || '', flowType: conn.flowType || 'data' });
+    });
+  }
+  var flowColors = { control: '#FFEB3B', data: '#00BCD4', event: '#E040FB', knowledge: '#7B1FA2' };
+
+  // Pure vertical link diagram (no two-part layout)
+  var html = '';
+  if (upstream.length > 0) {
+    upstream.forEach(function(u) {
+      var fc = flowColors[u.flowType] || '#888';
+      html += '<div class="ld-row"><div class="ld-node-box ld-upstream-node">' + getNodeDisplayName(u.fromNodeId) + '</div></div>';
+      html += '<div class="ld-row ld-row-indent"><div class="ld-port-box ld-port-out" style="border-color:' + fc + '">' + u.connLabel + '</div>';
+      html += '<div class="ld-flow-badge" style="background:' + fc + ';color:' + (u.flowType==='control'?'#333':'#fff') + '">' + u.flowType + '</div>';
+      html += '<div class="ld-arrow ld-arrow-down"><div class="ld-pipe-line-v" style="background:' + fc + '"></div><div class="ld-arrow-head-v" style="border-top-color:' + fc + '"></div></div>';
+      html += '<div class="ld-port-box ld-port-in" style="border-color:' + fc + '">' + u.connLabel + '</div></div>';
+    });
+    html += '<div class="ld-row"><div class="ld-arrow ld-arrow-down"><div class="ld-pipe-line-v" style="background:rgba(255,255,255,0.15)"></div><div class="ld-arrow-head-v" style="border-top-color:rgba(255,255,255,0.25)"></div></div></div>';
+  }
+  html += '<div class="ld-row ld-row-center"><div class="ld-node-box ld-current-node">' + name + '</div></div>';
+  if (layerName) {
+    var lCfg = LAYER_CONFIG[layerName];
+    html += '<div class="ld-row ld-row-center ld-row-gap"><span class="nip-layer">' + (lCfg ? lCfg.label : layerName) + '</span></div>';
+  }
+  if (desc) html += '<div class="ld-row ld-row-center ld-row-gap"><span class="nip-desc-text">' + desc + '</span></div>';
+  if (downstream.length > 0) {
+    html += '<div class="ld-row"><div class="ld-arrow ld-arrow-down"><div class="ld-pipe-line-v" style="background:rgba(255,255,255,0.15)"></div><div class="ld-arrow-head-v" style="border-top-color:rgba(255,255,255,0.25)"></div></div></div>';
+    downstream.forEach(function(d) {
+      var fc = flowColors[d.flowType] || '#888';
+      html += '<div class="ld-row ld-row-indent"><div class="ld-port-box ld-port-out" style="border-color:' + fc + '">' + d.connLabel + '</div>';
+      html += '<div class="ld-flow-badge" style="background:' + fc + ';color:' + (d.flowType==='control'?'#333':'#fff') + '">' + d.flowType + '</div>';
+      html += '<div class="ld-arrow ld-arrow-down"><div class="ld-pipe-line-v" style="background:' + fc + '"></div><div class="ld-arrow-head-v" style="border-top-color:' + fc + '"></div></div>';
+      html += '<div class="ld-port-box ld-port-in" style="border-color:' + fc + '">' + d.connLabel + '</div></div>';
+      html += '<div class="ld-row"><div class="ld-arrow ld-arrow-down"><div class="ld-pipe-line-v" style="background:' + fc + '"></div><div class="ld-arrow-head-v" style="border-top-color:' + fc + '"></div></div>';
+      html += '<div class="ld-node-box ld-downstream-node">' + getNodeDisplayName(d.toNodeId) + '</div></div>';
+    });
+  }
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Double-click handler (Fix 1) — deselect only on blank dblclick
+// ═══════════════════════════════════════════════════════════════════
+
+function onDblClick(event) {
+  if (!selectedNodeId) return;
+  var intersects = getIntersects(event);
+  var hitNode = false;
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode || obj.userData.isPort) {
+      hitNode = true;
+      break;
+    }
+  }
+  if (!hitNode) {
+    // Blank area double-click — deselect
+    selectedNodeId = null;
+    onUserInteraction();
+    // Reset all nodes
+    Object.keys(nodeMeshes).forEach(function(id) {
+      var nm = nodeMeshes[id];
+      nm.mesh.material.emissiveIntensity = 0.08;
+    });
+    // Reset all edges
+    edgeLines.forEach(function(ei) {
+      if (ei.coreTube) ei.coreTube.material.opacity = 0.25;
+      if (ei.glowTube) ei.glowTube.material.opacity = 0.25;
+      if (ei.line) ei.line.material.opacity = 0.6;
+      if (ei.glowLine) ei.glowLine.material.opacity = 0.25;
+    });
+    // Reset all flow dots
+    flowDots.forEach(function(fd) {
+      fd.speed = fd.baseSpeed;
+      fd.mesh.material.opacity = 0.9;
+    });
+    updateNodeInfoPanel(null);
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Resize
+// ═══════════════════════════════════════════════════════════════════
+
+function onResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Stats
+// ═══════════════════════════════════════════════════════════════════
+
+var frameCount = 0;
+var lastFpsUpdate = 0;
+
+function updateStats() {
+  var now = performance.now();
+  frameCount++;
+  if (now - lastFpsUpdate >= 1000) {
+    document.getElementById('fps').textContent = frameCount;
+    frameCount = 0;
+    lastFpsUpdate = now;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Animation Loop
+// ═══════════════════════════════════════════════════════════════════
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // --- Idle cam reset (lerp) + auto-rotate ---
+  if (_resetTargetCamPos && _resetTargetLookAt) {
+    camera.position.lerp(_resetTargetCamPos, _resetLerpFactor);
+    controls.target.lerp(_resetTargetLookAt, _resetLerpFactor);
+    var pivot = controls.target.clone();
+    var radius = camera.position.distanceTo(pivot);
+    var theta = Math.atan2(camera.position.x - pivot.x, camera.position.z - pivot.z) + autoRotateSpeed;
+    camera.position.x = pivot.x + radius * Math.sin(theta);
+    camera.position.z = pivot.z + radius * Math.cos(theta);
+    camera.lookAt(pivot);
+    if (camera.position.distanceTo(_resetTargetCamPos) < 0.3) { _resetTargetCamPos = null; _resetTargetLookAt = null; }
+    controls.update();
+  } else if (autoRotate) {
+    var pivot = controls.target.clone();
+    var radius = camera.position.distanceTo(pivot);
+    var theta = Math.atan2(camera.position.x - pivot.x, camera.position.z - pivot.z) + autoRotateSpeed;
+    camera.position.x = pivot.x + radius * Math.sin(theta);
+    camera.position.z = pivot.z + radius * Math.cos(theta);
+    camera.lookAt(pivot);
+    controls.update();
+  } else {
+    controls.update();
+  }
+
+  // Make port rings face camera
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.ring) {
+      c.userData.ring.lookAt(camera.position);
+    }
+  });
+
+  // Edge pulse animation
+  // 手动计算 delta（避免 clock.getDelta() 干扰 getElapsedTime）
+  var now = performance.now() / 1000;
+  if (animate._lastTime === undefined) animate._lastTime = now;
+  var delta = Math.min(now - animate._lastTime, 0.1);
+  animate._lastTime = now;
+
+  var t = clock.getElapsedTime();
+  edgeLines.forEach(function(ei, idx) {
+    var pulse = 0.5 + 0.3 * Math.sin(t * 0.8 + idx * 0.5);
+    if (ei.glowLine) ei.glowLine.material.opacity = 0.15 + 0.2 * pulse;
+    if (ei.glowTube) ei.glowTube.material.opacity = 0.15 + 0.2 * pulse;
+  });
+
+  // Flow dot animation
+  flowDots.forEach(function(fd) {
+    fd.progress += fd.speed * delta;
+    if (fd.progress > 1.0) fd.progress -= 1.0;
+    var pos = fd.edgeInfo.curve.getPoint(fd.progress);
+    fd.mesh.position.copy(pos);
+  });
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Start
+// ═══════════════════════════════════════════════════════════════════
+
+init();
+
+var embeddedData = window.__EMBEDDED_DATA__;
+if (embeddedData && embeddedData.nodes) {
+  buildScene(
+    embeddedData.nodes,
+    embeddedData.connections || [],
+    embeddedData.ports || [],
+    embeddedData.tags || {}
+  );
+  console.log('[3d-monitor] Loaded from embedded data: ' + embeddedData.nodes.length + ' nodes');
+} else {
+  console.warn('[3d-monitor] No embedded data found (window.__EMBEDDED_DATA__)');
+}
+
+})();
+</script>
+<!-- 3d-monitor v0.1.9 -- adaptive layout -->
+</body>
+</html>

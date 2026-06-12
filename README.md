@@ -1,6 +1,6 @@
-# System 3D Panorama
+# Arch Scanner
 
-一个基于 React Three Fiber 的交互式 3D 系统架构可视化框架，用于在 3D 空间中直观展示 AI Agent 系统中的节点、连接和数据流。
+一个基于 React Three Fiber 的交互式 3D 系统架构可视化框架（原 System 3D Panorama），用于在 3D 空间中直观展示项目架构中的节点、连接和数据流。
 
 ## 功能特性
 

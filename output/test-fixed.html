@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Monitor — v2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0a12;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+canvas{display:block}
+#tooltip{position:fixed;pointer-events:none;background:rgba(8,8,16,0.92);color:#e0e0e0;padding:8px 14px;border-radius:8px;font-size:13px;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;z-index:1000;max-width:280px;line-height:1.5;box-shadow:0 4px 24px rgba(0,0,0,0.6)}
+#tooltip .tt-name{color:#fff;font-weight:600;font-size:14px;margin-bottom:2px}
+#tooltip .tt-desc{color:#aaa;font-size:12px}
+#tooltip .tt-tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;margin-top:4px;margin-right:4px}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,0.8)}
+#stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.4);pointer-events:none;font-family:'SF Mono','Fira Code',monospace;line-height:1.6}
+#stats b{color:#4FC3F7}
+#legend{position:fixed;bottom:60px;right:20px;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px)}
+#legend .row{display:flex;align-items:center;gap:8px}
+#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+.label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
+</style>
+<script>window.__EMBEDDED_DATA__ = {"nodes": [{"id": "project-root", "label": "system-3d-panorama", "layer": "infrastructure", "description": "3D Panoramic Visualization for AI Agent System Architecture — Visualize nodes, connections, data flows in an interactive 3D space", "chineseName": "系统3D全景", "chineseDesc": "3D Panoramic Visualization for AI Agent System Architecture — Visualize nodes, connections, data flows in an interactive 3D space", "color": "#4CAF50", "geometryType": "sphere", "status": "Active", "position": [0, 0, -4]}, {"id": "plugins", "label": "Plugins", "layer": "infrastructure", "description": "Build Plugins — Vite build-time plugins for injection and optimization", "chineseName": "构建插件", "chineseDesc": "Vite构建插件，负责构建时注入和优化", "color": "#4A90D9", "geometryType": "box", "status": "Active", "position": [-8, -3, -0.27004300443895773]}, {"id": "public", "label": "Public", "layer": "frontend", "description": "Module: public (1 source files)", "chineseName": "Public", "chineseDesc": "Public模块", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, -9, 7.703969012205198]}, {"id": "server", "label": "Server", "layer": "infrastructure", "description": "MCP Server — Standardized MCP protocol server", "chineseName": "MCP服务端", "chineseDesc": "MCP协议服务端，提供标准化接口", "color": "#4A90D9", "geometryType": "box", "status": "Active", "position": [-8, 0, 0.2285548906540498]}, {"id": "src", "label": "Src", "layer": "frontend", "description": "3D Panorama Frontend — Three.js-based architecture visualization", "chineseName": "3D全景前端", "chineseDesc": "3D全景展示前端，基于Three.js渲染架构可视化", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, -6, 8.112542624640628]}, {"id": "packages-3d-monitor", "label": "3d Monitor", "layer": "infrastructure", "description": "Module: packages/3d-monitor (1 source files)", "chineseName": "3d Monitor", "chineseDesc": "3d Monitor模块", "color": "#4A90D9", "geometryType": "box", "status": "Active", "position": [-8, 3, -0.061906564158744]}, {"id": "packages-port-tag-tool", "label": "Port Tag Tool", "layer": "agent", "description": "Port Tag Tool — Core sensor that scans project directory structures, generates ports and tags", "chineseName": "端口标签工具", "chineseDesc": "核心传感器工具，扫描项目目录结构、生成端口和标签", "color": "#4CAF50", "geometryType": "box", "status": "Active", "position": [0, 0, 4.1958800396671]}, {"id": "components", "label": "Components", "layer": "frontend", "description": "3D Render Components — Three.js scene rendering components", "chineseName": "3D渲染组件", "chineseDesc": "Three.js 3D场景渲染组件集合", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, -3, 8.025288266091593]}, {"id": "data", "label": "Data", "layer": "frontend", "description": "Data Loader — MCP data loading adapter for sensor scan results", "chineseName": "数据加载层", "chineseDesc": "MCP数据加载适配层，加载传感器扫描结果", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, 0, 8.16184692226634]}, {"id": "examples", "label": "Examples", "layer": "frontend", "description": "Example Data — Frontend demo data and configurations", "chineseName": "示例数据", "chineseDesc": "前端示例数据和演示配置", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, 3, 7.9627445214109915]}, {"id": "mcp", "label": "Mcp", "layer": "frontend", "description": "Frontend MCP Adapter", "chineseName": "MCP前端适配", "chineseDesc": "前端MCP协议适配模块", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, 6, 8.160877618252016]}, {"id": "utils", "label": "Utils", "layer": "frontend", "description": "Frontend Utility Functions", "chineseName": "前端工具函数", "chineseDesc": "前端通用工具函数和帮助方法", "color": "#FFB74D", "geometryType": "box", "status": "Active", "position": [8, 9, 7.866710033385971]}, {"id": "packages-port-tag-tool--cli", "label": "Cli", "layer": "agent", "description": "CLI Entry — Command-line interface for scan/tags/ports actions", "chineseName": "命令行入口", "chineseDesc": "CLI命令行入口，支持scan/tags/ports等操作", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -1, 4.4958800396670995]}, {"id": "packages-port-tag-tool--hermesExampleData", "label": "HermesExampleData", "layer": "agent", "description": "Hermes Example Data", "chineseName": "示例数据", "chineseDesc": "Hermes系统内置示例数据", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -2, 4.4958800396670995]}, {"id": "packages-port-tag-tool--index", "label": "Index", "layer": "agent", "description": "Module Entry — port-tag-tool package entry point", "chineseName": "模块入口", "chineseDesc": "port-tag-tool模块导出入口", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -3, 4.4958800396670995]}, {"id": "packages-port-tag-tool--mcp-server", "label": "Mcp Server", "layer": "agent", "description": "MCP Server — Exposes standardized tool interfaces via MCP protocol", "chineseName": "MCP服务器", "chineseDesc": "MCP协议服务器，对外暴露标准化工具接口", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -4, 4.4958800396670995]}, {"id": "packages-port-tag-tool--portRegistry", "label": "PortRegistry", "layer": "agent", "description": "Port Registry — Port registration and management engine", "chineseName": "端口注册表", "chineseDesc": "端口注册与管理引擎，计算入口/出口端口", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -5, 4.4958800396670995]}, {"id": "packages-port-tag-tool--projectScanner", "label": "ProjectScanner", "layer": "agent", "description": "Project Scanner — Heuristic sensor that discovers modules and dependencies", "chineseName": "项目扫描器", "chineseDesc": "启发式项目扫描传感器，发现模块和依赖", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -6, 4.4958800396670995]}, {"id": "packages-port-tag-tool--tagRegistry", "label": "TagRegistry", "layer": "agent", "description": "Tag Registry — Tag definition and management engine", "chineseName": "标签注册表", "chineseDesc": "标签定义与管理引擎，自动贴标签", "color": "#4CAF50", "geometryType": "box", "status": "Active", "_parentId": "packages-port-tag-tool", "position": [0, -7, 4.4958800396670995]}, {"id": "components--AccordionExpand", "label": "AccordionExpand", "layer": "frontend", "description": "File: AccordionExpand.jsx in src/components", "chineseName": "AccordionExpand", "chineseDesc": "3D渲染组件的子模块AccordionExpand", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -4, 8.325288266091594]}, {"id": "components--BillboardText", "label": "BillboardText", "layer": "frontend", "description": "File: BillboardText.jsx in src/components", "chineseName": "BillboardText", "chineseDesc": "3D渲染组件的子模块BillboardText", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -5, 8.325288266091594]}, {"id": "components--ConnectionLine", "label": "ConnectionLine", "layer": "frontend", "description": "File: ConnectionLine.jsx in src/components", "chineseName": "ConnectionLine", "chineseDesc": "3D渲染组件的子模块ConnectionLine", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -6, 8.325288266091594]}, {"id": "components--ErrorBoundary", "label": "ErrorBoundary", "layer": "frontend", "description": "File: ErrorBoundary.jsx in src/components", "chineseName": "ErrorBoundary", "chineseDesc": "3D渲染组件的子模块ErrorBoundary", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -7, 8.325288266091594]}, {"id": "components--HoverLabel", "label": "HoverLabel", "layer": "frontend", "description": "File: HoverLabel.jsx in src/components", "chineseName": "HoverLabel", "chineseDesc": "3D渲染组件的子模块HoverLabel", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -8, 8.325288266091594]}, {"id": "components--InfoPanel", "label": "InfoPanel", "layer": "frontend", "description": "File: InfoPanel.jsx in src/components", "chineseName": "InfoPanel", "chineseDesc": "3D渲染组件的子模块InfoPanel", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -9, 8.325288266091594]}, {"id": "components--NebulaLink", "label": "NebulaLink", "layer": "frontend", "description": "File: NebulaLink.jsx in src/components", "chineseName": "NebulaLink", "chineseDesc": "3D渲染组件的子模块NebulaLink", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -10, 8.325288266091594]}, {"id": "components--Node3D", "label": "Node3D", "layer": "frontend", "description": "File: Node3D.jsx in src/components", "chineseName": "Node3D", "chineseDesc": "3D渲染组件的子模块Node3D", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -11, 8.325288266091594]}, {"id": "components--PortMarker", "label": "PortMarker", "layer": "frontend", "description": "File: PortMarker.jsx in src/components", "chineseName": "PortMarker", "chineseDesc": "3D渲染组件的子模块PortMarker", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -12, 8.325288266091594]}, {"id": "components--SubRegion", "label": "SubRegion", "layer": "frontend", "description": "File: SubRegion.jsx in src/components", "chineseName": "SubRegion", "chineseDesc": "3D渲染组件的子模块SubRegion", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "components", "position": [8, -13, 8.325288266091594]}, {"id": "data--mcpLoader", "label": "McpLoader", "layer": "frontend", "description": "File: mcpLoader.js in src/data", "chineseName": "McpLoader", "chineseDesc": "数据加载层的子模块McpLoader", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "data", "position": [8, -1, 8.461846922266341]}, {"id": "data--portRegistry", "label": "PortRegistry", "layer": "frontend", "description": "Port Registry — Port registration and management engine", "chineseName": "端口注册表", "chineseDesc": "端口注册与管理引擎，计算入口/出口端口", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "data", "position": [8, -2, 8.461846922266341]}, {"id": "data--systemData", "label": "SystemData", "layer": "frontend", "description": "File: systemData.js in src/data", "chineseName": "SystemData", "chineseDesc": "数据加载层的子模块SystemData", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "data", "position": [8, -3, 8.461846922266341]}, {"id": "data--tagRegistry", "label": "TagRegistry", "layer": "frontend", "description": "File: tagRegistry.py in src/data", "chineseName": "TagRegistry", "chineseDesc": "数据加载层的子模块TagRegistry", "color": "#FFB74D", "geometryType": "box", "status": "Active", "_parentId": "data", "position": [8, -4, 8.461846922266341]}, {"id": "dep-@react-three/drei", "label": "@react-three/drei", "layer": "external", "description": "External dependency: @react-three/drei@^9.92.7", "chineseName": "@react-three/drei", "chineseDesc": "外部依赖: @react-three/drei@^9.92.7", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [14.199713303740282, 0, 13.7618496355135]}, {"id": "dep-@react-three/fiber", "label": "@react-three/fiber", "layer": "external", "description": "External dependency: @react-three/fiber@^8.15.12", "chineseName": "@react-three/fiber", "chineseDesc": "外部依赖: @react-three/fiber@^8.15.12", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [15.58728957227504, 0, 12.013230040683993]}, {"id": "dep-@react-three/postprocessing", "label": "@react-three/postprocessing", "layer": "external", "description": "External dependency: @react-three/postprocessing@^2.16.2", "chineseName": "@react-three/postprocessing", "chineseDesc": "外部依赖: @react-three/postprocessing@^2.16.2", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [16.75028416427085, 0, 13.08429422030531]}, {"id": "dep-js-yaml", "label": "js-yaml", "layer": "external", "description": "External dependency: js-yaml@^4.2.0", "chineseName": "js-yaml", "chineseDesc": "外部依赖: js-yaml@^4.2.0", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [17.078979481775605, 0, 12.87581507136997]}, {"id": "dep-react", "label": "react", "layer": "external", "description": "External dependency: react@^18.2.0", "chineseName": "react", "chineseDesc": "外部依赖: react@^18.2.0", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [17.07251745501344, 0, 12.55570011128657]}, {"id": "dep-react-dom", "label": "react-dom", "layer": "external", "description": "External dependency: react-dom@^18.2.0", "chineseName": "react-dom", "chineseDesc": "外部依赖: react-dom@^18.2.0", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [17.305866931113997, 0, 13.337221781930566]}, {"id": "dep-three", "label": "three", "layer": "external", "description": "External dependency: three@^0.162.0", "chineseName": "three", "chineseDesc": "外部依赖: three@^0.162.0", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [14.724642832847167, 0, 12.562361684565843]}, {"id": "dep-@vitejs/plugin-react", "label": "@vitejs/plugin-react", "layer": "external", "description": "External dependency: @vitejs/plugin-react@^4.2.1", "chineseName": "@vitejs/plugin-react", "chineseDesc": "外部依赖: @vitejs/plugin-react@^4.2.1", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [14.345509494633006, 0, 13.82316657877891]}, {"id": "dep-vite", "label": "vite", "layer": "external", "description": "External dependency: vite@^5.2.0", "chineseName": "vite", "chineseDesc": "外部依赖: vite@^5.2.0", "color": "#FF7043", "geometryType": "box", "status": "External", "position": [14.55399378137372, 0, 13.960168732235616]}], "connections": [{"id": "conn-server-packages-port-tag-tool", "from": "server", "to": "packages-port-tag-tool", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-server-dep-js-yaml", "from": "server", "to": "dep-js-yaml", "flowType": "data", "label": "js-yaml", "color": "#FF7043"}, {"id": "conn-src-dep-react", "from": "src", "to": "dep-react", "flowType": "data", "label": "react", "color": "#FF7043"}, {"id": "conn-src-dep-@react-three/fiber", "from": "src", "to": "dep-@react-three/fiber", "flowType": "data", "label": "@react-three/fiber", "color": "#FF7043"}, {"id": "conn-src-dep-@react-three/drei", "from": "src", "to": "dep-@react-three/drei", "flowType": "data", "label": "@react-three/drei", "color": "#FF7043"}, {"id": "conn-src-dep-three", "from": "src", "to": "dep-three", "flowType": "data", "label": "three", "color": "#FF7043"}, {"id": "conn-src-data", "from": "src", "to": "data", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-src-dep-react-dom", "from": "src", "to": "dep-react-dom", "flowType": "data", "label": "react-dom", "color": "#FF7043"}, {"id": "conn-packages-port-tag-tool-packages-port-tag-tool--portRegistry", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--portRegistry", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-packages-port-tag-tool-packages-port-tag-tool--tagRegistry", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--tagRegistry", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-packages-port-tag-tool-packages-port-tag-tool--hermesExampleData", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--hermesExampleData", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-packages-port-tag-tool-packages-port-tag-tool--projectScanner", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--projectScanner", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-packages-port-tag-tool-packages-port-tag-tool--index", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--index", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-components-dep-react", "from": "components", "to": "dep-react", "flowType": "data", "label": "react", "color": "#FF7043"}, {"id": "conn-components-dep-@react-three/fiber", "from": "components", "to": "dep-@react-three/fiber", "flowType": "data", "label": "@react-three/fiber", "color": "#FF7043"}, {"id": "conn-components-dep-@react-three/drei", "from": "components", "to": "dep-@react-three/drei", "flowType": "data", "label": "@react-three/drei", "color": "#FF7043"}, {"id": "conn-components-dep-three", "from": "components", "to": "dep-three", "flowType": "data", "label": "three", "color": "#FF7043"}, {"id": "conn-components-data", "from": "components", "to": "data", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-components-utils", "from": "components", "to": "utils", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-components-examples", "from": "components", "to": "examples", "flowType": "data", "label": "import", "color": "#00BCD4"}, {"id": "conn-data-packages-port-tag-tool--projectScanner", "from": "data", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "mcpLoader -> projectScanner", "color": "#FF5722"}, {"id": "conn-data-dep-three", "from": "data", "to": "dep-three", "flowType": "data", "label": "three", "color": "#FF7043"}, {"id": "conn-examples-dep-three", "from": "examples", "to": "dep-three", "flowType": "data", "label": "three", "color": "#FF7043"}, {"id": "conn-utils-dep-three", "from": "utils", "to": "dep-three", "flowType": "data", "label": "three", "color": "#FF7043"}, {"id": "conn-packages-port-tag-tool--cli-packages-port-tag-tool--projectScanner", "from": "packages-port-tag-tool--cli", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "cli -> scanner/registries", "color": "#FF5722"}, {"id": "conn-packages-port-tag-tool--mcp-server-packages-port-tag-tool--projectScanner", "from": "packages-port-tag-tool--mcp-server", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "mcp-server -> projectScanner", "color": "#FF5722"}, {"id": "conn-data--mcpLoader-packages-port-tag-tool--projectScanner", "from": "data--mcpLoader", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "mcpLoader -> projectScanner", "color": "#FF5722"}, {"id": "conn-data--portRegistry-packages-port-tag-tool--projectScanner", "from": "data--portRegistry", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "mcpLoader -> projectScanner", "color": "#FF5722"}, {"id": "conn-data--systemData-packages-port-tag-tool--projectScanner", "from": "data--systemData", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "mcpLoader -> projectScanner", "color": "#FF5722"}, {"id": "conn-data--tagRegistry-packages-port-tag-tool--projectScanner", "from": "data--tagRegistry", "to": "packages-port-tag-tool--projectScanner", "flowType": "control", "label": "mcpLoader -> projectScanner", "color": "#FF5722"}], "tags": {"definitions": [{"id": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "description": "赵公明通过外部API向各模块下发高层战略指令", "flowType": "control", "format": "JSON/REST", "context": "泡茶：水管→水桶（水源到暂存）", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "example": {"from": "zhaogongming", "to": "strategy", "command": "deep_analysis", "target": "002415", "priority": "high", "params": {"industry": "consumer-electronics"}}, "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)"}, {"id": "tag-dispatcher-research-command", "label": "调研指令", "shortLabel": "调研", "description": "调度器向调研员发起调研任务", "flowType": "control", "format": "JSON/REST", "context": "泡茶：水桶→烧水壶", "transform": "任务调度(Dispatcher)→具体调研指令(JSON/REST)→调研员", "example": {"from": "zhaogongming", "to": "research", "task": "industry_analysis", "team": "consumer-electronics", "depth": "deep", "deadline": "2024-06-15"}, "color": "#FFEB3B", "transportContent": "调研任务 JSON: { task, team, depth, deadline }", "sourceLabel": "发送: 调研指令(JSON/REST)", "targetLabel": "接收: 调研指令(JSON/REST)"}, {"id": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "description": "调研员向分析师传递初步调研结果", "flowType": "data", "format": "Markdown/Report", "context": "泡茶：烧水壶→茶海", "transform": "原始调研数据→结构化Markdown发现→分析师", "example": {"from": "research", "to": "analyst-a", "source": "annual_report", "findings": ["market_share_35%", "revenue_growth_12%"], "confidence": 0.85, "evidence": ["report_pg42", "filing_8k"]}, "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)"}, {"id": "tag-analyst-lead-report", "label": "分析报告", "shortLabel": "报告", "description": "分析师向队长提交完整分析报告", "flowType": "data", "format": "Markdown/Report", "context": "泡茶：茶海→茶杯", "transform": "结构化发现(分析师)→深度分析报告→队长", "example": {"from": "analyst-a", "to": "team-lead", "ticker": "002415", "fair_value": 32.5, "rating": "BUY", "risk_level": "medium", "reasoning": "Strong_moat_and_growth"}, "color": "#00BCD4", "transportContent": "完整分析报告 Markdown: { ticker, fair_value, rating, risk_level, reasoning }", "sourceLabel": "发送: 分析报告(Markdown)", "targetLabel": "接收: 分析报告(Markdown)"}, {"id": "tag-lead-risk-decision", "label": "决策指令", "shortLabel": "决策", "description": "队长向风控员发送最终决策需要风控审核", "flowType": "control", "format": "JSON/REST", "context": "泡茶：茶杯→人", "transform": "分析报告(队长)→可执行决策→风控员", "example": {"from": "team-lead", "to": "risk-controller", "action": "BUY", "ticker": "002415", "quantity": 1000, "price_limit": 33, "strategy": "limit_order"}, "color": "#FFEB3B", "transportContent": "决策指令 JSON: { action, ticker, quantity, price_limit, strategy }", "sourceLabel": "发送: 决策指令(JSON/REST)", "targetLabel": "接收: 决策指令(JSON/REST)"}, {"id": "tag-risk-zhao-result", "label": "风控结果", "shortLabel": "结果", "description": "风控员向赵公明返回审核结果", "flowType": "control", "format": "JSON/REST", "transform": "风控审核(风控员)→审核结果(JSON)→赵公明", "example": {"from": "risk-controller", "to": "zhaogongming", "task_id": "t_xxxxx", "status": "approved", "risk_score": 2.5, "notes": "Within_risk_tolerance"}, "color": "#FFEB3B", "transportContent": "审核结果 JSON: { task_id, status, risk_score, notes }", "sourceLabel": "发送: 审核结果(JSON/REST)", "targetLabel": "接收: 审核结果(JSON/REST)"}, {"id": "tag-system-broadcast", "label": "系统广播", "shortLabel": "广播", "description": "系统级事件广播，通知各模块状态变更", "flowType": "event", "format": "JSON/PubSub", "context": "泡茶：水沸信号", "transform": "系统状态事件→JSON广播(PubSub)→所有订阅模块", "example": {"event": "system_ready", "timestamp": "2024-01-01T00:00:00Z", "modules": ["duckdb", "ccswitch", "api-server"]}, "color": "#E040FB", "transportContent": "系统事件广播 JSON/PubSub: { event, timestamp, modules[] }", "sourceLabel": "发送: 系统事件(PubSub)", "targetLabel": "接收: 系统事件(PubSub)"}, {"id": "tag-data-query", "label": "数据查询", "shortLabel": "查询", "description": "向数据仓库发起结构化查询", "flowType": "data", "format": "SQL/JSON", "context": "泡茶：取茶叶", "transform": "查询需求(模块)→SQL语句(DuckDB)→数据仓库", "example": {"from": "research", "query": "SELECT * FROM signals WHERE date > now() - 7d", "limit": 100}, "color": "#00BCD4", "transportContent": "SQL 查询: { query, limit }", "sourceLabel": "发送: 数据查询(SQL/JSON)", "targetLabel": "接收: 数据查询(SQL/JSON)"}, {"id": "tag-data-result", "label": "数据查询结果", "shortLabel": "结果", "description": "DuckDB 数据仓库返回查询结果集", "flowType": "data", "format": "JSON/CSV", "context": "泡茶：茶叶入壶", "transform": "SQL 查询→JSON 结果行→请求模块", "example": {"rows": 42, "columns": ["ticker", "value", "date"], "data": [{"ticker": "002415", "value": 32.5, "date": "2024-06-01"}]}, "color": "#00BCD4", "transportContent": "查询结果 JSON/CSV: { rows, columns[], data[] }", "sourceLabel": "发送: 查询结果(JSON/CSV)", "targetLabel": "接收: 查询结果(JSON/CSV)"}, {"id": "tag-external-webhook", "label": "外部 Webhook 事件", "shortLabel": "事件", "description": "外部系统通过 Webhook 触发平台内部事件", "flowType": "event", "format": "JSON/Webhook", "transform": "HTTP POST 请求→JSON 内部事件→路由分发", "example": {"source": "github", "action": "push", "repo": "hermes", "ref": "refs/heads/main", "commits": [{"id": "abc123", "message": "fix: bug"}]}, "color": "#E040FB", "transportContent": "Webhook 事件 JSON: { source, action, repo, ref, commits[] }", "sourceLabel": "发送: Webhook 事件(JSON/HTTP)", "targetLabel": "接收: Webhook 事件(JSON/HTTP)"}, {"id": "tag-zhao-strategy-command", "label": "战略指令下发", "shortLabel": "战略", "description": "赵公明向战略部下发高层战略分析指令", "flowType": "control", "format": "JSON/REST", "transform": "自然语言(主公)→结构化JSON指令(API)→战略任务(Strategy)", "example": {"from": "zhaogongming", "to": "strategy", "command": "industry_scan", "target_industry": "consumer-electronics", "priority": "high", "deadline": "7d"}, "color": "#FFEB3B", "transportContent": "战略指令 JSON: { command, target_industry, priority, deadline }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)"}, {"id": "tag-zhao-system-command", "label": "系统开发指令", "shortLabel": "开发", "description": "赵公明向系统部下发系统开发/维护指令", "flowType": "control", "format": "JSON/REST", "transform": "自然语言(主公)→结构化JSON指令(API)→开发任务(System)", "example": {"from": "zhaogongming", "to": "system", "command": "deploy_service", "service": "api-server", "version": "v2.1.0", "env": "production"}, "color": "#FFEB3B", "transportContent": "开发指令 JSON: { command, service, version, env }", "sourceLabel": "发送: 开发指令(JSON/REST)", "targetLabel": "接收: 开发指令(JSON/REST)"}, {"id": "tag-zhao-operations-command", "label": "运营指令", "shortLabel": "运营", "description": "赵公明向运营部下发育维/监控指令", "flowType": "control", "format": "JSON/REST", "transform": "自然语言(主公)→结构化JSON指令(API)→运营任务(Operations)", "example": {"from": "zhaogongming", "to": "operations", "command": "health_check", "target": "gateway", "interval": "5m"}, "color": "#FFEB3B", "transportContent": "运营指令 JSON: { command, target, interval }", "sourceLabel": "发送: 运营指令(JSON/REST)", "targetLabel": "接收: 运营指令(JSON/REST)"}, {"id": "tag-strategy-zhao-report", "label": "战略分析报告", "shortLabel": "战略报告", "description": "战略部向赵公明提交战略分析结果", "flowType": "data", "format": "Markdown/Report", "transform": "原始市场数据→战略分析(Markdown)→赵公明", "example": {"from": "strategy", "to": "zhaogongming", "report_type": "industry_landscape", "summary": "AI_healthcare_growing_30%_YoY", "confidence": 0.9}, "color": "#00BCD4", "transportContent": "战略分析报告 Markdown: { report_type, summary, confidence }", "sourceLabel": "发送: 战略分析(Markdown)", "targetLabel": "接收: 战略分析(Markdown)"}, {"id": "tag-system-zhao-report", "label": "系统状态报告", "shortLabel": "状态", "description": "系统部向赵公明报告系统运行状态", "flowType": "data", "format": "Markdown/Report", "transform": "系统监控数据→状态报告(Markdown)→赵公明", "example": {"from": "system", "to": "zhaogongming", "services": ["api-server", "gateway", "duckdb"], "all_green": true, "incidents": []}, "color": "#00BCD4", "transportContent": "系统状态报告 Markdown: { services[], all_green, incidents[] }", "sourceLabel": "发送: 系统状态(Markdown)", "targetLabel": "接收: 系统状态(Markdown)"}, {"id": "tag-ops-zhao-report", "label": "运营报告", "shortLabel": "运营报告", "description": "运营部向赵公明汇报运营数据", "flowType": "data", "format": "Markdown/Report", "transform": "运营监控数据→运营报告(Markdown)→赵公明", "example": {"from": "operations", "to": "zhaogongming", "api_requests": 15234, "avg_latency": 342, "error_rate": 0.02}, "color": "#00BCD4", "transportContent": "运营报告 Markdown: { api_requests, avg_latency, error_rate }", "sourceLabel": "发送: 运营报告(Markdown)", "targetLabel": "接收: 运营报告(Markdown)"}, {"id": "tag-knowledge-sync", "label": "知识同步", "shortLabel": "同步", "description": "系统部向知识库同步配置/文档更新", "flowType": "data", "format": "Markdown/JSON", "transform": "配置变化→同步文档(Markdown/JSON)→知识库", "example": {"from": "system", "to": "obsidian", "action": "sync", "path": "docs/infrastructure/", "files": ["api-server.md", "gateway.md"]}, "color": "#7B1FA2", "transportContent": "知识同步文档 Markdown/JSON: { action, path, files[] }", "sourceLabel": "发送: 知识同步(Markdown/JSON)", "targetLabel": "接收: 知识同步(Markdown/JSON)"}, {"id": "tag-knowledge-result", "label": "知识查询结果", "shortLabel": "知识", "description": "知识库返回查询结果", "flowType": "data", "format": "Markdown/JSON", "transform": "查询→知识库检索→结果文档", "color": "#7B1FA2", "transportContent": "知识检索结果 Markdown/JSON", "sourceLabel": "发送: 知识结果(Markdown/JSON)", "targetLabel": "接收: 知识结果(Markdown/JSON)"}, {"id": "tag-external-request", "label": "外部请求路由", "shortLabel": "路由", "description": "网关/消息队列向API服务转发外部请求", "flowType": "control", "format": "JSON/HTTP", "transform": "外部请求→网关路由→内部API服务", "color": "#4CAF50", "transportContent": "外部请求 JSON/HTTP: { method, path, headers, body }", "sourceLabel": "发送: 外部请求(JSON/HTTP)", "targetLabel": "接收: 外部请求(JSON/HTTP)"}, {"id": "tag-config-update", "label": "配置更新", "shortLabel": "配置", "description": "系统部向各服务下发配置更新", "flowType": "config", "format": "JSON", "transform": "配置变更→下发JSON配置→服务实例", "color": "#9C27B0", "transportContent": "配置更新 JSON: { service, key, value }", "sourceLabel": "发送: 配置更新(JSON)", "targetLabel": "接收: 配置更新(JSON)"}, {"id": "tag-cache-request", "label": "缓存请求", "shortLabel": "缓存", "description": "API服务向Redis发起缓存读写", "flowType": "data", "format": "Redis Protocol", "transform": "业务请求→Redis命令→缓存数据", "color": "#26C6DA", "transportContent": "Redis 命令: { command, key, value?, ttl? }", "sourceLabel": "发送: 缓存请求(Redis)", "targetLabel": "接收: 缓存请求(Redis)"}, {"id": "tag-event-message", "label": "事件消息", "shortLabel": "消息", "description": "服务间通过消息队列传递异步事件", "flowType": "event", "format": "JSON/AMQP", "transform": "服务事件→AMQP消息→订阅服务", "color": "#E040FB", "transportContent": "事件消息 JSON/AMQP: { event, payload, timestamp }", "sourceLabel": "发送: 事件消息(AMQP)", "targetLabel": "接收: 事件消息(AMQP)"}, {"id": "tag-event-publish", "label": "事件发布", "shortLabel": "发布", "description": "API服务向消息队列发布业务事件", "flowType": "event", "format": "JSON/AMQP", "transform": "业务事件→AMQP发布→消息队列路由", "color": "#E040FB", "transportContent": "业务事件 JSON/AMQP: { event_type, payload, timestamp }", "sourceLabel": "发送: 事件发布(AMQP)", "targetLabel": "接收: 事件发布(AMQP)"}, {"id": "tag-report-submit", "label": "报告提交", "shortLabel": "报告", "description": "各部门向赵公明提交工作报告", "flowType": "data", "format": "Markdown/Report", "transform": "部门工作成果→Markdown报告→赵公明", "color": "#00BCD4", "transportContent": "工作报告 Markdown", "sourceLabel": "发送: 工作报告(Markdown)", "targetLabel": "接收: 工作报告(Markdown)"}], "index": {"tag-agent-analyst-findings": {"tagId": "tag-agent-analyst-findings", "label": "调研发现", "flowType": "data", "color": "#00BCD4", "fromNodes": ["server", "src", "packages-port-tag-tool", "components", "data", "examples", "utils"], "toNodes": ["packages-port-tag-tool", "dep-js-yaml", "dep-react", "dep-@react-three/fiber", "dep-@react-three/drei", "dep-three", "data", "dep-react-dom", "packages-port-tag-tool--portRegistry", "packages-port-tag-tool--tagRegistry", "packages-port-tag-tool--hermesExampleData", "packages-port-tag-tool--projectScanner", "packages-port-tag-tool--index", "utils", "examples"], "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "format": "原始调研数据→结构化Markdown发现→分析师"}, "tag-external-agent-command": {"tagId": "tag-external-agent-command", "label": "战略指令下发", "flowType": "control", "color": "#FFEB3B", "fromNodes": ["data", "packages-port-tag-tool--cli", "packages-port-tag-tool--mcp-server", "data--mcpLoader", "data--portRegistry", "data--systemData", "data--tagRegistry"], "toNodes": ["packages-port-tag-tool--projectScanner"], "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "format": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)"}}, "portLabels": [{"connectionId": "conn-server-packages-port-tag-tool", "from": "server", "to": "packages-port-tag-tool", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-server-dep-js-yaml", "from": "server", "to": "dep-js-yaml", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-src-dep-react", "from": "src", "to": "dep-react", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-src-dep-@react-three/fiber", "from": "src", "to": "dep-@react-three/fiber", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-src-dep-@react-three/drei", "from": "src", "to": "dep-@react-three/drei", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-src-dep-three", "from": "src", "to": "dep-three", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-src-data", "from": "src", "to": "data", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-src-dep-react-dom", "from": "src", "to": "dep-react-dom", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--portRegistry", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--portRegistry", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--tagRegistry", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--tagRegistry", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--hermesExampleData", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--hermesExampleData", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--projectScanner", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-packages-port-tag-tool-packages-port-tag-tool--index", "from": "packages-port-tag-tool", "to": "packages-port-tag-tool--index", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-dep-react", "from": "components", "to": "dep-react", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-dep-@react-three/fiber", "from": "components", "to": "dep-@react-three/fiber", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-dep-@react-three/drei", "from": "components", "to": "dep-@react-three/drei", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-dep-three", "from": "components", "to": "dep-three", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-data", "from": "components", "to": "data", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-utils", "from": "components", "to": "utils", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-components-examples", "from": "components", "to": "examples", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-data-packages-port-tag-tool--projectScanner", "from": "data", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}, {"connectionId": "conn-data-dep-three", "from": "data", "to": "dep-three", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-examples-dep-three", "from": "examples", "to": "dep-three", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-utils-dep-three", "from": "utils", "to": "dep-three", "tagId": "tag-agent-analyst-findings", "label": "调研发现", "shortLabel": "发现", "flowType": "data", "color": "#00BCD4", "transportContent": "Markdown 结构报告: { source, findings[], confidence, evidence[] }", "sourceLabel": "发送: 调研发现(Markdown)", "targetLabel": "接收: 调研发现(Markdown)", "transform": "原始调研数据→结构化Markdown发现→分析师", "description": "调研员向分析师传递初步调研结果"}, {"connectionId": "conn-packages-port-tag-tool--cli-packages-port-tag-tool--projectScanner", "from": "packages-port-tag-tool--cli", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}, {"connectionId": "conn-packages-port-tag-tool--mcp-server-packages-port-tag-tool--projectScanner", "from": "packages-port-tag-tool--mcp-server", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}, {"connectionId": "conn-data--mcpLoader-packages-port-tag-tool--projectScanner", "from": "data--mcpLoader", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}, {"connectionId": "conn-data--portRegistry-packages-port-tag-tool--projectScanner", "from": "data--portRegistry", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}, {"connectionId": "conn-data--systemData-packages-port-tag-tool--projectScanner", "from": "data--systemData", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}, {"connectionId": "conn-data--tagRegistry-packages-port-tag-tool--projectScanner", "from": "data--tagRegistry", "to": "packages-port-tag-tool--projectScanner", "tagId": "tag-external-agent-command", "label": "战略指令下发", "shortLabel": "指令", "flowType": "control", "color": "#FFEB3B", "transportContent": "高层战略指令 JSON: { command, target, priority, params }", "sourceLabel": "发送: 战略指令(JSON/REST)", "targetLabel": "接收: 战略指令(JSON/REST)", "transform": "自然语言(主公)→结构化JSON指令(API)→调度任务(Dispatcher)", "description": "赵公明通过外部API向各模块下发高层战略指令"}]}, "ports": []};</script>
+</head>
+<body>
+<div id="tooltip"></div>
+<div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges</div>
+<div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点高亮管道 · 悬停查看信息</div>
+<div id="legend">
+<div class="row"><span class="dot" style="background:#FFEB3B"></span>Command 层</div>
+<div class="row"><span class="dot" style="background:#00BCD4"></span>Data 层</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
+<span class="line-sample" style="background:#FFEB3B"></span>control
+<span class="line-sample" style="background:#00BCD4;margin-left:6px"></span>data
+<span class="line-sample" style="background:#E040FB;margin-left:6px"></span>event
+<span class="line-sample" style="background:#7B1FA2;margin-left:6px"></span>knowledge
+</div>
+</div>
+
+<!-- Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- OrbitControls -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- CSS2DRenderer -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  3D Topology Viewer v2 — Chip-style nodes, circuit board feel
+// ═══════════════════════════════════════════════════════════════════
+
+(function() {
+'use strict';
+
+var scene, camera, renderer, labelRenderer, controls;
+var nodeGroup, edgeGroup, portGroup;
+var nodeMeshes = {};      // nodeId -> { mesh, data, ports: [], edges: [] }
+var edgeLines = [];       // { line, glowLine, conn, fromId, toId }
+var portMeshes = {};      // portId -> mesh
+var raycaster, mouse, tooltipEl;
+var selectedNodeId = null;
+var clock = new THREE.Clock();
+var autoRotate = true;
+var autoRotateTimer = null;
+var autoRotateSpeed = 0.002;
+
+// ─── Layer config ──────────────────────────────────────────────────
+var LAYER_CONFIG = {
+  command:  { y: 6,  color: 0xFFEB3B, label: 'Command' },
+  control:  { y: 6,  color: 0xFFEB3B, label: 'Control' },
+  data:     { y: 3,  color: 0x00BCD4, label: 'Data' },
+  analysis: { y: 0,  color: 0x81C784, label: 'Analysis' },
+  frontend: { y: 0,  color: 0xFFB74D, label: 'Frontend' },
+  backend:  { y: 0,  color: 0x42A5F5, label: 'Backend' },
+  feature:  { y: 1,  color: 0x42A5F5, label: 'Feature' },
+  build:    { y: -1, color: 0x66BB6A, label: 'Build' },
+  config:   { y: -1, color: 0x9E9E9E, label: 'Config' },
+  infrastructure: { y: -2, color: 0x4A90D9, label: 'Infra' },
+  risk:     { y: 3,  color: 0xF44336, label: 'Risk' },
+  decision: { y: 6,  color: 0xCE93D8, label: 'Decision' },
+  external: { y: -2, color: 0xFF7043, label: 'External' },
+  management: { y: 4, color: 0xFFB74D, label: 'Management' },
+};
+
+var FLOW_COLORS = {
+  control:  0xFFEB3B,
+  data:     0x00BCD4,
+  event:    0xE040FB,
+  knowledge: 0x7B1FA2,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════════════
+
+function init() {
+  tooltipEl = document.getElementById('tooltip');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a12);
+  scene.fog = new THREE.Fog(0x0a0a12, 25, 45);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(12, 8, 14);
+  camera.lookAt(0, 0, 0);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  document.body.appendChild(renderer.domElement);
+
+  // CSS2D Renderer for labels
+  labelRenderer = new THREE.CSS2DRenderer();
+  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  labelRenderer.domElement.style.position = 'absolute';
+  labelRenderer.domElement.style.top = '0';
+  labelRenderer.domElement.style.pointerEvents = 'none';
+  document.body.appendChild(labelRenderer.domElement);
+
+  // OrbitControls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 4;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+  controls.maxPolarAngle = Math.PI / 2.1;
+  controls.addEventListener('start', function() { autoRotate = false; if (autoRotateTimer) { clearTimeout(autoRotateTimer); autoRotateTimer = null; } });
+  controls.addEventListener('end', function() {
+    if (autoRotateTimer) clearTimeout(autoRotateTimer);
+    autoRotateTimer = setTimeout(function() {
+      autoRotate = true;
+      autoRotateTimer = null;
+    }, 6500);
+  });
+
+  // Raycaster
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  // Groups
+  nodeGroup = new THREE.Group();
+  edgeGroup = new THREE.Group();
+  portGroup = new THREE.Group();
+  scene.add(nodeGroup);
+  scene.add(edgeGroup);
+  scene.add(portGroup);
+
+  // Lights
+  var ambient = new THREE.AmbientLight(0x404060, 0.6);
+  scene.add(ambient);
+  var dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(10, 20, 10);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+  var fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+  fillLight.position.set(-10, 5, -10);
+  scene.add(fillLight);
+  var rimLight = new THREE.DirectionalLight(0xff8844, 0.3);
+  rimLight.position.set(0, -10, 15);
+  scene.add(rimLight);
+
+  // Grid background (circuit board feel)
+  createGrid();
+
+  // Events
+  renderer.domElement.addEventListener('mousemove', onMouseMove);
+  renderer.domElement.addEventListener('click', onClick);
+  window.addEventListener('resize', onResize);
+
+  // Start
+  animate();
+}
+
+// ─── Grid background ────────────────────────────────────────────────
+function createGrid() {
+  // Main ground grid
+  var gridHelper = new THREE.GridHelper(40, 40, 0x1a3a5a, 0x0d1f33);
+  gridHelper.position.y = -3;
+  scene.add(gridHelper);
+
+  // Secondary fine grid
+  var gridGeo = new THREE.BufferGeometry();
+  var step = 0.5;
+  var size = 20;
+  var points = [];
+  for (var i = -size; i <= size; i += step) {
+    points.push(-size, -3, i, size, -3, i);
+    points.push(i, -3, -size, i, -3, size);
+  }
+  var fineGrid = new THREE.LineSegments(
+    new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(points, 3)),
+    new THREE.LineBasicMaterial({ color: 0x0d1f33, transparent: true, opacity: 0.3 })
+  );
+  scene.add(fineGrid);
+
+  // Circuit board dots at intersections
+  var dotGeo = new THREE.BufferGeometry();
+  var dotPositions = [];
+  for (var x = -size; x <= size; x += 1) {
+    for (var z = -size; z <= size; z += 1) {
+      dotPositions.push(x, -3, z);
+    }
+  }
+  dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
+  var dotMat = new THREE.PointsMaterial({
+    color: 0x1a4a6a,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.4,
+  });
+  var dots = new THREE.Points(dotGeo, dotMat);
+  scene.add(dots);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Layout — Layer-based stacking with horizontal grid
+// ═══════════════════════════════════════════════════════════════════
+
+function computeLayout(nodes) {
+  // Group nodes by layer
+  var layerMap = {};
+  var layerOrder = [];
+  nodes.forEach(function(n) {
+    var layer = n.layer || 'default';
+    if (!layerMap[layer]) {
+      layerMap[layer] = [];
+      layerOrder.push(layer);
+    }
+    layerMap[layer].push(n);
+  });
+
+  // Sort layers by Y height (highest first)
+  layerOrder.sort(function(a, b) {
+    var ya = (LAYER_CONFIG[a] || LAYER_CONFIG['default'] || { y: 0 }).y;
+    var yb = (LAYER_CONFIG[b] || LAYER_CONFIG['default'] || { y: 0 }).y;
+    return yb - ya;
+  });
+
+  var spacing = 3.5;
+  var positions = {};
+  // Track z-offset per y-level to spread overlapping layers apart
+  var yLevelZIndex = {};
+  var zSpacing = 3.0; // node depth is 1.2, so 3.0 center-to-center = 1.8 edge-to-edge
+
+  layerOrder.forEach(function(layer) {
+    var layerNodes = layerMap[layer];
+    var yPos = (LAYER_CONFIG[layer] || { y: 0 }).y;
+    var count = layerNodes.length;
+    var rowWidth = (count - 1) * spacing;
+
+    // Assign z-offset for this y-level (increment for each layer at same y)
+    if (yLevelZIndex[yPos] === undefined) yLevelZIndex[yPos] = 0;
+    var zOffset = yLevelZIndex[yPos] * zSpacing;
+    yLevelZIndex[yPos]++;
+
+    layerNodes.forEach(function(n, i) {
+      var xPos = -rowWidth / 2 + i * spacing;
+      positions[n.id] = { x: xPos, y: yPos, z: zOffset };
+    });
+  });
+
+  return positions;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Build Scene
+// ═══════════════════════════════════════════════════════════════════
+
+function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
+  // Clear
+  while (nodeGroup.children.length > 0) nodeGroup.remove(nodeGroup.children[0]);
+  while (edgeGroup.children.length > 0) edgeGroup.remove(edgeGroup.children[0]);
+  while (portGroup.children.length > 0) portGroup.remove(portGroup.children[0]);
+  nodeMeshes = {};
+  edgeLines = [];
+  portMeshes = {};
+  selectedNodeId = null;
+
+  if (!dataNodes || dataNodes.length === 0) return;
+
+  var positions = computeLayout(dataNodes);
+  var nodeMap = {}; // nodeId -> node data
+
+  // ─── Build Nodes (Chip cubes) ──────────────────────────
+  dataNodes.forEach(function(n) {
+    nodeMap[n.id] = n;
+    var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
+    var layer = n.layer || 'default';
+    var layerCfg = LAYER_CONFIG[layer] || LAYER_CONFIG['default'] || { color: 0x888888 };
+    var chipColor = n.color ? new THREE.Color(n.color).getHex() : layerCfg.color;
+
+    var size = 1.2;
+    var geo = new THREE.BoxGeometry(size, size * 0.6, size);
+    var mat = new THREE.MeshStandardMaterial({
+      color: chipColor,
+      roughness: 0.4,
+      metalness: 0.6,
+      emissive: chipColor,
+      emissiveIntensity: 0.08,
+      transparent: true,
+      opacity: 0.92,
+    });
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(pos.x, pos.y, pos.z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    // Chip detail lines on top
+    var lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.15 });
+    var lineGeo = new THREE.BufferGeometry();
+    var s = size * 0.4;
+    var yOff = size * 0.3 + 0.01;
+    var lPts = [];
+    for (var li = -s; li <= s; li += s * 0.5) {
+      lPts.push(li, yOff, -s, li, yOff, s);
+    }
+    for (var lj = -s; lj <= s; lj += s * 0.5) {
+      lPts.push(-s, yOff, lj, s, yOff, lj);
+    }
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(lPts, 3));
+    var lines = new THREE.LineSegments(lineGeo, lineMat);
+    mesh.add(lines);
+
+    // Highlight border (edge glow)
+    var edgeMat = new THREE.LineBasicMaterial({
+      color: chipColor,
+      transparent: true,
+      opacity: 0.3,
+    });
+    var edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(size * 1.02, size * 0.62 * 1.02, size * 1.02));
+    var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
+    mesh.add(edgeWire);
+
+    // Store
+    mesh.userData.nodeId = n.id;
+    mesh.userData.isNode = true;
+    nodeMeshes[n.id] = { mesh: mesh, data: n, ports: [], edges: [] };
+    nodeGroup.add(mesh);
+
+    // Label (CSS2D)
+    var labelDiv = document.createElement('div');
+    labelDiv.className = 'label-2d';
+    labelDiv.textContent = n.chineseName || n.label || n.id;
+    var label = new THREE.CSS2DObject(labelDiv);
+    label.position.set(pos.x, pos.y + size * 0.6 + 0.4, pos.z);
+    nodeGroup.add(label);
+  });
+
+  // ─── Build Ports ───────────────────────────────────────
+  var portPositions = {}; // portId -> { x, y, z }
+
+  if (dataPorts) {
+    dataPorts.forEach(function(p) {
+      var nodeId = p.nodeId;
+      var nm = nodeMeshes[nodeId];
+      if (!nm) return;
+      var pos = nm.mesh.position.clone();
+      var sz = 1.2;
+      var isOutput = p.type === 'output';
+      var portColor = isOutput ? 0xF44336 : 0x4CAF50;
+      var radius = 0.12;
+
+      // Determine edge position based on port index
+      var portsForNode = nm.ports;
+      portsForNode.push(p);
+      var idx = portsForNode.length - 1;
+      var total = portsForNode.length;
+
+      // Place around the chip edge
+      var angle = (idx / Math.max(total, 1)) * Math.PI * 2;
+      var edgeX = Math.cos(angle) * sz * 0.55;
+      var edgeZ = Math.sin(angle) * sz * 0.55;
+      var edgeY = (isOutput ? 1 : -1) * sz * 0.15;
+
+      pos.x += edgeX;
+      pos.y += edgeY;
+      pos.z += edgeZ;
+
+      portPositions[p.portId] = { x: pos.x, y: pos.y, z: pos.z };
+
+      // Port sphere
+      var sphereGeo = new THREE.SphereGeometry(radius, 12, 12);
+      var sphereMat = new THREE.MeshStandardMaterial({
+        color: portColor,
+        emissive: portColor,
+        emissiveIntensity: 0.5,
+        roughness: 0.3,
+        metalness: 0.2,
+      });
+      var sphere = new THREE.Mesh(sphereGeo, sphereMat);
+      sphere.position.copy(pos);
+      sphere.userData.portId = p.portId;
+      sphere.userData.isPort = true;
+      sphere.userData.nodeId = nodeId;
+      portGroup.add(sphere);
+      portMeshes[p.portId] = sphere;
+
+      // Port glow ring
+      var ringGeo = new THREE.RingGeometry(radius * 0.8, radius * 1.8, 16);
+      var ringMat = new THREE.MeshBasicMaterial({
+        color: portColor,
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.DoubleSide,
+      });
+      var ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.copy(pos);
+      ring.lookAt(camera.position);
+      portGroup.add(ring);
+      sphere.userData.ring = ring;
+
+      // Store reference on node
+      nm.ports.push(p);
+    });
+  }
+
+  // ─── Build Edges ───────────────────────────────────────
+  if (dataConns) {
+    dataConns.forEach(function(conn) {
+      var fromData = nodeMap[conn.from];
+      var toData = nodeMap[conn.to];
+      if (!fromData || !toData) return;
+
+      var fromPos = positions[conn.from] || { x: 0, y: 0, z: 0 };
+      var toPos = positions[conn.to] || { x: 0, y: 0, z: 0 };
+
+      var p1 = new THREE.Vector3(fromPos.x, fromPos.y, fromPos.z);
+      var p2 = new THREE.Vector3(toPos.x, toPos.y, toPos.z);
+      var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+
+      var flowType = conn.flowType || 'data';
+      var colorHex = FLOW_COLORS[flowType] || 0x888888;
+
+      // Curve with control points to avoid crossing
+      var dist = p1.distanceTo(p2);
+      var curveHeight = Math.min(dist * 0.2, 2.0);
+      var isSameLayer = fromPos.y === toPos.y;
+      var curveDir = isSameLayer ? 1 : (toPos.y > fromPos.y ? 1 : -1);
+
+      var cp1 = new THREE.Vector3(
+        mid.x + (fromPos.z - toPos.z) * 0.15,
+        mid.y + curveHeight * curveDir,
+        mid.z + (toPos.x - fromPos.x) * 0.15
+      );
+
+      var curve = new THREE.QuadraticBezierCurve3(p1, cp1, p2);
+      var pts = curve.getPoints(24);
+
+      // Main glow line
+      var glowGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      var glowMat = new THREE.LineBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.25,
+        linewidth: 1,
+      });
+      var glowLine = new THREE.Line(glowGeo, glowMat);
+      edgeGroup.add(glowLine);
+
+      // Core bright line
+      var coreMat = new THREE.LineBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.6,
+      });
+      var coreLine = new THREE.Line(glowGeo.clone(), coreMat);
+      // Offset slightly for visual depth
+      coreLine.position.y = 0.01;
+      edgeGroup.add(coreLine);
+
+      // Store edge data
+      var edgeInfo = {
+        line: coreLine,
+        glowLine: glowLine,
+        conn: conn,
+        fromId: conn.from,
+        toId: conn.to,
+      };
+      edgeLines.push(edgeInfo);
+
+      // Link to nodes
+      if (nodeMeshes[conn.from]) nodeMeshes[conn.from].edges.push(edgeInfo);
+      if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
+    });
+  }
+
+  document.getElementById('nodeCount').textContent = dataNodes.length;
+  document.getElementById('edgeCount').textContent = dataConns.length;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Interaction
+// ═══════════════════════════════════════════════════════════════════
+
+function getIntersects(event) {
+  var rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  // Collect all meshes
+  var allMeshes = [];
+  nodeGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isNode) allMeshes.push(c);
+  });
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.isPort) allMeshes.push(c);
+  });
+  return raycaster.intersectObjects(allMeshes);
+}
+
+function onMouseMove(event) {
+  var intersects = getIntersects(event);
+  var found = null;
+
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      var nm = nodeMeshes[obj.userData.nodeId];
+      if (nm) {
+        found = nm.data;
+        break;
+      }
+    } else if (obj.userData.isPort) {
+      // Show parent node info
+      var pnm = nodeMeshes[obj.userData.nodeId];
+      if (pnm) {
+        found = pnm.data;
+        break;
+      }
+    }
+  }
+
+  if (found) {
+    var tt = tooltipEl;
+    tt.style.display = 'block';
+    tt.style.left = (event.clientX + 16) + 'px';
+    tt.style.top = (event.clientY - 10) + 'px';
+    var html = '<div class="tt-name">' + (found.chineseName || found.label || found.id) + '</div>';
+    if (found.label && found.label !== found.id) {
+      html += '<div class="tt-desc">' + found.label + '</div>';
+    }
+    if (found.layer) {
+      html += '<div><span class="tt-tag" style="background:' + (LAYER_CONFIG[found.layer] ? '#' + new THREE.Color(LAYER_CONFIG[found.layer].color).getHexString() : '#555') + '44;color:#ccc">' + found.layer + '</span></div>';
+    }
+    tt.innerHTML = html;
+    renderer.domElement.style.cursor = 'pointer';
+  } else {
+    tooltipEl.style.display = 'none';
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+function onClick(event) {
+  var intersects = getIntersects(event);
+  var clickedNodeId = null;
+
+  for (var i = 0; i < intersects.length; i++) {
+    var obj = intersects[i].object;
+    if (obj.userData.isNode) {
+      clickedNodeId = obj.userData.nodeId;
+      break;
+    } else if (obj.userData.isPort) {
+      clickedNodeId = obj.userData.nodeId;
+      break;
+    }
+  }
+
+  // Reset all
+  Object.keys(nodeMeshes).forEach(function(id) {
+    var nm = nodeMeshes[id];
+    nm.mesh.material.emissiveIntensity = 0.08;
+  });
+
+  // Reset all edges
+  edgeLines.forEach(function(ei) {
+    ei.line.material.opacity = 0.6;
+    ei.glowLine.material.opacity = 0.25;
+  });
+
+  if (clickedNodeId) {
+    selectedNodeId = clickedNodeId;
+    var nm = nodeMeshes[clickedNodeId];
+    if (nm) {
+      nm.mesh.material.emissiveIntensity = 0.5;
+      // Highlight connected edges
+      nm.edges.forEach(function(ei) {
+        ei.line.material.opacity = 1.0;
+        ei.glowLine.material.opacity = 0.6;
+      });
+    }
+  } else {
+    selectedNodeId = null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Resize
+// ═══════════════════════════════════════════════════════════════════
+
+function onResize() {
+  var w = window.innerWidth;
+  var h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Stats
+// ═══════════════════════════════════════════════════════════════════
+
+var frameCount = 0;
+var lastFpsUpdate = 0;
+
+function updateStats() {
+  var now = performance.now();
+  frameCount++;
+  if (now - lastFpsUpdate >= 1000) {
+    document.getElementById('fps').textContent = frameCount;
+    frameCount = 0;
+    lastFpsUpdate = now;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Animation Loop
+// ═══════════════════════════════════════════════════════════════════
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Auto-rotate
+  if (autoRotate) {
+    var pivot = new THREE.Vector3(0, 0, 0);
+    var radius = camera.position.distanceTo(pivot);
+    var theta = Math.atan2(camera.position.x, camera.position.z);
+    theta += autoRotateSpeed;
+    camera.position.x = radius * Math.sin(theta);
+    camera.position.z = radius * Math.cos(theta);
+    camera.lookAt(pivot);
+    controls.update();
+  } else {
+    controls.update();
+  }
+
+  // Make port rings face camera
+  portGroup.children.forEach(function(c) {
+    if (c.isMesh && c.userData.ring) {
+      c.userData.ring.lookAt(camera.position);
+    }
+  });
+
+  // Edge pulse animation
+  var t = clock.getElapsedTime();
+  edgeLines.forEach(function(ei, idx) {
+    var pulse = 0.5 + 0.3 * Math.sin(t * 0.8 + idx * 0.5);
+    ei.glowLine.material.opacity = 0.15 + 0.2 * pulse;
+  });
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Start
+// ═══════════════════════════════════════════════════════════════════
+
+init();
+
+var embeddedData = window.__EMBEDDED_DATA__;
+if (embeddedData && embeddedData.nodes) {
+  buildScene(
+    embeddedData.nodes,
+    embeddedData.connections || [],
+    embeddedData.ports || [],
+    embeddedData.tags || {}
+  );
+  console.log('[3d-monitor] Loaded from embedded data: ' + embeddedData.nodes.length + ' nodes');
+} else {
+  console.warn('[3d-monitor] No embedded data found (window.__EMBEDDED_DATA__)');
+}
+
+})();
+</script>
+</body>
+</html>

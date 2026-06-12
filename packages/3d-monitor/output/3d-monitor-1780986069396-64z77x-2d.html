@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>3D 系统拓扑图 — Canvas 2D</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;color:#e0e0e0;touch-action:none}
+canvas{display:block;width:100%;height:100%}
+#stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.4);pointer-events:none;font-family:'SF Mono','Fira Code',monospace;line-height:1.6;text-shadow:0 0 8px rgba(0,0,0,0.9)}
+#stats b{color:#4FC3F7}
+#info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,0.8)}
+#legend{position:fixed;bottom:60px;right:20px;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#legend .row{display:flex;align-items:center;gap:8px}
+#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+#nodeInfoPanel{position:fixed;bottom:24px;right:24px;z-index:100;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;min-width:200px;max-width:280px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;pointer-events:none;font-size:13px;color:#e0e0e0;line-height:1.6}
+#nodeInfoPanel .nip-name{color:#fff;font-weight:600;font-size:15px;margin-bottom:4px}
+#nodeInfoPanel .nip-desc{color:#aaa;font-size:12px;margin-bottom:6px}
+#nodeInfoPanel .nip-id{color:#4FC3F7;font-size:11px;font-family:monospace}
+</style>
+</head>
+<body>
+<div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges</div>
+<div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点查看详情 · 双击空白脱选</div>
+<div id="legend">
+<div class="row"><span class="dot" style="background:#FFEB3B"></span>Command</div>
+<div class="row"><span class="dot" style="background:#00BCD4"></span>Data</div>
+<div class="row"><span class="dot" style="background:#E040FB"></span>Event</div>
+<div class="row"><span class="dot" style="background:#7B1FA2"></span>Knowledge</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
+<span class="line-sample" style="background:#FFEB3B"></span>control
+<span class="line-sample" style="background:#00BCD4;margin-left:6px"></span>data
+<span class="line-sample" style="background:#E040FB;margin-left:6px"></span>event
+<span class="line-sample" style="background:#7B1FA2;margin-left:6px"></span>knowledge
+</div>
+</div>
+<div id="nodeInfoPanel"></div>
+<canvas id="canvas"></canvas>
+<script>
+(function() {
+'use strict';
+
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+// ─── Data ──────────────────────────────────────────────────
+var data = {"nodes":[{"id":"zhaogongming","label":"赵公明","layer":"command","chineseName":"主帅"},{"id":"strategist","label":"军师","layer":"command","chineseName":"参谋部"},{"id":"x-commissioner","label":"X专员","layer":"command","chineseName":"调度员"},{"id":"research","label":"研究部","layer":"analysis","chineseName":"研究员"},{"id":"analyst-a","label":"分析师A","layer":"analysis","chineseName":"A角"},{"id":"analyst-b","label":"分析师B","layer":"analysis","chineseName":"B角"},{"id":"team-lead","label":"小队长","layer":"management","chineseName":"队长"},{"id":"risk-control","label":"风控部","layer":"risk","chineseName":"风控员"},{"id":"knowledge","label":"知识管理","layer":"knowledge","chineseName":"档案室"},{"id":"codex-cli","label":"Codex","layer":"execution","chineseName":"编程助手"},{"id":"data-collector","label":"数据管家","layer":"data","chineseName":"数据采集"},{"id":"duckdb","label":"数据仓库","layer":"data","chineseName":"DuckDB"},{"id":"hermes-web","label":"投研管家","layer":"frontend","chineseName":"Web前端"}],"connections":[{"from":"zhaogongming","to":"strategist","flowType":"control","label":"战略指令"},{"from":"zhaogongming","to":"research","flowType":"control","label":"调研指令"},{"from":"zhaogongming","to":"x-commissioner","flowType":"control","label":"编程任务"},{"from":"zhaogongming","to":"risk-control","flowType":"control","label":"风控指令"},{"from":"strategist","to":"zhaogongming","flowType":"data","label":"方案交付"},{"from":"research","to":"analyst-a","flowType":"data","label":"调研发现"},{"from":"research","to":"analyst-b","flowType":"data","label":"调研发现"},{"from":"analyst-a","to":"team-lead","flowType":"data","label":"分析报告"},{"from":"analyst-b","to":"team-lead","flowType":"data","label":"分析报告"},{"from":"team-lead","to":"risk-control","flowType":"control","label":"决策指令"},{"from":"risk-control","to":"zhaogongming","flowType":"data","label":"风控结果"},{"from":"x-commissioner","to":"codex-cli","flowType":"control","label":"代码调度"},{"from":"codex-cli","to":"knowledge","flowType":"data","label":"结果归档"},{"from":"data-collector","to":"duckdb","flowType":"data","label":"数据存储"},{"from":"duckdb","to":"research","flowType":"data","label":"数据查询"},{"from":"knowledge","to":"research","flowType":"data","label":"知识同步"},{"from":"duckdb","to":"hermes-web","flowType":"data","label":"数据展示"}],"ports":[],"tags":{}};
+var nodes = data.nodes || [];
+var connections = data.connections || [];
+
+// layer -> color mapping
+var layerColors = {
+  command: '#FFEB3B',
+  analysis: '#00BCD4',
+  management: '#4CAF50',
+  risk: '#FF5722',
+  knowledge: '#7B1FA2',
+  execution: '#E040FB',
+  data: '#00BCD4',
+  frontend: '#FF9800'
+};
+var defaultNodeColor = '#78909C';
+
+var flowTypeColors = {
+  control: '#FFEB3B',
+  data: '#00BCD4',
+  event: '#E040FB',
+  knowledge: '#7B1FA2'
+};
+var defaultFlowColor = '#90A4AE';
+
+// ─── 3D Projection ────────────────────────────────────────
+var rotX = 0.3;
+var rotY = -0.4;
+var zoom = 1.0;
+var targetZoom = 1.0;
+var centerX = 0, centerY = 0, centerZ = 0;
+
+function project(x, y, z) {
+  // rotate around Y
+  var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+  var x1 = x * cosY - z * sinY;
+  var z1 = x * sinY + z * cosY;
+  var y1 = y;
+  // rotate around X
+  var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+  var y2 = y1 * cosX - z1 * sinX;
+  var z2 = y1 * sinX + z1 * cosX;
+  // perspective
+  var fov = 500 * zoom;
+  var scale = fov / (fov + z2);
+  var w = canvas.width / 2;
+  var h = canvas.height / 2;
+  return {
+    sx: w + x1 * scale,
+    sy: h - y2 * scale,
+    scale: scale,
+    depth: z2
+  };
+}
+
+// ─── Node geometry ─────────────────────────────────────────
+var nodeHalfSize = 30;
+
+function getNodeColor(node) {
+  return layerColors[node.layer] || defaultNodeColor;
+}
+
+function getFlowColor(flowType) {
+  return flowTypeColors[flowType] || defaultFlowColor;
+}
+
+// ─── Build scene data ─────────────────────────────────────
+var nodePositions = {};
+var edgeList = [];
+
+function buildScene() {
+  // Auto-layout: arrange nodes by layer
+  var layers = {};
+  nodes.forEach(function(n) {
+    if (!layers[n.layer]) layers[n.layer] = [];
+    layers[n.layer].push(n);
+  });
+  var layerNames = Object.keys(layers);
+  var spacingX = 220;
+  var spacingZ = 200;
+  var spacingY = 150;
+  layerNames.forEach(function(layer, li) {
+    var layerNodes = layers[layer];
+    var count = layerNodes.length;
+    var totalAngle = Math.min(count * 0.6, Math.PI * 1.2);
+    layerNodes.forEach(function(n, ni) {
+      var angle = -totalAngle/2 + (count > 1 ? (ni / (count-1)) * totalAngle : 0);
+      var radius = spacingZ * 0.6;
+      var z = Math.sin(angle) * radius;
+      var x = Math.cos(angle) * radius + (li - (layerNames.length-1)/2) * spacingX;
+      var y = Math.sin(angle) * spacingY * 0.3 + (li - (layerNames.length-1)/2) * spacingY * 0.15;
+      if (n.x !== undefined && n.y !== undefined && n.z !== undefined) {
+        nodePositions[n.id] = {x: n.x, y: n.y, z: n.z};
+      } else {
+        nodePositions[n.id] = {x: x, y: y, z: z};
+      }
+    });
+  });
+
+  edgeList = connections.map(function(c) {
+    var fromPos = nodePositions[c.from];
+    var toPos = nodePositions[c.to];
+    if (!fromPos || !toPos) return null;
+    return {
+      from: c.from,
+      to: c.to,
+      flowType: c.flowType || 'data',
+      label: c.label || '',
+      fromPos: fromPos,
+      toPos: toPos,
+      color: getFlowColor(c.flowType || 'data')
+    };
+  }).filter(Boolean);
+}
+
+buildScene();
+
+// ─── Interaction state ─────────────────────────────────────
+var isDragging = false;
+var dragStartX = 0, dragStartY = 0;
+var rotXStart = 0, rotYStart = 0;
+var hoveredNodeId = null;
+var selectedNodeId = null;
+var touchZoomBase = 0;
+
+// ─── Mouse / Touch events ──────────────────────────────────
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  if (e.touches) {
+    return {x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top};
+  }
+  return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+}
+
+function getNodeAt(sx, sy) {
+  var best = null;
+  var bestDist = 20;
+  nodes.forEach(function(n) {
+    var pos = nodePositions[n.id];
+    if (!pos) return;
+    var p = project(pos.x, pos.y, pos.z);
+    var dx = p.sx - sx;
+    var dy = p.sy - sy;
+    var dist = Math.sqrt(dx*dx + dy*dy);
+    var hitRadius = nodeHalfSize * Math.max(p.scale, 0.3);
+    if (dist < hitRadius && dist < bestDist) {
+      bestDist = dist;
+      best = n;
+    }
+  });
+  return best;
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  var pos = getPos(e);
+  isDragging = true;
+  dragStartX = pos.x;
+  dragStartY = pos.y;
+  rotXStart = rotX;
+  rotYStart = rotY;
+}
+
+function onPointerMove(e) {
+  e.preventDefault();
+  var pos = getPos(e);
+  if (isDragging) {
+    var dx = pos.x - dragStartX;
+    var dy = pos.y - dragStartY;
+    rotY = rotYStart + dx * 0.005;
+    rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, rotXStart - dy * 0.005));
+    return;
+  }
+  // Hover detection
+  var n = getNodeAt(pos.x, pos.y);
+  hoveredNodeId = n ? n.id : null;
+  canvas.style.cursor = n ? 'pointer' : 'default';
+}
+
+function onPointerUp(e) {
+  if (!isDragging) return;
+  isDragging = false;
+  var pos = getPos(e);
+  var dx = Math.abs(pos.x - dragStartX);
+  var dy = Math.abs(pos.y - dragStartY);
+  // If it's a click (not drag), select node
+  if (dx < 5 && dy < 5) {
+    var n = getNodeAt(pos.x, pos.y);
+    if (n) {
+      selectedNodeId = n.id;
+      updateNodeInfoPanel(n);
+    } else {
+      selectedNodeId = null;
+      updateNodeInfoPanel(null);
+    }
+  }
+}
+
+function onWheel(e) {
+  e.preventDefault();
+  targetZoom *= (e.deltaY > 0 ? 0.9 : 1.1);
+  targetZoom = Math.max(0.2, Math.min(5, targetZoom));
+}
+
+// Touch events
+function onTouchStart(e) {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    onPointerDown(e);
+  } else if (e.touches.length === 2) {
+    touchZoomBase = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (e.touches.length === 1 && isDragging) {
+    onPointerMove(e);
+  } else if (e.touches.length === 2) {
+    var dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    if (touchZoomBase > 0) {
+      targetZoom *= dist / touchZoomBase;
+      targetZoom = Math.max(0.2, Math.min(5, targetZoom));
+      touchZoomBase = dist;
+    }
+  }
+}
+
+function onTouchEnd(e) {
+  e.preventDefault();
+  if (e.touches.length === 0) {
+    onPointerUp(e);
+    isDragging = false;
+  }
+}
+
+// Double-click to deselect
+function onDblClick(e) {
+  selectedNodeId = null;
+  updateNodeInfoPanel(null);
+}
+
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('mousemove', onPointerMove);
+canvas.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('mouseleave', function() { isDragging = false; });
+canvas.addEventListener('wheel', onWheel, {passive: false});
+canvas.addEventListener('dblclick', onDblClick);
+canvas.addEventListener('touchstart', onTouchStart, {passive: false});
+canvas.addEventListener('touchmove', onTouchMove, {passive: false});
+canvas.addEventListener('touchend', onTouchEnd, {passive: false});
+
+// ─── Node info panel ───────────────────────────────────────
+function updateNodeInfoPanel(node) {
+  var panel = document.getElementById('nodeInfoPanel');
+  if (!node) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+  panel.style.pointerEvents = 'auto';
+  panel.innerHTML = '<div class="nip-name">' + escapeHtml(node.label) + '</div>' +
+    (node.chineseName ? '<div class="nip-desc">' + escapeHtml(node.chineseName) + '</div>' : '') +
+    '<div class="nip-id">' + escapeHtml(node.id) + ' · ' + escapeHtml(node.layer) + '</div>';
+}
+
+function escapeHtml(s) {
+  if (typeof s !== 'string') s = String(s || '');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Resize ────────────────────────────────────────────────
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+
+// ─── Flow dots ─────────────────────────────────────────────
+var flowDots = [];
+
+function initFlowDots() {
+  flowDots = [];
+  edgeList.forEach(function(e) {
+    // 1-3 dots per edge
+    var count = 1 + Math.floor(Math.random() * 2);
+    for (var i = 0; i < count; i++) {
+      flowDots.push({
+        edge: e,
+        progress: Math.random(),
+        speed: (0.3 + Math.random() * 0.4) * (e.flowType === 'control' ? 1.5 : 1.0)
+      });
+    }
+  });
+}
+initFlowDots();
+
+// ─── Drawing ───────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Sort edges by depth for correct Z-order
+  var sortedEdges = edgeList.slice().sort(function(a, b) {
+    var az = (a.fromPos.z + a.toPos.z) / 2;
+    var bz = (b.fromPos.z + b.toPos.z) / 2;
+    return az - bz;
+  });
+
+  // Draw edges
+  sortedEdges.forEach(function(e) {
+    var p1 = project(e.fromPos.x, e.fromPos.y, e.fromPos.z);
+    var p2 = project(e.toPos.x, e.toPos.y, e.toPos.z);
+    var alpha = Math.min(1, (p1.scale + p2.scale) * 0.5 + 0.2);
+    ctx.beginPath();
+    ctx.moveTo(p1.sx, p1.sy);
+    ctx.lineTo(p2.sx, p2.sy);
+    ctx.strokeStyle = e.color;
+    ctx.globalAlpha = alpha * 0.6;
+    ctx.lineWidth = Math.max(1, (p1.scale + p2.scale) * 1.5);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // Draw flow dots
+  var now = performance.now() / 1000;
+  if (flowDots._lastTime === undefined) flowDots._lastTime = now;
+  var delta = Math.min(now - flowDots._lastTime, 0.1);
+  flowDots._lastTime = now;
+
+  flowDots.forEach(function(fd) {
+    fd.progress += fd.speed * delta;
+    if (fd.progress > 1.0) fd.progress -= 1.0;
+    var e = fd.edge;
+    var x = e.fromPos.x + (e.toPos.x - e.fromPos.x) * fd.progress;
+    var y = e.fromPos.y + (e.toPos.y - e.fromPos.y) * fd.progress;
+    var z = e.fromPos.z + (e.toPos.z - e.fromPos.z) * fd.progress;
+    var p = project(x, y, z);
+    var radius = Math.max(2, 4 * p.scale);
+    ctx.beginPath();
+    ctx.arc(p.sx, p.sy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = e.color;
+    ctx.shadowBlur = 12;
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  });
+
+  // Sort nodes by depth
+  var sortedNodes = nodes.slice().sort(function(a, b) {
+    var pa = nodePositions[a.id];
+    var pb = nodePositions[b.id];
+    if (!pa || !pb) return 0;
+    return pa.z - pb.z;
+  });
+
+  // Draw nodes
+  sortedNodes.forEach(function(n) {
+    var pos = nodePositions[n.id];
+    if (!pos) return;
+    var p = project(pos.x, pos.y, pos.z);
+    var color = getNodeColor(n);
+    var halfSize = nodeHalfSize * p.scale;
+    var isSelected = n.id === selectedNodeId;
+    var isHovered = n.id === hoveredNodeId;
+
+    // Glow for selected
+    if (isSelected) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 20;
+    }
+
+    // Node rectangle
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.85;
+    var rx = halfSize * 1.4;
+    var ry = halfSize * 0.9;
+    ctx.beginPath();
+    ctx.roundRect(p.sx - rx, p.sy - ry, rx * 2, ry * 2, 4);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+    // Border
+    var bw = isSelected ? 2 : (isHovered ? 1.5 : 1);
+    ctx.strokeStyle = isSelected ? '#ffffff' : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = bw * p.scale;
+    ctx.beginPath();
+    ctx.roundRect(p.sx - rx, p.sy - ry, rx * 2, ry * 2, 4);
+    ctx.stroke();
+
+    // Label
+    var fontSize = Math.max(9, 12 * p.scale);
+    ctx.font = fontSize + 'px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(n.label, p.sx, p.sy);
+    ctx.shadowBlur = 0;
+  });
+}
+
+// roundRect polyfill for canvas
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+    this.moveTo(x + r, y);
+    this.lineTo(x + w - r, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r);
+    this.lineTo(x + w, y + h - r);
+    this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    this.lineTo(x + r, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r);
+    this.lineTo(x, y + r);
+    this.quadraticCurveTo(x, y, x + r, y);
+    this.closePath();
+  };
+}
+
+// ─── Stats ─────────────────────────────────────────────────
+var frameCount = 0;
+var lastFpsUpdate = 0;
+
+function updateStats() {
+  var now = performance.now();
+  frameCount++;
+  if (now - lastFpsUpdate >= 1000) {
+    document.getElementById('fps').textContent = frameCount;
+    document.getElementById('nodeCount').textContent = nodes.length;
+    document.getElementById('edgeCount').textContent = connections.length;
+    frameCount = 0;
+    lastFpsUpdate = now;
+  }
+}
+
+// ─── Animation loop ───────────────────────────────────────
+function animate() {
+  // Smooth zoom
+  zoom += (targetZoom - zoom) * 0.08;
+  if (Math.abs(zoom - targetZoom) < 0.001) zoom = targetZoom;
+
+  resize();
+  draw();
+  updateStats();
+  requestAnimationFrame(animate);
+}
+
+resize();
+animate();
+})();
+</script>
+</body>
+</html>

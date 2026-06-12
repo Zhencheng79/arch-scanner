@@ -1,7 +1,7 @@
 {
-  "name": "system-3d-panorama",
+  "name": "arch-scanner",
   "version": "0.1.17",
-  "description": "3D Panoramic Visualization for AI Agent System Architecture \u2014 Visualize nodes, connections, data flows in an interactive 3D space",
+  "description": "Architecture Scanner — 3D visualization of project architecture",
   "keywords": [
     "3d",
     "visualization",
@@ -32,7 +32,7 @@
     "js-yaml": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "three": "^0.162.0"
+    "three": "^0.128.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40 — OrbitControls autoRotate 环绕</title>
+<title>3D Monitor v0.1.40-node-spread.07 — Y-axis Level Layout</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{overflow:hidden;background:#0a0a12;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
 canvas{display:block}
 #tooltip{position:fixed;pointer-events:none;background:rgba(8,8,16,0.92);color:#e0e0e0;padding:8px 14px;border-radius:8px;font-size:13px;border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;z-index:1000;max-width:280px;line-height:1.5;box-shadow:0 4px 24px rgba(0,0,0,0.6)}
 #tooltip .tt-name{color:#fff;font-weight:600;font-size:14px;margin-bottom:2px}
@@ -19,8 +19,8 @@ canvas{display:block}
 #legend .row{display:flex;align-items:center;gap:8px}
 #legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
 #legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
-.label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
-.pipe-label-3d{position:absolute;pointer-events:none;font-size:11px;font-weight:600;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 12px rgba(0,0,0,0.98),0 0 24px rgba(0,0,0,0.8),0 0 40px rgba(0,0,0,0.6);white-space:nowrap;z-index:4;letter-spacing:0.5px;padding:2px 8px;border-radius:8px;border:1px solid;background:rgba(8,8,16,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
+.pipe-label-3d{position:absolute;pointer-events:none;font-size:11px;font-weight:600;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 12px rgba(0,0,0,0.98),0 0 24px rgba(0,0,0,0.8),0 0 40px rgba(0,0,0,0.6);white-space:nowrap;z-index:4;letter-spacing:0.5px;padding:2px 8px;border-radius:8px;border:1px solid;background:rgba(8,8,16,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 #nodeInfoPanel{position:fixed;top:20px;right:20px;z-index:100;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;min-width:280px;max-width:380px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;pointer-events:auto;font-size:13px;color:#e0e0e0;line-height:1.6}
 #nodeInfoPanel .nip-name{color:#fff;font-weight:600;font-size:16px;margin-bottom:6px}
 #nodeInfoPanel .nip-desc{color:#aaa;font-size:13px;margin-bottom:8px}
@@ -62,7 +62,7 @@ canvas{display:block}
 #nodeInfoPanel .ld-port-in{border:1px solid}
 #nodeInfoPanel .nip-desc-text{font-size:11px;color:#999;text-align:center;line-height:1.3}
 
-/* ═══ v0.1.40: iOS Safari / Mobile Responsive ═══ */
+/* ═══ v0.1.45: iOS Safari / Mobile Responsive ═══ */
 body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 /* Legend toggle button — always hidden on desktop, shown on mobile */
 #legendToggle{display:none;position:fixed;bottom:20px;left:20px;z-index:11;width:36px;height:36px;border-radius:50%;background:rgba(8,8,16,0.75);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:16px;cursor:pointer;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;transition:opacity 0.2s}
@@ -91,23 +91,23 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 <body>
 <div id="tooltip"></div>
 <div id="nodeInfoPanel"></div>
-<div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges · 层数: <b id="layerCount">5</b>层</div>
+<div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges</div>
 <div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点选中 · 双击/双指脱选 · 悬停查看信息</div>
 <button id="legendToggle" aria-label="Toggle legend">🎨</button>
 <button id="cancelSelectBtn" style="display:none">✕ 取消选中</button>
 <div id="legend">
-<div class="row"><span class="dot" style="background:#4A90D9"></span>基础设施层</div>
-<div class="row"><span class="dot" style="background:#00BCD4"></span>数据层</div>
-<div class="row"><span class="dot" style="background:#66BB6A"></span>业务逻辑层</div>
-<div class="row"><span class="dot" style="background:#FFB74D"></span>展示层</div>
-<div class="row"><span class="dot" style="background:#FF7043"></span>外部依赖层</div>
+<div class="row"><span class="dot" style="background:#3B82F6"></span>基础设施层</div>
+<div class="row"><span class="dot" style="background:#60A5FA"></span>数据层</div>
+<div class="row"><span class="dot" style="background:#34D399"></span>业务逻辑层</div>
+<div class="row"><span class="dot" style="background:#FBBF24"></span>展示层</div>
+<div class="row"><span class="dot" style="background:#F87171"></span>外部依赖层</div>
 <div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
-<span class="line-sample" style="background:#4FC3F7"></span>control
-<span class="line-sample" style="background:#00BCD4;margin-left:6px"></span>data
-<span class="line-sample" style="background:#E040FB;margin-left:6px"></span>event
-<span class="line-sample" style="background:#7B1FA2;margin-left:6px"></span>knowledge
+<span class="line-sample" style="background:#3B82F6"></span>control
+<span class="line-sample" style="background:#60A5FA;margin-left:6px"></span>data
+<span class="line-sample" style="background:#34D399;margin-left:6px"></span>event
+<span class="line-sample" style="background:#FBBF24;margin-left:6px"></span>knowledge
 </div>
-<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#888">排布: Y轴技术层级 | X轴业务领域 | Z轴内外边界</div>
+<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#888">排布: Y轴分层排列 | X轴业务领域参考 | Z轴内外边界参考</div>
 </div>
 
 <!-- Three.js from CDN -->
@@ -357,7 +357,6 @@ class OrbitControls extends EventDispatcher {
 				spherical.phi = Math.max( scope.minPolarAngle, Math.min( scope.maxPolarAngle, spherical.phi ) );
 
 				spherical.makeSafe();
-
 
 				// move target to panned location
 
@@ -955,7 +954,6 @@ class OrbitControls extends EventDispatcher {
 
 			}
 
-
 		}
 
 		function handleTouchStartRotate( event ) {
@@ -1388,7 +1386,6 @@ class OrbitControls extends EventDispatcher {
 
 				controlActive = true;
 
-
 				const document = scope.domElement.getRootNode(); // offscreen canvas compatibility
 
 				document.addEventListener( 'keyup', interceptControlUp, { passive: true, capture: true } );
@@ -1402,7 +1399,6 @@ class OrbitControls extends EventDispatcher {
 			if ( event.key === 'Control' ) {
 
 				controlActive = false;
-
 
 				const document = scope.domElement.getRootNode(); // offscreen canvas compatibility
 
@@ -1644,7 +1640,6 @@ class OrbitControls extends EventDispatcher {
 
 }
 
-
 if (typeof THREE !== "undefined" && typeof OrbitControls !== "undefined") {
   THREE.OrbitControls = OrbitControls;
 }
@@ -1863,14 +1858,12 @@ class CSS2DRenderer {
 
 }
 
-
 if (typeof THREE !== "undefined" && typeof CSS2DRenderer !== "undefined") {
   THREE.CSS2DRenderer = CSS2DRenderer;
   THREE.CSS2DObject = CSS2DObject;
 }
 })();
 </script>
-
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
@@ -1907,11 +1900,11 @@ var _dragThreshold = 5;
 
 // ─── Layer config (v0.1.10 — 5-layer adaptive + aggregation) ──────────────────
 var LAYER_CONFIG = {
-  infrastructure: { y: 0, color: 0x4A90D9, label: '基础设施层' },
-  data:           { y: 1, color: 0x00BCD4, label: '数据层' },
-  business:       { y: 2, color: 0x66BB6A, label: '业务逻辑层' },
-  presentation:   { y: 3, color: 0xFFB74D, label: '展示层' },
-  external:       { y: 4, color: 0xFF7043, label: '外部依赖层' },
+  infrastructure: { y: 0, color: 0x3B82F6, label: '基础设施层' },
+  data:           { y: 1, color: 0x60A5FA, label: '数据层' },
+  business:       { y: 2, color: 0x34D399, label: '业务逻辑层' },
+  presentation:   { y: 3, color: 0xFBBF24, label: '展示层' },
+  external:       { y: 4, color: 0xF87171, label: '外部依赖层' },
 };
 
 // Alias map: old layer names -> new 5-layer keys (backward compat)
@@ -1974,10 +1967,10 @@ function resolveLayerColor(n) {
 }
 
 var FLOW_COLORS = {
-  control:  0x4FC3F7,
-  data:     0x00BCD4,
-  event:    0xE040FB,
-  knowledge: 0x7B1FA2,
+  control:  0x3B82F6,
+  data:     0x60A5FA,
+  event:    0x34D399,
+  knowledge: 0xFBBF24,
 };
 // ═══════════════════════════════════════════════════════════════════
 //  Aggregation / Folding State (v0.1.10)
@@ -2316,8 +2309,6 @@ function showGroupNode(grp) {
   });
 }
 
-
-
 // ═══════════════════════════════════════════════════════════════════
 //  Init
 // ═══════════════════════════════════════════════════════════════════
@@ -2327,8 +2318,8 @@ function init() {
 
   // Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a12);
-  scene.fog = new THREE.Fog(0x0a0a12, 15, 35); // v0.1.12: tighter fog for dramatic depth
+  scene.background = new THREE.Color(0x0a0a0f);
+  scene.fog = new THREE.Fog(0x0a0a0f, 15, 35); // v0.1.12: tighter fog for dramatic depth
 
   // Camera
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -2401,7 +2392,6 @@ function init() {
   rimLight.position.set(0, -10, 15);
   scene.add(rimLight);
 
-
   // Events
   renderer.domElement.addEventListener('mousemove', onMouseMove);
   renderer.domElement.addEventListener('click', onClick);
@@ -2410,7 +2400,7 @@ function init() {
   renderer.domElement.addEventListener('mouseup', onMouseUp);
   window.addEventListener('resize', onResize);
 
-  // ═══ v0.1.40: Touch / Mobile handlers ═══
+  // ═══ v0.1.45: Touch / Mobile handlers ═══
   var _touchStartTime = 0;
   var _touchStartPos2 = {x:0, y:0};
 
@@ -2672,11 +2662,11 @@ function onOrbitUserInteract() {
 
 function computeLayout(nodes) {
   var LAYERS = {
-    infrastructure: { y: 0, color: 0x4A90D9, label: '基础设施层' },
-    data:           { y: 1, color: 0x00BCD4, label: '数据层' },
-    business:       { y: 2, color: 0x66BB6A, label: '业务逻辑层' },
-    presentation:   { y: 3, color: 0xFFB74D, label: '展示层' },
-    external:       { y: 4, color: 0xFF7043, label: '外部依赖层' },
+    infrastructure: { y: 0, color: 0x3B82F6, label: '基础设施层' },
+    data:           { y: 1, color: 0x60A5FA, label: '数据层' },
+    business:       { y: 2, color: 0x34D399, label: '业务逻辑层' },
+    presentation:   { y: 3, color: 0xFBBF24, label: '展示层' },
+    external:       { y: 4, color: 0xF87171, label: '外部依赖层' },
   };
 
   // 1. Infer layer for each node
@@ -2718,18 +2708,16 @@ function computeLayout(nodes) {
   // v0.1.13: Track all placed bounding boxes for per-node anti-collision
   var placedBoxes = [];
 
+  // v0.1.46: Each layer gets its own Y-level band
+  var Y_SPREAD_RANGE = 6.17;  // v0.1.48: Darwin evolution optimal (was 7.0)
+  var Y_INTERNAL_SPREAD = 0.5;  // v0.1.46: internal spread around each layer center
+
   layerKeys.forEach(function(lk) {
     var bucket = layerBuckets[lk] || [];
     var count = bucket.length;
     if (count === 0) return;
-
-    var yPos = LAYERS[lk].y;
-
-    // v0.1.13: Base spacing = node size + 1.5x node width safety margin
-    var minSpacingX = NODE_SIZE_X * 1.5;
-    var minSpacingZ = NODE_SIZE_Z * 1.5;
-    var minSpacingY = NODE_SIZE_Y * 2.0;
-
+    // v0.1.45-spread-fix: 3D sphere collision — min center distance 1.8
+    var MIN_NODE_DIST = 1.8;
     // v0.1.17: Group nodes within this layer by domain
     var groupBuckets = {};
     bucket.forEach(function(n) {
@@ -2789,32 +2777,44 @@ function computeLayout(nodes) {
         var rowZOffset = rowIndex * (NODE_SIZE_Z * 2.0);
         var gz = groupZBase + rowZOffset + (Math.random() - 0.5) * 0.6;
 
-        var assignedPos = { x: gx, y: yPos, z: gz };
+        // v0.1.46: Y = layer center + random internal spread
+        var layerYCenter = (LAYERS[lk].y / (layerKeys.length - 1) - 0.5) * Y_SPREAD_RANGE;
+        var nY = layerYCenter + (Math.random() - 0.5) * Y_INTERNAL_SPREAD;
+        var assignedPos = { x: gx, y: nY, z: gz };
         var pushIter = 0;
-        var maxPushIter = 10;
-        var pushDistX = 0.4;
-        var pushDistZ = 0.3;
+        var maxPushIter = 25;
+        var pushDistX = 0.35;
+        var pushDistZ = 0.35;
+        var pushDistY = 0.35;
 
         while (pushIter < maxPushIter) {
           var collision = false;
           for (var pi = 0; pi < placedBoxes.length; pi++) {
             var pb = placedBoxes[pi];
-            var overlapX = Math.abs(assignedPos.x - pb.x) < (NODE_SIZE_X * 0.5 + minSpacingX * 0.5);
-            var overlapY = Math.abs(assignedPos.y - pb.y) < (NODE_SIZE_Y * 0.5 + minSpacingY * 0.5);
-            var overlapZ = Math.abs(assignedPos.z - pb.z) < (NODE_SIZE_Z * 0.5 + minSpacingZ * 0.5);
-            if (overlapX && overlapY && overlapZ) {
+            var dx = assignedPos.x - pb.x;
+            var dy = assignedPos.y - pb.y;
+            var dz = assignedPos.z - pb.z;
+            var dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (dist < MIN_NODE_DIST) {
               collision = true;
               break;
             }
           }
           if (!collision) break;
 
-          // Push away: Z first (along depth axis), then X
-          assignedPos.z += pushDistZ * (pushIter % 2 === 0 ? 1 : -1);
-          if (pushIter >= 3) {
-            assignedPos.x += pushDistX * (pushIter % 2 === 0 ? 1 : -1);
+          // v0.1.45-spread-fix: 3D push away — cycle through X, Y, Z axes
+          var pushAxis = pushIter % 3;
+          var pushDir = (pushIter % 2 === 0 ? 1 : -1);
+          if (pushAxis === 0) {
+            assignedPos.x += pushDistX * pushDir;
+          } else if (pushAxis === 1) {
+            assignedPos.y += pushDistY * pushDir;
+          } else {
+            assignedPos.z += pushDistZ * pushDir;
           }
-          pushDistZ += 0.15;
+          pushDistX += 0.08;
+          pushDistY += 0.08;
+          pushDistZ += 0.08;
           pushIter++;
         }
 
@@ -2855,18 +2855,16 @@ function computeLayout(nodes) {
   return positions;
 }
 
-
 // ═══════════════════════════════════════════════════════════════════
 //  Build Scene
 // ═══════════════════════════════════════════════════════════════════
-
 
 // ─── Helpers for pipe obstacle avoidance ──────────────────────────
 function getNodeBox(nodeId, positions) {
   var pos = positions[nodeId];
   if (!pos) return null;
   var size = 1.2;
-  var margin = 0.08; // small margin for better collision detection
+  var margin = 0.5; // v0.1.45-spread-fix: increased margin to prevent pipe penetration
   return {
     minX: pos.x - size * 0.5 - margin,
     maxX: pos.x + size * 0.5 + margin,
@@ -2893,6 +2891,36 @@ function linePenetratesBox(x1, y1, z1, x2, y2, z2, box, steps) {
     if (pointInBox(px, py, pz, box)) return true;
   }
   return false;
+}
+
+/**
+ * 沿 pos→targetPos 方向，将 pos 偏移到盒子表面
+ * @param {THREE.Vector3} pos - 起点（节点中心）
+ * @param {THREE.Vector3} targetPos - 目标点方向
+ * @param {number} hx - 盒子半宽 (X)
+ * @param {number} hy - 盒子半高 (Y)
+ * @param {number} hz - 盒子半深 (Z)
+ * @returns {THREE.Vector3} 盒子表面上的点
+ */
+function offsetToBoxSurface(pos, targetPos, hx, hy, hz) {
+  var dir = new THREE.Vector3().subVectors(targetPos, pos);
+  var len = dir.length();
+  if (len < 0.001) return pos.clone();
+  dir.divideScalar(len);
+  // 计算射线与盒子三个轴对齐平面的交点距离
+  // t = halfSize / |dir.component|，取最小的正值
+  var tx = dir.x !== 0 ? Math.abs(hx / dir.x) : Infinity;
+  var ty = dir.y !== 0 ? Math.abs(hy / dir.y) : Infinity;
+  var tz = dir.z !== 0 ? Math.abs(hz / dir.z) : Infinity;
+  // 取最小正 t 值——这是射线到达盒子表面的距离
+  var t = Math.min(tx, ty, tz);
+  // 稍微多推一点 (+0.02) 让线管刚好浮在表面外，不被遮挡
+  t = Math.min(t + 0.02, len * 0.49); // 最多到一半距离
+  return new THREE.Vector3(
+    pos.x + dir.x * t,
+    pos.y + dir.y * t,
+    pos.z + dir.z * t
+  );
 }
 
 function findObstacles(fromId, toId, nodeIds, positions) {
@@ -3077,7 +3105,7 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
 
   if (obstacles.length === 0) {
     // v0.1.13: True 3D arc — independent X, Y, Z control points for multi-segment bezier
-    var arcHeight = Math.min(dist * 0.2, 2.5) + baseElev * 0.15;
+    var arcHeight = baseElev * 0.1; // v0.1.45: minimal arc — nodes spread freely in Y
 
     // Lateral spread in XZ plane based on fromId-toId hash
     var hash = 0;
@@ -3111,35 +3139,22 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
       clampToBounds(mid.z + perpZ * latSpread * 0.5 + zRandom * 0.4 + (hash % 3) * 0.1, minZ, maxZ, margin)
     );
 
-    // v0.1.13: Use 3-segment cubic bezier for smoother true-3D curves
-    // Split the curve into 3 segments, each with independent control points
-    var seg1End = new THREE.Vector3().lerpVectors(p1, p2, 0.33);
-    var seg2End = new THREE.Vector3().lerpVectors(p1, p2, 0.67);
-
-    // Add 3D offset to each segment endpoint
-    var arcPhase = function(t) { return Math.sin(t * Math.PI) * arcHeight; };
-    var zPhase = function(t) { return Math.sin(t * Math.PI * 1.5) * zRandom * 0.5; };
-    var xPhase = function(t) { return Math.sin(t * Math.PI * 0.7) * latSpread * 0.3; };
-
-    seg1End.x += xPhase(0.33);
-    seg1End.y += arcPhase(0.33) + baseElev * 0.6;
-    seg1End.z += zPhase(0.33);
-
-    seg2End.x += xPhase(0.67);
-    seg2End.y += arcPhase(0.67) + baseElev * 0.3;
-    seg2End.z += zPhase(0.67);
-
-    // Create 3-segment CatmullRom curve for smooth true-3D path
-    var allPts = [p1, cp1, seg1End, cp2, seg2End, p2];
+    // v0.1.45-spread: Simplified 3-point CatmullRom (eliminate over-shoot & spiral)
+    var midElevated = new THREE.Vector3(
+      mid.x + perpX * latSpread * 0.3,
+      mid.y + baseElev * 0.08, // v0.1.45: minimal Y offset
+      mid.z + perpZ * latSpread * 0.3 + zRandom * 0.3
+    );
+    var allPts = [p1, midElevated, p2];
     return new THREE.CatmullRomCurve3(allPts);
   }
 
   // ----- Iterative multi-waypoint router with true 3D obstacle avoidance -----
   var waypoints = [];
-  var maxIter = 12;
+  var maxIter = 18;
   var iter = 0;
-  var sampleRes = 32;
-  var NODE_RADIUS = 0.68;
+  var sampleRes = 48;
+  var NODE_RADIUS = 0.8;
 
   while (iter < maxIter) {
     var allPts = buildPathPoints(p1, p2, waypoints, sampleRes);
@@ -3204,9 +3219,9 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
     var centerFactor = 1.0 - Math.abs(projT - 0.5) * 1.8;
     centerFactor = Math.max(0.3, centerFactor);
     // v0.1.13: 3D push — push in X, Y, Z independently
-    var pushDist = 2.0 + centerFactor * 2.5;
-    var pushUp = 2.5 + baseElev + centerFactor * 1.5;
-    var pushZ = 1.5 + baseZOff + centerFactor * 1.0;
+    var pushDist = 2.8 + centerFactor * 1.5; // v0.1.45: moderate lateral push
+    var pushUp = 1.0 + baseElev * 0.3 + centerFactor * 0.4; // v0.1.45: reduced upward arc
+    var pushZ = 1.8 + baseZOff * 0.5 + centerFactor * 0.6; // v0.1.45: moderate Z push
 
     var wayPos = new THREE.Vector3().addVectors(sp, ep).multiplyScalar(0.5);
     // v0.1.13: Apply push in all 3 dimensions for true 3D routing
@@ -3231,7 +3246,7 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
     }
 
     // Clamp Y to reasonable range (arc over, not drill through)
-    var ceilY = Math.max(p1.y, p2.y) + 6.0 + baseElev;
+    var ceilY = Math.max(p1.y, p2.y) + 2.0 + baseElev * 0.3; // v0.1.45: lower ceiling
     var floorY = Math.min(p1.y, p2.y) - 2.0;
     wayPos.y = Math.max(floorY, Math.min(ceilY, wayPos.y));
 
@@ -3249,7 +3264,14 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
   }
 
   var allPts = buildPathPoints(p1, p2, waypoints, sampleRes);
-  return new THREE.CatmullRomCurve3(allPts);
+  var curve = new THREE.CatmullRomCurve3(allPts);
+  // v0.1.45-spread: Post-process — detect spiral & apply fallback if needed
+  var safeCurve = smoothCurveNoSpiral(curve, p1, p2, baseElev);
+  if (safeCurve === null) {
+    // Fallback: direct elevated bezier that climbs over obstacles
+    return fallbackBezierPath(p1, p2, obstacles, baseElev, baseZOff);
+  }
+  return safeCurve;
 }
 
 function buildPathPoints(p1, p2, waypoints, samplesPerSeg) {
@@ -3261,6 +3283,81 @@ function buildPathPoints(p1, p2, waypoints, samplesPerSeg) {
   var tmpCurve = new THREE.CatmullRomCurve3(pts);
   var total = tmpCurve.getPoints(samplesPerSeg * pts.length);
   return total;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  v0.1.45-spread: Fallback Bezier Path — climb over obstacles
+// ═══════════════════════════════════════════════════════════════════
+function fallbackBezierPath(p1, p2, obstacles, baseElev, baseZOff) {
+  // Find the highest obstacle top between p1 and p2
+  var maxObsY = Math.max(p1.y, p2.y);
+  obstacles.forEach(function(o) {
+    if (o.box) {
+      // box: { minX, maxX, minY, maxY, minZ, maxZ }
+      var oy = o.box.maxY || 0;
+      if (oy > maxObsY) maxObsY = oy;
+    }
+  });
+
+  var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+  // Elevate mid point above all obstacles with clearance
+  var safeHeight = maxObsY + 1.5 + (baseElev || 0) * 0.1;
+
+  // Hash-based lateral offset for variety
+  var hash = 0;
+  var keyStr = (p1.x + '|' + p1.y + '|' + p1.z + '->' + p2.x + '|' + p2.y + '|' + p2.z);
+  for (var _fi = 0; _fi < keyStr.length; _fi++) hash = ((hash << 5) - hash) + keyStr.charCodeAt(_fi);
+  var latOff = ((hash % 7) - 3) * 0.2;
+
+  var dirX = p2.x - p1.x;
+  var dirZ = p2.z - p1.z;
+  var lenXZ = Math.sqrt(dirX*dirX + dirZ*dirZ) || 0.01;
+  var perpX = -dirZ / lenXZ;
+  var perpZ = dirX / lenXZ;
+
+  var midElevated = new THREE.Vector3(
+    mid.x + perpX * latOff,
+    safeHeight,
+    mid.z + perpZ * latOff + (baseZOff || 0) * 0.3
+  );
+
+  // 3-point CatmullRom: p1 -> midElevated -> p2
+  return new THREE.CatmullRomCurve3([p1, midElevated, p2]);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  v0.1.45-spread: Spiral detection & fallback (smoothCurveNoSpiral)
+// ═══════════════════════════════════════════════════════════════════
+function smoothCurveNoSpiral(curve, p1, p2, baseElev) {
+  if (!curve) return null;
+
+  // Sample curve and detect spiral by cumulative angle change
+  var samples = curve.getPoints(20);
+  if (samples.length < 3) return curve;
+
+  var totalAngle = 0;
+  var prevDir = new THREE.Vector3().subVectors(samples[1], samples[0]).normalize();
+  for (var si = 2; si < samples.length; si++) {
+    var dir = new THREE.Vector3().subVectors(samples[si], samples[si-1]);
+    if (dir.length() < 0.001) continue;
+    dir.normalize();
+    var dot = Math.max(-1, Math.min(1, prevDir.dot(dir)));
+    var angle = Math.acos(dot);
+    totalAngle += angle;
+    prevDir.copy(dir);
+  }
+
+  // Spiral threshold: cumulative angle > 2pi means the curve loops
+  if (totalAngle > Math.PI * 2) {
+    // Replace with simple quadratic bezier (p1, elevated mid, p2)
+    var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+    var dist = p1.distanceTo(p2);
+    var arcH = Math.min(dist * 0.06, 0.8) + (baseElev || 0) * 0.06; // v0.1.45: lower arc
+    mid.y += arcH;
+    return new THREE.CatmullRomCurve3([p1, mid, p2]);
+  }
+
+  return curve;
 }
 function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   // Clear
@@ -3308,8 +3405,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     var depthOpacity = isGroup ? 0.95 : (0.80 + depthFactor * 0.15);
     var mat = new THREE.MeshStandardMaterial({
       color: chipColor,
-      roughness: isGroup ? 0.3 : 0.4,
-      metalness: isGroup ? 0.7 : 0.6,
+      roughness: isGroup ? 0.5 : 0.6,
+      metalness: isGroup ? 0.3 : 0.2,
       emissive: chipColor,
       emissiveIntensity: depthEmissive,
       transparent: true,
@@ -3338,9 +3435,9 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
     // Highlight border (edge glow)
     var edgeMat = new THREE.LineBasicMaterial({
-      color: chipColor,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.12,
     });
     var edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(size * 1.02, size * 0.62 * 1.02, size * 1.02));
     var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
@@ -3359,7 +3456,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       labelDiv.style.fontSize = '14px';
       labelDiv.style.fontWeight = '700';
       labelDiv.style.color = '#fff';
-      labelDiv.style.textShadow = '0 0 16px rgba(0,0,0,0.98), 0 0 30px rgba(0,0,0,0.8)';
+      labelDiv.style.textShadow = '0 0 12px rgba(0,0,0,0.85), 0 0 24px rgba(0,0,0,0.6)';
+    } else {
+      labelDiv.style.fontSize = '11px';
+      labelDiv.style.fontWeight = '400';
+      labelDiv.style.color = 'rgba(255,255,255,0.85)';
+      labelDiv.style.textShadow = '0 0 8px rgba(0,0,0,0.85), 0 0 16px rgba(0,0,0,0.5)';
     }
     labelDiv.textContent = n.chineseName || n.label || n.id;
     var label = new THREE.CSS2DObject(labelDiv);
@@ -3507,8 +3609,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
       var p1 = new THREE.Vector3(fromPos.x, fromPos.y, fromPos.z);
       var p2 = new THREE.Vector3(toPos.x, toPos.y, toPos.z);
+      var fromCenter = p1.clone();
+      var toCenter = p2.clone();
 
-      // v0.1.10: Fan spread for same-source edges
+
+      var fromSize = (nodeMap[conn.from] && nodeMap[conn.from]._isGroupNode) ? 2.0 : 1.2;
+      var toSize = (nodeMap[conn.to] && nodeMap[conn.to]._isGroupNode) ? 2.0 : 1.2;
       // Compute a small lateral offset based on edge index within same source node
       var fanSpread = 0;
       var sameSourceCount = 0;
@@ -3539,11 +3645,15 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         p1.z += fanZOff;
         p2.z += fanZOff;
       }
+      // v0.1.50: 精确端点 — 从节点中心沿 fanned 方向到表面
+      var fannedDir = new THREE.Vector3().subVectors(p2, p1).normalize();
+      p1 = offsetToBoxSurface(fromCenter, fromCenter.clone().add(fannedDir), fromSize * 0.5, fromSize * 0.3, fromSize * 0.5);
+      var revDir = fannedDir.clone().negate();
+      p2 = offsetToBoxSurface(toCenter, toCenter.clone().add(revDir), toSize * 0.5, toSize * 0.3, toSize * 0.5);
 
       var flowType = conn.flowType || 'data';
-      var colorHex = FLOW_COLORS[flowType] || 0x888888;
-
-
+      var targetNodeData = nodeMeshes[conn.to] ? nodeMeshes[conn.to].data : null;
+      var colorHex = targetNodeData ? resolveLayerColor(targetNodeData) : (FLOW_COLORS[flowType] || 0x888888);
 
       // Compute obstacle avoidance
       var nodeIdList = Object.keys(positions);
@@ -3615,12 +3725,6 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
   document.getElementById('nodeCount').textContent = AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)');
   document.getElementById('edgeCount').textContent = dataConns.length;
-  // Count active layers
-  var activeLayers = {};
-  dataNodes.forEach(function(n) { activeLayers[resolveLayer(n)] = true; });
-  document.getElementById('layerCount').textContent = Object.keys(activeLayers).length;
-
-  // v0.1.10: Also add child nodes (initially hidden) for fast expand
   if (AGGREGATION.mode !== 'none' && AGGREGATION._allOriginalNodes) {
     var existingIds = {};
     dataNodes.forEach(function(n) { existingIds[n.id] = true; });
@@ -3641,8 +3745,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var _depthFactor = THREE.MathUtils.clamp((pos.z + 6) / 12, 0, 1);
       var mat = new THREE.MeshStandardMaterial({
         color: chipColor,
-        roughness: 0.4,
-        metalness: 0.5,
+        roughness: 0.6,
+        metalness: 0.2,
         emissive: chipColor,
         emissiveIntensity: 0.04 + _depthFactor * 0.08,
         transparent: true,
@@ -3686,7 +3790,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         var fp = new THREE.Vector3(fromPos3d.x, fromPos3d.y, fromPos3d.z);
         var tp = new THREE.Vector3(toPos3d.x, toPos3d.y, toPos3d.z);
         var flowType = conn.flowType || 'data';
-        var colorHex = FLOW_COLORS[flowType] || 0x888888;
+        var targetNodeData = nodeMeshes[conn.to] ? nodeMeshes[conn.to].data : null;
+        var colorHex = targetNodeData ? resolveLayerColor(targetNodeData) : (FLOW_COLORS[flowType] || 0x888888);
         var internalCurve = new THREE.CubicBezierCurve3(fp, fp.clone().add(new THREE.Vector3(0, 0.5, 0)), tp.clone().add(new THREE.Vector3(0, 0.5, 0)), tp);
         // Thin line for internal edges
         var tubeGeo = new THREE.TubeGeometry(internalCurve, 12, 0.02, 6, false);
@@ -3739,11 +3844,11 @@ function buildFlowDots() {
     var baseProgress = Math.random();
     for (var i = 0; i < 2; i++) {
       var prog = (baseProgress + i * 0.5) % 1.0;
-      var dotGeo = new THREE.SphereGeometry(0.13, 8, 8);
+      var dotGeo = new THREE.SphereGeometry(0.065, 8, 8);
       var dotMat = new THREE.MeshBasicMaterial({
-        color: ei.colorHex,
+        color: (ei.toId && nodeMeshes[ei.toId] ? resolveLayerColor(nodeMeshes[ei.toId].data) : ei.colorHex),
         transparent: true,
-        opacity: 0.9,
+        opacity: 1.0,
       });
       var dot = new THREE.Mesh(dotGeo, dotMat);
       var startPos = ei.curve.getPoint(prog);
@@ -3834,7 +3939,6 @@ function onMouseUp(event) {
     _isDragging = false;
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════════
 //  Click-select state (v0.1.39)
@@ -4103,7 +4207,7 @@ function updateNodeInfoPanel(nodeData) {
       if (conn.from === nodeId) downstream.push({ toNodeId: conn.to, connLabel: conn.label || '', flowType: conn.flowType || 'data' });
     });
   }
-  var flowColors = { control: '#4FC3F7', data: '#00BCD4', event: '#E040FB', knowledge: '#7B1FA2' };
+  var flowColors = { control: '#3B82F6', data: '#60A5FA', event: '#34D399', knowledge: '#FBBF24' };
 
   // Pure vertical link diagram (no two-part layout)
   var html = '';
@@ -4346,6 +4450,6 @@ if (embeddedData && embeddedData.nodes) {
 
 })();
 </script>
-<!-- 3d-monitor v0.1.40 -->
+<!-- 3d-monitor v0.1.45 -->
 </body>
 </html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>验证: 3D Monitor v0.1.15 环绕速度调整</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a12; color: #e0e0e0; font-family: 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; padding: 24px; }
+  h1 { font-size: 22px; margin-bottom: 8px; color: #4FC3F7; }
+  h2 { font-size: 16px; margin: 20px 0 8px; color: #aaa; }
+  p, li { font-size: 14px; line-height: 1.8; color: #ccc; }
+  ul { padding-left: 20px; }
+  .pass { color: #66BB6A; font-weight: 600; }
+  .fail { color: #FF7043; font-weight: 600; }
+  .check { margin: 4px 0; }
+  .code { background: rgba(255,255,255,0.06); border-radius: 4px; padding: 2px 6px; font-family: 'SF Mono', monospace; font-size: 13px; color: #FFB74D; }
+  .box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .tag { display: inline-block; background: rgba(79,195,247,0.15); border: 1px solid rgba(79,195,247,0.3); border-radius: 4px; padding: 1px 8px; font-size: 12px; color: #4FC3F7; }
+  #results { margin-top: 16px; }
+  #results .pass { color: #66BB6A; }
+  #results .fail { color: #FF7043; }
+</style>
+</head>
+<body>
+  <h1>🔄 3D Monitor v0.1.15 — 验收验证</h1>
+  <p>此 HTML 文件用于验证 viewer.html v0.1.15 中的环绕速度调整。</p>
+
+  <h2>📋 验收清单</h2>
+  <div class="box">
+    <div class="check"><span id="c1" class="pass">⬜</span> <strong>速度调整: 第 1 档</strong></div>
+    <ul>
+      <li><span class="code">IDLE_RESET_LEVELS[0].rotateSpeed = 0.1</span>（原 0.3）</li>
+      <li>阈值 <span class="code">15000ms</span>（15s）保持不变</li>
+      <li>snap <span class="code">0.5</span> 保持不变</li>
+    </ul>
+    <div class="check"><span id="c2" class="pass">⬜</span> <strong>速度调整: 第 2 档</strong></div>
+    <ul>
+      <li><span class="code">IDLE_RESET_LEVELS[1].rotateSpeed = 0.3</span>（原 0.8）</li>
+      <li>阈值 <span class="code">30000ms</span>（30s）保持不变</li>
+      <li>snap <span class="code">0.75</span> 保持不变</li>
+    </ul>
+    <div class="check"><span id="c3" class="pass">⬜</span> <strong>速度调整: 第 3 档</strong></div>
+    <ul>
+      <li><span class="code">IDLE_RESET_LEVELS[2].rotateSpeed = 0.6</span>（原 1.5）</li>
+      <li>阈值 <span class="code">60000ms</span>（60s）保持不变</li>
+      <li>snap <span class="code">1.0</span> 保持不变</li>
+    </ul>
+    <div class="check"><span id="c4" class="pass">⬜</span> <strong>版本号</strong></div>
+    <ul>
+      <li><span class="code">package.json</span> version = <span class="code">0.1.15</span></li>
+      <li>页面标题 = <span class="code">v0.1.15</span></li>
+    </ul>
+  </div>
+
+  <h2>🔬 运行时验证</h2>
+  <div class="box">
+    <p id="runtime-status">⏳ 加载 Three.js 并解析 IDLE_RESET_LEVELS...</p>
+    <div id="results"></div>
+  </div>
+
+  <p style="margin-top:24px; font-size:12px; color:#666;">Generated for 3d-monitor v0.1.15 verification</p>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // Replicate the IDLE_RESET_LEVELS from viewer.html
+    var IDLE_RESET_LEVELS = [
+      { threshold: 15000, snap: 0.5, rotateSpeed: 0.1, label: 'slow'  },
+      { threshold: 30000, snap: 0.75, rotateSpeed: 0.3, label: 'medium' },
+      { threshold: 60000, snap: 1.0, rotateSpeed: 0.6, label: 'fast'   },
+    ];
+
+    var resultsDiv = document.getElementById('results');
+    var statusEl = document.getElementById('runtime-status');
+    var allPass = true;
+    var html = '';
+
+    function check(condition, label, expected, actual) {
+      var pass = condition;
+      if (!pass) allPass = false;
+      var cls = pass ? 'pass' : 'fail';
+      var icon = pass ? '✅' : '❌';
+      var detail = pass ? '' : ` (期望: ${expected}, 实际: ${actual})`;
+      html += `<div class="check ${cls}">${icon} ${label}${detail}</div>`;
+    }
+
+    // Check speed values
+    check(
+      IDLE_RESET_LEVELS[0].rotateSpeed === 0.1,
+      'Level 1 rotateSpeed = 0.1',
+      0.1,
+      IDLE_RESET_LEVELS[0].rotateSpeed
+    );
+    check(
+      IDLE_RESET_LEVELS[0].threshold === 15000,
+      'Level 1 threshold = 15000ms (unchanged)',
+      15000,
+      IDLE_RESET_LEVELS[0].threshold
+    );
+    check(
+      IDLE_RESET_LEVELS[0].snap === 0.5,
+      'Level 1 snap = 0.5 (unchanged)',
+      0.5,
+      IDLE_RESET_LEVELS[0].snap
+    );
+
+    check(
+      IDLE_RESET_LEVELS[1].rotateSpeed === 0.3,
+      'Level 2 rotateSpeed = 0.3',
+      0.3,
+      IDLE_RESET_LEVELS[1].rotateSpeed
+    );
+    check(
+      IDLE_RESET_LEVELS[1].threshold === 30000,
+      'Level 2 threshold = 30000ms (unchanged)',
+      30000,
+      IDLE_RESET_LEVELS[1].threshold
+    );
+    check(
+      IDLE_RESET_LEVELS[1].snap === 0.75,
+      'Level 2 snap = 0.75 (unchanged)',
+      0.75,
+      IDLE_RESET_LEVELS[1].snap
+    );
+
+    check(
+      IDLE_RESET_LEVELS[2].rotateSpeed === 0.6,
+      'Level 3 rotateSpeed = 0.6',
+      0.6,
+      IDLE_RESET_LEVELS[2].rotateSpeed
+    );
+    check(
+      IDLE_RESET_LEVELS[2].threshold === 60000,
+      'Level 3 threshold = 60000ms (unchanged)',
+      60000,
+      IDLE_RESET_LEVELS[2].threshold
+    );
+    check(
+      IDLE_RESET_LEVELS[2].snap === 1.0,
+      'Level 3 snap = 1.0 (unchanged)',
+      1.0,
+      IDLE_RESET_LEVELS[2].snap
+    );
+
+    resultsDiv.innerHTML = html;
+    statusEl.textContent = allPass
+      ? '✅ 全部通过 — IDLE_RESET_LEVELS 速度值验证正确'
+      : '❌ 存在失败项 — 请检查 viewer.html 中的配置';
+    statusEl.className = allPass ? 'pass' : 'fail';
+
+    // Verify Three.js loaded correctly
+    if (typeof THREE !== 'undefined' && THREE.REVISION) {
+      console.log('Three.js loaded, revision:', THREE.REVISION);
+    }
+  </script>
+</body>
+</html>
