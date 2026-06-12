@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.13 — 箭头加粗+模块标签+详情功能说明+统一模块配色</title>
+<title>3D Monitor v0.1.40-node-spread.14 — 恢复层配色+模块色边框辅助</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -2001,6 +2001,15 @@ function resolveModuleColor(n) {
   return 0x888888;
 }
 
+/**
+ * Resolve the effective layer color for a node (restored v14).
+ */
+function resolveLayerColor(n) {
+  var lk = resolveLayer(n);
+  var cfg = LAYER_CONFIG[lk];
+  return cfg ? cfg.color : (n.color ? new THREE.Color(n.color).getHex() : 0x888888);
+}
+
 var FLOW_COLORS = {
   control:  0x3B82F6,
   data:     0x60A5FA,
@@ -3496,7 +3505,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
     var layerKey = resolveLayer(n);
     var layerCfg = LAYER_CONFIG[layerKey] || { color: 0x888888 };
-    var chipColor = resolveModuleColor(n);
+    var chipColor = resolveLayerColor(n);
     n.layer = layerKey; // stamp back for downstream
 
     // v0.1.10: Group nodes get larger size and different appearance
@@ -3537,11 +3546,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     var lines = new THREE.LineSegments(lineGeo, lineMat);
     mesh.add(lines);
 
-    // Highlight border (edge glow)
+    // Highlight border (edge glow) — v14: module color, higher opacity
+    var modEdgeColor = n.module && MODULE_CONFIG[n.module] ? MODULE_CONFIG[n.module].color : 0x888888;
     var edgeMat = new THREE.LineBasicMaterial({
-      color: 0xffffff,
+      color: modEdgeColor,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.4,
     });
     var edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(size * 1.02, size * 0.62 * 1.02, size * 1.02));
     var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
@@ -3561,6 +3571,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       mesh.scale.set(1.5, 1.5, 1.5);
       mat.emissiveIntensity = 0.6;
       mat.color.setHex(0xFFD700);
+      if (edgeWire) edgeWire.scale.set(1.1, 1.1, 1.1);
     }
 
     // Store
@@ -4068,7 +4079,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (!pos) return;
       nodeMap[n.id] = n;
       var layerKey = resolveLayer(n);
-      var chipColor = resolveModuleColor(n);
+      var chipColor = resolveLayerColor(n);
       n.layer = layerKey;
 
       var size = 0.9; // smaller size for child nodes
@@ -4835,6 +4846,6 @@ if (embeddedData && embeddedData.nodes) {
 
 })();
 </script>
-<!-- 3d-monitor v0.1.40-node-spread.12 -->
+<!-- 3d-monitor v0.1.40-node-spread.14 -->
 </body>
 </html>
