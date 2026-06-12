@@ -2962,6 +2962,20 @@ function computeLayout(nodes) {
     }
   });
 
+  // ─── v0.1.40-node-spread.16: Recompute _moduleLayoutInfo avgY after Y-layering ───
+  Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
+    var info = window._moduleLayoutInfo[modId];
+    var ySum = 0, count = 0;
+    var members = moduleMembers[modId];
+    if (members) {
+      members.forEach(function(n) {
+        var p = positions[n.id];
+        if (p) { ySum += p.y; count++; }
+      });
+      if (count > 0) info.avgY = ySum / count;
+    }
+  });
+
   return positions;
 }
 
