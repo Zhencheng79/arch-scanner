@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.07 — Y-axis Level Layout</title>
+<title>3D Monitor v0.1.40-node-spread.10 — Module Y-Layering</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -1874,9 +1874,12 @@ if (typeof THREE !== "undefined" && typeof CSS2DRenderer !== "undefined") {
 'use strict';
 
 var scene, camera, renderer, labelRenderer, controls;
-var nodeGroup, edgeGroup, portGroup;
+var nodeGroup, edgeGroup, portGroup, moduleGroup;
 var flowDots = [];        // { mesh, edgeInfo, progress, speed }
 var flowDotsGroup;
+var _arrowFlowDots = [];
+  _moduleFlowArrows = [];
+var _moduleFlowArrows = [];
 var nodeMeshes = {};      // nodeId -> { mesh, data, ports: [], edges: [] }
 var edgeLines = [];       // { line, glowLine, conn, fromId, toId }
 var portMeshes = {};      // portId -> mesh
@@ -1906,6 +1909,33 @@ var LAYER_CONFIG = {
   presentation:   { y: 3, color: 0xFBBF24, label: '展示层' },
   external:       { y: 4, color: 0xF87171, label: '外部依赖层' },
 };
+
+
+// ─── v0.1.40-node-spread.09: Module detection ─────────────────────────
+var MODULE_CONFIG = {
+  'extraction': { label: '提取模块', color: 0x4CAF50 },
+  'db': { label: '存储模块', color: 0x2196F3 },
+  'resolution': { label: '解析模块', color: 0xFF9800 },
+  'graph': { label: '图查询模块', color: 0x9C27B0 },
+  'context': { label: '上下文模块', color: 0xE91E63 },
+  'mcp': { label: 'MCP服务模块', color: 0x00BCD4 },
+  'installer': { label: '安装模块', color: 0x795548 },
+  'cli': { label: 'CLI模块', color: 0x607D8B },
+  'other': { label: '其他', color: 0x888888 },
+};
+var MODULE_PREFIXES = {
+  'extraction-': 'extraction', 'db-': 'db', 'resolution-': 'resolution',
+  'graph-': 'graph', 'context-': 'context', 'mcp-': 'mcp',
+  'installer-': 'installer', 'bin-': 'cli',
+};
+var MODULE_Y_ORDER = ['extraction', 'db', 'resolution', 'graph', 'context', 'mcp', 'installer', 'cli', 'other'];
+var MODULE_Y_SPACING = 1.5;
+function detectModule(nodeId) {
+  for (var prefix in MODULE_PREFIXES) {
+    if (nodeId.indexOf(prefix) === 0) return MODULE_PREFIXES[prefix];
+  }
+  return 'other';
+}
 
 // Alias map: old layer names -> new 5-layer keys (backward compat)
 var LAYER_ALIAS = {
@@ -2371,10 +2401,12 @@ function init() {
   edgeGroup = new THREE.Group();
   portGroup = new THREE.Group();
   flowDotsGroup = new THREE.Group();
+  moduleGroup = new THREE.Group();
   scene.add(nodeGroup);
   scene.add(edgeGroup);
   // scene.add(portGroup); // v0.1.39: port spheres removed
   scene.add(flowDotsGroup);
+  scene.add(moduleGroup);
 
   // Lights
   var ambient = new THREE.AmbientLight(0x404060, 0.8);
@@ -2850,6 +2882,65 @@ function computeLayout(nodes) {
     assignedPos.x = cx;
     assignedPos.y = cy;
     assignedPos.z = cz;
+  });
+
+
+  // ─── v0.1.40-node-spread.09: Module clustering layout for presentation layer ───
+  window._moduleLayoutInfo = {};
+  var presBucket = layerBuckets['presentation'] || [];
+  if (presBucket.length > 0) {
+    var moduleMembers = {};
+    presBucket.forEach(function(n) {
+      var mod = detectModule(n.id);
+      if (!moduleMembers[mod]) moduleMembers[mod] = [];
+      moduleMembers[mod].push(n);
+    });
+    Object.keys(moduleMembers).forEach(function(modId) {
+      var members = moduleMembers[modId];
+      if (members.length === 0) return;
+      var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      var ySum = 0, count = 0;
+      members.forEach(function(n) {
+        var p = positions[n.id];
+        if (!p) return;
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.z < minZ) minZ = p.z;
+        if (p.z > maxZ) maxZ = p.z;
+        ySum += p.y; count++;
+      });
+      if (count === 0) return;
+      window._moduleLayoutInfo[modId] = {
+        minX: minX, maxX: maxX,
+        minZ: minZ, maxZ: maxZ,
+        avgY: ySum / count,
+        nodeCount: count,
+        color: MODULE_CONFIG[modId] ? MODULE_CONFIG[modId].color : 0x888888,
+        label: MODULE_CONFIG[modId] ? MODULE_CONFIG[modId].label : modId,
+      };
+    });
+  }
+
+  // ─── v0.1.40-node-spread.10: Module Y-layering ─────────────────────
+  var moduleYLevels = {};
+  presBucket.forEach(function(n) {
+    var mod = detectModule(n.id);
+    var idx = MODULE_Y_ORDER.indexOf(mod);
+    if (idx === -1) idx = MODULE_Y_ORDER.indexOf('other');
+    var p = positions[n.id];
+    if (!p) return;
+    if (!moduleYLevels[mod]) {
+      moduleYLevels[mod] = idx;
+      var info = window._moduleLayoutInfo[mod];
+      if (info) {
+        var baseY = info.avgY;
+        info.avgY = baseY + idx * MODULE_Y_SPACING;
+      }
+    }
+    var info = window._moduleLayoutInfo[mod];
+    if (info) {
+      p.y = info.avgY;
+    }
   });
 
   return positions;
@@ -3365,6 +3456,9 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   while (edgeGroup.children.length > 0) edgeGroup.remove(edgeGroup.children[0]);
   while (portGroup.children.length > 0) portGroup.remove(portGroup.children[0]);
   while (flowDotsGroup.children.length > 0) flowDotsGroup.remove(flowDotsGroup.children[0]);
+  while (moduleGroup.children.length > 0) moduleGroup.remove(moduleGroup.children[0]);
+  _arrowFlowDots = [];
+  _moduleFlowArrows = [];
   nodeMeshes = {};
   edgeLines = [];
   flowDots = [];
@@ -3580,6 +3674,188 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     // Store reference on node
   });
 
+
+    // ─── v0.1.40-node-spread.10: Module background boxes (rounded rect) ──
+  if (window._moduleLayoutInfo) {
+    Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
+      var info = window._moduleLayoutInfo[modId];
+      if (info.nodeCount < 2) return;
+      var cX = (info.minX + info.maxX) / 2;
+      var cZ = (info.minZ + info.maxZ) / 2;
+      var sX = info.maxX - info.minX + 4.0;
+      var sZ = info.maxZ - info.minZ + 4.0;
+      var cY = info.avgY;
+      var mc = info.color;
+      var mc3 = new THREE.Color(mc);
+      // Rounded rectangle shape
+      var shape = new THREE.Shape();
+      var r = Math.min(1.0, Math.min(sX, sZ) * 0.15);
+      var hw = sX / 2, hd = sZ / 2;
+      shape.moveTo(-hw + r, -hd);
+      shape.lineTo(hw - r, -hd);
+      shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
+      shape.lineTo(hw, hd - r);
+      shape.quadraticCurveTo(hw, hd, hw - r, hd);
+      shape.lineTo(-hw + r, hd);
+      shape.quadraticCurveTo(-hw, hd, -hw, hd - r);
+      shape.lineTo(-hw, -hd + r);
+      shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+      // Fill
+      var bgGeo = new THREE.ShapeGeometry(shape);
+      var bgMat = new THREE.MeshBasicMaterial({
+        color: mc, transparent: true, opacity: 0.08, depthWrite: false, side: THREE.DoubleSide,
+      });
+      var bgMesh = new THREE.Mesh(bgGeo, bgMat);
+      bgMesh.position.set(cX, cY, cZ);
+      bgMesh.rotation.x = -Math.PI / 2;
+      moduleGroup.add(bgMesh);
+      // Dashed border
+      var edgesPts = shape.getPoints(32);
+      edgesPts.push(edgesPts[0]);
+      var edgeGeo = new THREE.BufferGeometry().setFromPoints(
+        edgesPts.map(function(pt) { return new THREE.Vector3(pt.x, 0, pt.y); })
+      );
+      var egMat = new THREE.LineDashedMaterial({
+        color: mc, transparent: true, opacity: 0.15, dashSize: 0.3, gapSize: 0.2,
+      });
+      var egLine = new THREE.Line(edgeGeo, egMat);
+      egLine.position.set(cX, cY, cZ);
+      egLine.computeLineDistances();
+      moduleGroup.add(egLine);
+      // Label
+      var mlDiv = document.createElement('div');
+      mlDiv.className = 'label-2d';
+      mlDiv.style.fontSize = '16px';
+      mlDiv.style.fontWeight = 'bold';
+      mlDiv.style.color = '#' + mc3.getHexString();
+      mlDiv.textContent = info.label;
+      var mlObj = new THREE.CSS2DObject(mlDiv);
+      mlObj.position.set(cX, cY + 1.0, cZ);
+      moduleGroup.add(mlObj);
+    });
+  }
+    // ─── v0.1.40-node-spread.10: Module flow arrows (TubeGeometry curves) ─
+  function buildModuleFlowArrow(srcMod, dstMod, colorA, colorB, srcInfo, dstInfo) {
+    var sX = srcInfo.maxX + 2.0, eX = dstInfo.minX - 2.0;
+    var sY = srcInfo.avgY, eY = dstInfo.avgY;
+    var sZ = (srcInfo.minZ + srcInfo.maxZ) / 2;
+    var eZ = (dstInfo.minZ + dstInfo.maxZ) / 2;
+    var midX = (sX + eX) / 2, midY = (sY + eY) / 2, midZ = (sZ + eZ) / 2;
+    var arcZ = midZ + 1.0;
+    var pathPts = [
+      new THREE.Vector3(sX, sY, sZ),
+      new THREE.Vector3(midX, midY, arcZ),
+      new THREE.Vector3(eX, eY, eZ)
+    ];
+    var curve = new THREE.CatmullRomCurve3(pathPts);
+    var tubeSegments = 20, radialSegments = 6, tubeRadius = 0.08;
+    var tubeGeo = new THREE.TubeGeometry(curve, tubeSegments, tubeRadius, radialSegments, false);
+    var posAttr = tubeGeo.getAttribute('position');
+    var colors = new Float32Array(posAttr.count * 3);
+    var cA = new THREE.Color(colorA), cB = new THREE.Color(colorB);
+    for (var vi = 0; vi < posAttr.count; vi++) {
+      var t = vi / posAttr.count;
+      var c = cA.clone().lerp(cB, t);
+      colors[vi*3] = c.r; colors[vi*3+1] = c.g; colors[vi*3+2] = c.b;
+    }
+    tubeGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    var tubeMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6 });
+    var tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+    moduleGroup.add(tubeMesh);
+    var coneGeo = new THREE.ConeGeometry(0.25, 0.6, 8);
+    var coneMat = new THREE.MeshBasicMaterial({ color: colorB, transparent: true, opacity: 0.7 });
+    var cone = new THREE.Mesh(coneGeo, coneMat);
+    var endDir = curve.getTangent(1.0);
+    cone.position.copy(curve.getPoint(1.0));
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), endDir);
+    moduleGroup.add(cone);
+    var dotCount = 4;
+    for (var di = 0; di < dotCount; di++) {
+      var dg = new THREE.SphereGeometry(0.1, 6, 6);
+      var dm = new THREE.MeshBasicMaterial({ color: cB, transparent: true, opacity: 0.8 });
+      var dot = new THREE.Mesh(dg, dm);
+      var initP = di / dotCount;
+      moduleGroup.add(dot);
+      _moduleFlowArrows.push({ mesh: dot, curve: curve, progress: initP, speed: 0.12 + Math.random() * 0.06 });
+    }
+    var plDiv = document.createElement('div');
+    plDiv.className = 'pipe-label-3d';
+    var lcStr = '#' + cB.getHexString();
+    plDiv.style.borderColor = lcStr;
+    plDiv.style.color = lcStr;
+    plDiv.style.fontSize = '11px';
+    plDiv.textContent = (window.MODULE_CONFIG[srcMod] ? window.MODULE_CONFIG[srcMod].label : srcMod) + ' → ' + (window.MODULE_CONFIG[dstMod] ? window.MODULE_CONFIG[dstMod].label : dstMod);
+    var plObj = new THREE.CSS2DObject(plDiv);
+    var labPos = curve.getPoint(0.5);
+    plObj.position.set(labPos.x, labPos.y + 0.8, labPos.z);
+    moduleGroup.add(plObj);
+  }
+
+  var PIPELINE = ['extraction', 'db', 'resolution', 'graph', 'context', 'mcp'];
+  if (window._moduleLayoutInfo) {
+    for (var pi = 0; pi < PIPELINE.length - 1; pi++) {
+      var srcMod = PIPELINE[pi], dstMod = PIPELINE[pi + 1];
+      var srcInfo = window._moduleLayoutInfo[srcMod];
+      var dstInfo = window._moduleLayoutInfo[dstMod];
+      if (!srcInfo || !dstInfo) continue;
+      if (srcInfo.nodeCount < 1 || dstInfo.nodeCount < 1) continue;
+      buildModuleFlowArrow(srcMod, dstMod, srcInfo.color, dstInfo.color, srcInfo, dstInfo);
+    }
+    // Branch arrows: resolution→installer, context→cli
+    var branchArrows = [
+      ['resolution', 'installer'],
+      ['context', 'cli']
+    ];
+    branchArrows.forEach(function(br) {
+      var srcMod = br[0], dstMod = br[1];
+      var srcInfo = window._moduleLayoutInfo[srcMod];
+      var dstInfo = window._moduleLayoutInfo[dstMod];
+      if (!srcInfo || !dstInfo) return;
+      if (srcInfo.nodeCount < 1 || dstInfo.nodeCount < 1) return;
+      buildModuleFlowArrow(srcMod, dstMod, srcInfo.color, dstInfo.color, srcInfo, dstInfo);
+    });
+  }
+  // ─── v0.1.40-node-spread.09: Integration glow bands ───────────────
+  if (window._moduleLayoutInfo) {
+    var bands = [
+      { a: 'extraction', b: 'db', color: 0x4CAF50, label: '数据管道集成' },
+      { a: 'graph', b: 'resolution', color: 0x9C27B0, label: '查询引擎集成' },
+      { a: 'mcp', b: 'context', color: 0xE91E63, label: '交付层集成' },
+    ];
+    bands.forEach(function(band) {
+      var infoA = window._moduleLayoutInfo[band.a];
+      var infoB = window._moduleLayoutInfo[band.b];
+      if (!infoA || !infoB) return;
+      if (infoA.nodeCount < 1 || infoB.nodeCount < 1) return;
+      var leftEdge = infoA.maxX + 2.0, rightEdge = infoB.minX - 2.0;
+      if (leftEdge > rightEdge) { leftEdge = infoB.maxX + 2.0; rightEdge = infoA.minX - 2.0; }
+      if (leftEdge >= rightEdge) return;
+      var bcX = (leftEdge + rightEdge) / 2;
+      var bw = rightEdge - leftEdge;
+      var bY = (infoA.avgY + infoB.avgY) / 2;
+      var bZ = (Math.min(infoA.minZ, infoB.minZ) + Math.max(infoA.maxZ, infoB.maxZ)) / 2;
+      var bD = Math.max(infoA.maxZ - infoA.minZ, infoB.maxZ - infoB.minZ) + 4.0;
+      var gg = new THREE.BoxGeometry(bw, 0.06, bD);
+      var gm = new THREE.MeshBasicMaterial({ color: band.color, transparent: true, opacity: 0.12, depthWrite: false });
+      var gMesh = new THREE.Mesh(gg, gm);
+      gMesh.position.set(bcX, bY, bZ);
+      moduleGroup.add(gMesh);
+      var geg = new THREE.EdgesGeometry(gg);
+      var gem = new THREE.LineBasicMaterial({ color: band.color, transparent: true, opacity: 0.25 });
+      var gEdge = new THREE.LineSegments(geg, gem);
+      gEdge.position.copy(gMesh.position);
+      moduleGroup.add(gEdge);
+      var gld = document.createElement('div');
+      gld.className = 'pipe-label-3d';
+      var glc = '#' + new THREE.Color(band.color).getHexString();
+      gld.style.borderColor = glc; gld.style.color = glc; gld.style.fontSize = '12px';
+      gld.textContent = band.label;
+      var glo = new THREE.CSS2DObject(gld);
+      glo.position.set(bcX, bY - 0.8, bZ);
+      moduleGroup.add(glo);
+    });
+  }
+
   // ─── Build Edges ───────────────────────────────────────
   // Compute pipe-vs-pipe crossings to assign elevation offsets
   computePipeCrossings(dataConns, positions);
@@ -3666,6 +3942,22 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var pipeDepthFactor = THREE.MathUtils.clamp((midPt.z + 6) / 12, 0, 1);
       var glowOpacity = THREE.MathUtils.clamp(0.25 * (0.8 + pipeDepthFactor * 0.4), 0.15, 0.8);
       var coreOpacity = THREE.MathUtils.clamp(0.6 * (0.8 + pipeDepthFactor * 0.4), 0.15, 0.8);
+
+      // v0.1.40-node-spread.09: Module-based edge noise reduction
+      var fromModule = detectModule(conn.from);
+      var toModule = detectModule(conn.to);
+      if (fromModule && toModule && fromModule !== toModule) {
+        var isPipelineAdj = false;
+        var PC = ['extraction','db','resolution','graph','context','mcp'];
+        for (var _pci = 0; _pci < PC.length - 1; _pci++) {
+          if ((fromModule === PC[_pci] && toModule === PC[_pci+1]) ||
+              (toModule === PC[_pci] && fromModule === PC[_pci+1])) {
+            isPipelineAdj = true; break;
+          }
+        }
+        if (isPipelineAdj) { colorHex = 0xFFD700; flowType = 'pipeline'; }
+        else { glowOpacity *= 0.5; coreOpacity *= 0.5; }
+      }
 
       // Main glow tube (thicker pipe)
       var tubeGeo = new THREE.TubeGeometry(curve, 20, 0.04, 8, false);
@@ -4075,6 +4367,20 @@ function applyDimming(selectedId) {
         ei._labelObj.element.style.opacity = (ei.fromId === selectedId || ei.toId === selectedId) ? '1' : '0.2';
       }
     });
+
+  // v0.1.40-node-spread.09/10: Arrow flow dots animation
+  _arrowFlowDots.forEach(function(afd) {
+    afd.progress += afd.speed * delta;
+    if (afd.progress > 1.0) afd.progress -= 1.0;
+    afd.mesh.position.set(afd.startX + afd.progress * (afd.endX - afd.startX), afd.y, afd.z);
+  });
+  // v0.1.40-node-spread.10: Module flow arrows animation
+  _moduleFlowArrows.forEach(function(mfa) {
+    mfa.progress += mfa.speed * delta;
+    if (mfa.progress > 1.0) mfa.progress -= 1.0;
+    var pt = mfa.curve.getPoint(mfa.progress);
+    mfa.mesh.position.copy(pt);
+  });
 
   } else {
     // ── Reset everything to defaults ──
