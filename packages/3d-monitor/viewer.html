@@ -3517,6 +3517,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   dataNodes.forEach(function(n) {
     nodeMap[n.id] = n;
     var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
+    n.module = detectModule(n.id);
     var layerKey = resolveLayer(n);
     var layerCfg = LAYER_CONFIG[layerKey] || { color: 0x888888 };
     var chipColor = resolveLayerColor(n);
