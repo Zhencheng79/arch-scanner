@@ -117,33 +117,165 @@ const LAYER_COLORS = {
   default: '#9E9E9E',
 };
 
+
+
 /**
- * 中文名称和描述映射表
- * 根据路径或模块名推断中文信息
+ * 通用中文名称映射表 — 适用于所有项目的常见目录和文件名称
  */
-const CHINESE_MAP = {
-  'packages/port-tag-tool': { chineseName: '端口标签工具', chineseDesc: '核心传感器工具，扫描项目目录结构、生成端口和标签', description: 'Port Tag Tool — Core sensor that scans project directory structures, generates ports and tags' },
-  'src': { chineseName: '3D全景前端', chineseDesc: '3D全景展示前端，基于Three.js渲染架构可视化', description: '3D Panorama Frontend — Three.js-based architecture visualization' },
-  'plugins': { chineseName: '构建插件', chineseDesc: 'Vite构建插件，负责构建时注入和优化', description: 'Build Plugins — Vite build-time plugins for injection and optimization' },
-  'server': { chineseName: 'MCP服务端', chineseDesc: 'MCP协议服务端，提供标准化接口', description: 'MCP Server — Standardized MCP protocol server' },
-  'tools': { chineseName: '工具入口', chineseDesc: '辅助工具入口，提供Shell/CJS/Python等辅助脚本', description: 'Tool Entry — Helper entry points for Shell/CJS/Python scripts' },
-  'src/data': { chineseName: '数据加载层', chineseDesc: 'MCP数据加载适配层，加载传感器扫描结果', description: 'Data Loader — MCP data loading adapter for sensor scan results' },
-  'src/components': { chineseName: '3D渲染组件', chineseDesc: 'Three.js 3D场景渲染组件集合', description: '3D Render Components — Three.js scene rendering components' },
-  'src/mcp': { chineseName: 'MCP前端适配', chineseDesc: '前端MCP协议适配模块', description: 'Frontend MCP Adapter' },
-  'src/utils': { chineseName: '前端工具函数', chineseDesc: '前端通用工具函数和帮助方法', description: 'Frontend Utility Functions' },
-  'src/examples': { chineseName: '示例数据', chineseDesc: '前端示例数据和演示配置', description: 'Example Data — Frontend demo data and configurations' },
+const GENERIC_CHINESE_MAP = {
+  // --- 常见目录 ---
+  'lib': { chineseName: '库', chineseDesc: '公共库模块', description: 'Library — Shared library code' },
+  'api': { chineseName: 'API接口', chineseDesc: 'API接口层，处理外部请求和响应', description: 'API Layer — External request/response handling' },
+  'src': { chineseName: '源码目录', chineseDesc: '项目源代码主目录', description: 'Source — Project source code root directory' },
+  'components': { chineseName: '组件', chineseDesc: 'UI组件集合', description: 'Components — UI component collection' },
+  'utils': { chineseName: '工具函数', chineseDesc: '通用工具函数集合', description: 'Utilities — Common utility functions' },
+  'config': { chineseName: '配置', chineseDesc: '项目配置文件', description: 'Configuration — Project configuration files' },
+  'hooks': { chineseName: '钩子', chineseDesc: '自定义钩子函数', description: 'Hooks — Custom hook functions' },
+  'services': { chineseName: '服务', chineseDesc: '业务服务层', description: 'Services — Business service layer' },
+  'types': { chineseName: '类型定义', chineseDesc: 'TypeScript类型定义', description: 'Types — TypeScript type definitions' },
+  'styles': { chineseName: '样式', chineseDesc: '样式定义文件', description: 'Styles — Style definitions' },
+  'assets': { chineseName: '静态资源', chineseDesc: '静态资源文件，如图片、字体等', description: 'Assets — Static resources such as images, fonts' },
+  'public': { chineseName: '公共资源', chineseDesc: '公共静态资源目录', description: 'Public — Public static assets directory' },
+  'pages': { chineseName: '页面', chineseDesc: '页面级组件', description: 'Pages — Page-level components' },
+  'views': { chineseName: '视图', chineseDesc: '视图组件', description: 'Views — View components' },
+  'store': { chineseName: '状态管理', chineseDesc: '全局状态管理模块', description: 'Store — Global state management' },
+  'db': { chineseName: '数据库', chineseDesc: '数据库相关模块', description: 'Database — Database-related modules' },
+  'data': { chineseName: '数据处理', chineseDesc: '数据处理层', description: 'Data — Data processing layer' },
+  'middleware': { chineseName: '中间件', chineseDesc: '中间件处理层', description: 'Middleware — Middleware processing layer' },
+  'routes': { chineseName: '路由', chineseDesc: '路由配置定义', description: 'Routes — Route definitions' },
+  'controllers': { chineseName: '控制器', chineseDesc: '请求控制器', description: 'Controllers — Request controllers' },
+  'models': { chineseName: '数据模型', chineseDesc: '数据模型定义', description: 'Models — Data model definitions' },
+  'helpers': { chineseName: '辅助函数', chineseDesc: '辅助工具函数', description: 'Helpers — Helper utility functions' },
+  'constants': { chineseName: '常量', chineseDesc: '常量定义文件', description: 'Constants — Constant definitions' },
+  'env': { chineseName: '环境配置', chineseDesc: '环境配置文件', description: 'Environment — Environment configuration' },
+  'build': { chineseName: '构建输出', chineseDesc: '构建产物目录', description: 'Build — Build output directory' },
+  'dist': { chineseName: '分发目录', chineseDesc: '分发包目录', description: 'Dist — Distribution directory' },
+  'test': { chineseName: '测试', chineseDesc: '测试文件集合', description: 'Test — Test files' },
+  'docs': { chineseName: '文档', chineseDesc: '项目文档', description: 'Docs — Project documentation' },
+  'scripts': { chineseName: '脚本', chineseDesc: '辅助脚本工具', description: 'Scripts — Helper scripts' },
+  'bin': { chineseName: '二进制', chineseDesc: '可执行二进制文件', description: 'Bin — Executable binaries' },
+  'client': { chineseName: '客户端', chineseDesc: '客户端代码', description: 'Client — Client-side code' },
+  'deploy': { chineseName: '部署', chineseDesc: '部署配置和脚本', description: 'Deploy — Deployment configurations and scripts' },
+  'docker': { chineseName: 'Docker', chineseDesc: 'Docker容器配置', description: 'Docker — Docker container configuration' },
+  'migrations': { chineseName: '数据库迁移', chineseDesc: '数据库迁移脚本', description: 'Migrations — Database migration scripts' },
+  'seeds': { chineseName: '数据填充', chineseDesc: '数据库数据填充脚本', description: 'Seeds — Database seed data scripts' },
+  'generated': { chineseName: '生成代码', chineseDesc: '自动生成的代码', description: 'Generated — Auto-generated code' },
+  'shared': { chineseName: '共享模块', chineseDesc: '跨项目共享代码', description: 'Shared — Cross-project shared code' },
+  'common': { chineseName: '公共模块', chineseDesc: '公共基础代码', description: 'Common — Common base code' },
+  'core': { chineseName: '核心模块', chineseDesc: '系统核心功能', description: 'Core — Core system functionality' },
+  'features': { chineseName: '功能模块', chineseDesc: '业务功能模块', description: 'Features — Business feature modules' },
+  'modules': { chineseName: '模块', chineseDesc: '功能模块集合', description: 'Modules — Feature module collection' },
+  'widgets': { chineseName: '小部件', chineseDesc: '可复用小部件', description: 'Widgets — Reusable widgets' },
+  'layout': { chineseName: '布局', chineseDesc: '页面布局组件', description: 'Layout — Page layout components' },
+  'templates': { chineseName: '模板', chineseDesc: '代码模板文件', description: 'Templates — Code template files' },
+  'mcp': { chineseName: 'MCP协议', chineseDesc: 'MCP协议适配层', description: 'MCP — MCP protocol adapter layer' },
+  'bridge': { chineseName: '桥接层', chineseDesc: '系统间桥接层', description: 'Bridge — Cross-system bridge layer' },
+  'proxy': { chineseName: '代理', chineseDesc: '代理层模块', description: 'Proxy — Proxy layer module' },
+  'gateway': { chineseName: '网关', chineseDesc: 'API网关服务', description: 'Gateway — API gateway service' },
+  'adapter': { chineseName: '适配器', chineseDesc: '外部系统适配器', description: 'Adapter — External system adapter' },
+  'provider': { chineseName: '提供者', chineseDesc: '服务提供者', description: 'Provider — Service provider' },
+  'context': { chineseName: '上下文', chineseDesc: 'React上下文模块', description: 'Context — React context module' },
+  'selectors': { chineseName: '选择器', chineseDesc: '状态选择器', description: 'Selectors — State selectors' },
+  'reducer': { chineseName: '状态归约', chineseDesc: '状态归约函数', description: 'Reducer — State reducer function' },
+  'actions': { chineseName: '状态动作', chineseDesc: '状态动作定义', description: 'Actions — State action definitions' },
+  'schema': { chineseName: '数据模式', chineseDesc: '数据结构模式定义', description: 'Schema — Data schema definitions' },
+  'theme': { chineseName: '主题', chineseDesc: '主题样式定义', description: 'Theme — Theme style definitions' },
+  'setup': { chineseName: '初始化', chineseDesc: '环境初始化配置', description: 'Setup — Environment initialization' },
+  'spec': { chineseName: '规格测试', chineseDesc: '规格测试文件', description: 'Spec — Specification test files' },
+  // --- 常见文件 (不含扩展名) ---
+  'index': { chineseName: '入口文件', chineseDesc: '模块入口文件', description: 'Entry — Module entry file' },
+  'main': { chineseName: '主入口', chineseDesc: '应用主入口文件', description: 'Main — Application main entry file' },
+  'app': { chineseName: '应用入口', chineseDesc: '应用主入口', description: 'App — Application entry point' },
+  'cli': { chineseName: '命令行入口', chineseDesc: 'CLI命令行工具入口', description: 'CLI — Command-line interface entry point' },
+  'router': { chineseName: '路由配置', chineseDesc: '路由配置定义', description: 'Router — Route configuration definition' },
+  'README': { chineseName: '项目说明', chineseDesc: '项目说明文档', description: 'README — Project documentation' },
+  'package': { chineseName: '包配置', chineseDesc: '包管理配置文件', description: 'Package — Package configuration file' },
 };
 
-/** 子文件中文名映射（packages/port-tag-tool 下的文件）*/
-const FILE_CHINESE_MAP = {
-  'cli.js': { chineseName: '命令行入口', chineseDesc: 'CLI命令行入口，支持scan/tags/ports等操作', description: 'CLI Entry — Command-line interface for scan/tags/ports actions' },
-  'portRegistry.js': { chineseName: '端口注册表', chineseDesc: '端口注册与管理引擎，计算入口/出口端口', description: 'Port Registry — Port registration and management engine' },
-  'tagRegistry.js': { chineseName: '标签注册表', chineseDesc: '标签定义与管理引擎，自动贴标签', description: 'Tag Registry — Tag definition and management engine' },
-  'projectScanner.js': { chineseName: '项目扫描器', chineseDesc: '启发式项目扫描传感器，发现模块和依赖', description: 'Project Scanner — Heuristic sensor that discovers modules and dependencies' },
-  'mcp-server.js': { chineseName: 'MCP服务器', chineseDesc: 'MCP协议服务器，对外暴露标准化工具接口', description: 'MCP Server — Exposes standardized tool interfaces via MCP protocol' },
-  'index.js': { chineseName: '模块入口', chineseDesc: 'port-tag-tool模块导出入口', description: 'Module Entry — port-tag-tool package entry point' },
-  'hermesExampleData.js': { chineseName: '示例数据', chineseDesc: 'Hermes系统内置示例数据', description: 'Hermes Example Data' },
+/**
+
+
+/**
+ * 通用文件名中文映射（按文件名不含扩展名匹配）
+ */
+const FILE_GENERIC_MAP = {
+  'index': { chineseName: '模块入口', chineseDesc: '模块导出入口文件', description: 'Entry — Module export entry file' },
+  'cli': { chineseName: '命令行入口', chineseDesc: 'CLI命令行入口', description: 'CLI — Command-line interface entry' },
+  'server': { chineseName: '服务端入口', chineseDesc: '服务端启动入口', description: 'Server — Server entry point' },
+  'utils': { chineseName: '工具函数', chineseDesc: '工具函数集合', description: 'Utils — Utility functions' },
+  'helpers': { chineseName: '辅助函数', chineseDesc: '辅助函数集合', description: 'Helpers — Helper functions' },
+  'constants': { chineseName: '常量定义', chineseDesc: '常量定义文件', description: 'Constants — Constant definitions' },
+  'types': { chineseName: '类型定义', chineseDesc: 'TypeScript类型定义文件', description: 'Types — TypeScript type definitions' },
+  'api': { chineseName: 'API接口', chineseDesc: '外部API接口定义', description: 'API — External API interface definitions' },
+  'routes': { chineseName: '路由定义', chineseDesc: '路由配置定义', description: 'Routes — Route configuration definitions' },
+  'models': { chineseName: '数据模型', chineseDesc: '数据模型定义', description: 'Models — Data model definitions' },
+  'schema': { chineseName: '数据模式', chineseDesc: '数据结构模式定义', description: 'Schema — Data schema definitions' },
+  'hooks': { chineseName: '自定义钩子', chineseDesc: '自定义React钩子', description: 'Hooks — Custom React hooks' },
+  'store': { chineseName: '状态管理', chineseDesc: '状态管理模块', description: 'Store — State management module' },
+  'reducer': { chineseName: '状态归约', chineseDesc: '状态归约函数', description: 'Reducer — State reducer function' },
+  'actions': { chineseName: '状态动作', chineseDesc: '状态动作定义', description: 'Actions — State action definitions' },
+  'selectors': { chineseName: '状态选择器', chineseDesc: '状态选择器函数', description: 'Selectors — State selector functions' },
+  'styles': { chineseName: '样式定义', chineseDesc: '样式表文件', description: 'Styles — Style definitions' },
+  'theme': { chineseName: '主题定义', chineseDesc: '主题配置定义', description: 'Theme — Theme configuration definitions' },
+  'test': { chineseName: '测试文件', chineseDesc: '单元测试文件', description: 'Test — Unit test file' },
+  'spec': { chineseName: '规格测试', chineseDesc: '规格测试文件', description: 'Spec — Specification test file' },
+  'setup': { chineseName: '初始化', chineseDesc: '测试环境初始化', description: 'Setup — Test environment setup' },
+  'config': { chineseName: '配置', chineseDesc: '应用配置文件', description: 'Config — Application configuration file' },
+  'middleware': { chineseName: '中间件', chineseDesc: '中间件定义', description: 'Middleware — Middleware definitions' },
+  'README': { chineseName: '项目说明', chineseDesc: '项目说明文档', description: 'README — Project documentation' },
+  'package': { chineseName: '包配置', chineseDesc: '包管理配置文件', description: 'Package — Package configuration file' },
 };
+
+/**
+ * 根据目录名或文件名智能生成中文名称
+ * @param {string} name - 目录名或文件名（不含扩展名）
+ * @param {string} type - 'dir' 或 'file'
+ * @returns {string} 中文名称
+ */
+function generateChineseName(name, type = 'dir') {
+  // 先查 GENERIC_CHINESE_MAP（包含常见的目录和文件映射）
+  if (GENERIC_CHINESE_MAP[name] && GENERIC_CHINESE_MAP[name].chineseName) {
+    return GENERIC_CHINESE_MAP[name].chineseName;
+  }
+  // 查 FILE_GENERIC_MAP
+  if (FILE_GENERIC_MAP[name] && FILE_GENERIC_MAP[name].chineseName) {
+    return FILE_GENERIC_MAP[name].chineseName;
+  }
+  // 未匹配：将英文名按语义拆分，各单词首字母大写
+  const label = name
+    // camelCase → 空格分隔
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    // kebab-case → 空格分隔
+    .replace(/[-_]/g, ' ')
+    // 多个空格合并
+    .replace(/\s+/g, ' ')
+    .trim()
+    // 各单词首字母大写
+    .replace(/\w/g, c => c.toUpperCase());
+  return label || name;
+}
+
+/**
+ * 根据目录名或文件名智能生成中文描述
+ * @param {string} name - 目录名或文件名（不含扩展名）
+ * @param {string} label - 英文 label（已格式化）
+ * @param {string} type - 'dir' 或 'file'
+ * @returns {string} 中文描述
+ */
+function generateChineseDesc(name, label, type = 'dir') {
+  // 先查已知映射
+  if (GENERIC_CHINESE_MAP[name] && GENERIC_CHINESE_MAP[name].chineseDesc) {
+    return GENERIC_CHINESE_MAP[name].chineseDesc;
+  }
+  if (FILE_GENERIC_MAP[name] && FILE_GENERIC_MAP[name].chineseDesc) {
+    return FILE_GENERIC_MAP[name].chineseDesc;
+  }
+  // 未匹配：使用 label 纯中文或纯英文展示，不混杂
+  if (type === 'file') {
+    return `${label} — ${label}文件`;
+  }
+  return `${label} — ${label}`;
+}
 
 // ===== 辅助函数 =====
 
@@ -347,10 +479,10 @@ function discoverModules(projectPath, fileList) {
       .replace(/\b\w/g, c => c.toUpperCase());
 
     // === 问题3修复：中文名称和描述 ===
-    const chineseInfo = CHINESE_MAP[relPath] || CHINESE_MAP[dirName] || {};
+    const chineseInfo = GENERIC_CHINESE_MAP[relPath] || {};
     const description = chineseInfo.description || `Module: ${relPath} (${filesInDir.length} source files)`;
-    const chineseName = chineseInfo.chineseName || label;
-    const chineseDesc = chineseInfo.chineseDesc || `${label}模块`;
+    const chineseName = chineseInfo.chineseName || generateChineseName(dirName, 'dir');
+    const chineseDesc = chineseInfo.chineseDesc || generateChineseDesc(dirName, label, 'dir');
 
     modules.set(modId, {
       id: modId,
@@ -398,9 +530,15 @@ function discoverModules(projectPath, fileList) {
         .replace(/\b\w/g, c => c.toUpperCase());
 
       // Get Chinese info for known files
-      const fileChinese = FILE_CHINESE_MAP[basename(fileName)] || {};
-      const childChineseName = fileChinese.chineseName || childLabel;
-      const childChineseDesc = fileChinese.chineseDesc || `${parentMod.chineseName}的子模块${childLabel}`;
+      const fileNameOnly = basename(fileName);
+      const fileChinese = FILE_GENERIC_MAP[fileBaseName] ? {
+          chineseName: FILE_GENERIC_MAP[fileBaseName].chineseName,
+          chineseDesc: FILE_GENERIC_MAP[fileBaseName].chineseDesc,
+          description: FILE_GENERIC_MAP[fileBaseName].description,
+        } : {};
+      const childChineseName = fileChinese.chineseName || generateChineseName(fileBaseName, 'file');
+      const childChineseDesc = fileChinese.chineseDesc ||
+        generateChineseDesc(fileBaseName, childLabel, 'file');
       const childDescription = fileChinese.description || `File: ${basename(fileName)} in ${parentMod.relPath}`;
 
       // Per-file imports/exports using extractImports (which uses AST with JSX support)
@@ -757,8 +895,8 @@ function buildEntryNodes(projectPath, pkg) {
     label: projectName,
     layer: 'infrastructure',
     description: projectDesc || `Project: ${projectName}`,
-    chineseName: '系统3D全景',
-    chineseDesc: projectDesc || '3D全景可视化系统 — 架构节点、连接、数据流展示',
+    chineseName: pkg?.name || basename(projectPath),
+    chineseDesc: projectDesc || '',
     color: '#4CAF50',
     geometryType: 'sphere',
     status: 'Active',
