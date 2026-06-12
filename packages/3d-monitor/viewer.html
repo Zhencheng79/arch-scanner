@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.10 — Module Y-Layering</title>
+<title>3D Monitor v0.1.40-node-spread.11 — 流向箭头+背景框+连线修复</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -3675,15 +3675,15 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   });
 
 
-    // ─── v0.1.40-node-spread.10: Module background boxes (rounded rect) ──
+    // ─── v0.1.40-node-spread.11: Module background boxes (rounded rect) ──
   if (window._moduleLayoutInfo) {
     Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
       var info = window._moduleLayoutInfo[modId];
       if (info.nodeCount < 2) return;
       var cX = (info.minX + info.maxX) / 2;
       var cZ = (info.minZ + info.maxZ) / 2;
-      var sX = info.maxX - info.minX + 4.0;
-      var sZ = info.maxZ - info.minZ + 4.0;
+      var sX = info.maxX - info.minX + 5.0;
+      var sZ = info.maxZ - info.minZ + 5.0;
       var cY = info.avgY;
       var mc = info.color;
       var mc3 = new THREE.Color(mc);
@@ -3703,7 +3703,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       // Fill
       var bgGeo = new THREE.ShapeGeometry(shape);
       var bgMat = new THREE.MeshBasicMaterial({
-        color: mc, transparent: true, opacity: 0.08, depthWrite: false, side: THREE.DoubleSide,
+        color: mc, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide,
       });
       var bgMesh = new THREE.Mesh(bgGeo, bgMat);
       bgMesh.position.set(cX, cY, cZ);
@@ -3715,26 +3715,25 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var edgeGeo = new THREE.BufferGeometry().setFromPoints(
         edgesPts.map(function(pt) { return new THREE.Vector3(pt.x, 0, pt.y); })
       );
-      var egMat = new THREE.LineDashedMaterial({
-        color: mc, transparent: true, opacity: 0.15, dashSize: 0.3, gapSize: 0.2,
+      var egMat = new THREE.LineBasicMaterial({
+        color: mc, transparent: true, opacity: 0.35,
       });
       var egLine = new THREE.Line(edgeGeo, egMat);
       egLine.position.set(cX, cY, cZ);
-      egLine.computeLineDistances();
       moduleGroup.add(egLine);
       // Label
       var mlDiv = document.createElement('div');
       mlDiv.className = 'label-2d';
-      mlDiv.style.fontSize = '16px';
+      mlDiv.style.fontSize = '18px';
       mlDiv.style.fontWeight = 'bold';
       mlDiv.style.color = '#' + mc3.getHexString();
       mlDiv.textContent = info.label;
       var mlObj = new THREE.CSS2DObject(mlDiv);
-      mlObj.position.set(cX, cY + 1.0, cZ);
+      mlObj.position.set(cX, cY + 1.2, cZ);
       moduleGroup.add(mlObj);
     });
   }
-    // ─── v0.1.40-node-spread.10: Module flow arrows (TubeGeometry curves) ─
+    // ─── v0.1.40-node-spread.11: Module flow arrows (TubeGeometry curves) ─
   function buildModuleFlowArrow(srcMod, dstMod, colorA, colorB, srcInfo, dstInfo) {
     var sX = srcInfo.maxX + 2.0, eX = dstInfo.minX - 2.0;
     var sY = srcInfo.avgY, eY = dstInfo.avgY;
@@ -3748,7 +3747,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       new THREE.Vector3(eX, eY, eZ)
     ];
     var curve = new THREE.CatmullRomCurve3(pathPts);
-    var tubeSegments = 20, radialSegments = 6, tubeRadius = 0.08;
+    var tubeSegments = 24, radialSegments = 8, tubeRadius = 0.14;
     var tubeGeo = new THREE.TubeGeometry(curve, tubeSegments, tubeRadius, radialSegments, false);
     var posAttr = tubeGeo.getAttribute('position');
     var colors = new Float32Array(posAttr.count * 3);
@@ -3759,19 +3758,19 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       colors[vi*3] = c.r; colors[vi*3+1] = c.g; colors[vi*3+2] = c.b;
     }
     tubeGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    var tubeMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.6 });
+    var tubeMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.75 });
     var tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
     moduleGroup.add(tubeMesh);
-    var coneGeo = new THREE.ConeGeometry(0.25, 0.6, 8);
+    var coneGeo = new THREE.ConeGeometry(0.18, 0.4, 8);
     var coneMat = new THREE.MeshBasicMaterial({ color: colorB, transparent: true, opacity: 0.7 });
     var cone = new THREE.Mesh(coneGeo, coneMat);
     var endDir = curve.getTangent(1.0);
     cone.position.copy(curve.getPoint(1.0));
     cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), endDir);
     moduleGroup.add(cone);
-    var dotCount = 4;
+    var dotCount = 6;
     for (var di = 0; di < dotCount; di++) {
-      var dg = new THREE.SphereGeometry(0.1, 6, 6);
+      var dg = new THREE.SphereGeometry(0.08, 6, 6);
       var dm = new THREE.MeshBasicMaterial({ color: cB, transparent: true, opacity: 0.8 });
       var dot = new THREE.Mesh(dg, dm);
       var initP = di / dotCount;
@@ -3787,7 +3786,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     plDiv.textContent = (window.MODULE_CONFIG[srcMod] ? window.MODULE_CONFIG[srcMod].label : srcMod) + ' → ' + (window.MODULE_CONFIG[dstMod] ? window.MODULE_CONFIG[dstMod].label : dstMod);
     var plObj = new THREE.CSS2DObject(plDiv);
     var labPos = curve.getPoint(0.5);
-    plObj.position.set(labPos.x, labPos.y + 0.8, labPos.z);
+    plObj.position.set(labPos.x, labPos.y + 1.2, labPos.z);
     moduleGroup.add(plObj);
   }
 
@@ -3922,10 +3921,17 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         p2.z += fanZOff;
       }
       // v0.1.50: 精确端点 — 从节点中心沿 fanned 方向到表面
+      // v0.1.40-node-spread.11: 使用节点实际 box 半尺寸，更贴合真实节点大小
       var fannedDir = new THREE.Vector3().subVectors(p2, p1).normalize();
-      p1 = offsetToBoxSurface(fromCenter, fromCenter.clone().add(fannedDir), fromSize * 0.5, fromSize * 0.3, fromSize * 0.5);
+      var srcNode = nodeMap[conn.from] || null;
+      var dstNode = nodeMap[conn.to] || null;
+      var srcHalf = (srcNode && srcNode._isGroupNode) ? 1.0 : 0.6;
+      var srcHalfY = (srcNode && srcNode._isGroupNode) ? 0.6 : 0.36;
+      var dstHalf = (dstNode && dstNode._isGroupNode) ? 1.0 : 0.6;
+      var dstHalfY = (dstNode && dstNode._isGroupNode) ? 0.6 : 0.36;
+      p1 = offsetToBoxSurface(fromCenter, fromCenter.clone().add(fannedDir), srcHalf, srcHalfY, srcHalf);
       var revDir = fannedDir.clone().negate();
-      p2 = offsetToBoxSurface(toCenter, toCenter.clone().add(revDir), toSize * 0.5, toSize * 0.3, toSize * 0.5);
+      p2 = offsetToBoxSurface(toCenter, toCenter.clone().add(revDir), dstHalf, dstHalfY, dstHalf);
 
       var flowType = conn.flowType || 'data';
       var targetNodeData = nodeMeshes[conn.to] ? nodeMeshes[conn.to].data : null;
@@ -4374,7 +4380,7 @@ function applyDimming(selectedId) {
     if (afd.progress > 1.0) afd.progress -= 1.0;
     afd.mesh.position.set(afd.startX + afd.progress * (afd.endX - afd.startX), afd.y, afd.z);
   });
-  // v0.1.40-node-spread.10: Module flow arrows animation
+  // v0.1.40-node-spread.11: Module flow arrows animation
   _moduleFlowArrows.forEach(function(mfa) {
     mfa.progress += mfa.speed * delta;
     if (mfa.progress > 1.0) mfa.progress -= 1.0;
