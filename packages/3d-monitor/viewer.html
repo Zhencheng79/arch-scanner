@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.14 — 恢复层配色+模块色边框辅助</title>
+<title>3D Monitor v0.1.40-node-spread.15 — 恢复层配色+模块色边框辅助</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -2773,8 +2773,8 @@ function computeLayout(nodes) {
     });
 
     // v0.1.17: Assign X positions by group ordering
-    var groupSpacing = 2.5;     // spacing between groups (v0.1.40-node-spread.12)
-    var intraGroupSpacing = 1.1; // spacing within a group (v0.1.40-node-spread.12)
+    var groupSpacing = 2.5;     // spacing between groups (v0.1.40-node-spread.15)
+    var intraGroupSpacing = 1.1; // spacing within a group (v0.1.40-node-spread.15)
     var groupWidths = {};
     GROUP_X_ORDER.forEach(function(g) {
       var gb = groupBuckets[g] || [];
@@ -2805,7 +2805,7 @@ function computeLayout(nodes) {
       var groupZBase = GROUP_Z_OFFSETS[g] || 0;
 
       // v0.1.18: Multi-row layout — max 6 nodes per row, auto wrap on Z axis
-      var MAX_PER_ROW = 12; // v0.1.40-node-spread.12
+      var MAX_PER_ROW = 16; // v0.1.40-node-spread.15
       var rowCount = Math.ceil(gb.length / MAX_PER_ROW);
       var totalRows = rowCount;
 
@@ -2820,7 +2820,7 @@ function computeLayout(nodes) {
         var gx = offsetX + groupStarts[g] + colIndex * intraGroupSpacing;
 
         // Z: row depth offset — each new row shifts along Z axis
-        var rowZOffset = rowIndex * (NODE_SIZE_Z * 1.2); // v0.1.40-node-spread.12
+        var rowZOffset = rowIndex * (NODE_SIZE_Z * 1.2); // v0.1.40-node-spread.15
         var gz = groupZBase + rowZOffset + (Math.random() - 0.5) * 0.6;
 
         // v0.1.46: Y = layer center + random internal spread
@@ -3557,7 +3557,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
     mesh.add(edgeWire);
 
-    // v0.1.40-node-spread.12: Hub node detection
+    // v0.1.40-node-spread.15: Hub node detection
     var connCount = 0;
     if (dataConns) {
       dataConns.forEach(function(c) {
@@ -3716,7 +3716,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   if (window._moduleLayoutInfo) {
     Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
       var info = window._moduleLayoutInfo[modId];
-      if (info.nodeCount < 2) return;
+      if (info.nodeCount < 1) return;
       var cX = (info.minX + info.maxX) / 2;
       var cZ = (info.minZ + info.maxZ) / 2;
       var sX = info.maxX - info.minX + 5.0;
@@ -3740,7 +3740,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       // Fill
       var bgGeo = new THREE.ShapeGeometry(shape);
       var bgMat = new THREE.MeshBasicMaterial({
-        color: mc, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide,
+        color: mc, transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide,
       });
       var bgMesh = new THREE.Mesh(bgGeo, bgMat);
       bgMesh.position.set(cX, cY, cZ);
@@ -3753,7 +3753,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         edgesPts.map(function(pt) { return new THREE.Vector3(pt.x, 0, pt.y); })
       );
       var egMat = new THREE.LineBasicMaterial({
-        color: mc, transparent: true, opacity: 0.35,
+        color: mc, transparent: true, opacity: 0.35, linewidth: 2,
       });
       var egLine = new THREE.Line(edgeGeo, egMat);
       egLine.position.set(cX, cY, cZ);
@@ -4581,6 +4581,21 @@ function updateNodeInfoPanel(nodeData) {
     html += '<div class="nip-section">功能说明</div>';
     html += '<div style="font-size:12px;color:#ccc;line-height:1.5;margin-bottom:8px">' + funcDesc + '</div>';
   }
+  if (!archRole) {
+    var layerMap = {
+      'presentation': '展示层', 'service': '服务层', 'gateway': '网关层',
+      'data': '数据层', 'infrastructure': '基础设施层'
+    };
+    archRole = layerMap[nodeData.layer] || '';
+  }
+  if (!archRole && nodeData.tags && nodeData.tags.length) {
+    archRole = nodeData.tags[0];
+  }
+  if (archRole) {
+    html += '<hr class="nip-divider">';
+    html += '<div class="nip-section">架构角色</div>';
+    html += '<div style="font-size:12px;color:#aaa;line-height:1.5;margin-bottom:8px">' + archRole + '</div>';
+  }
   // --- 所属模块 section ---
   var moduleId = nodeData.module || '';
   var moduleLabel = '';
@@ -4781,7 +4796,7 @@ function animate() {
     fd.mesh.position.copy(pos);
   });
 
-  // v0.1.40-node-spread.12: Module flow arrows animation (moved from applyDimming)
+  // v0.1.40-node-spread.15: Module flow arrows animation (moved from applyDimming)
   _moduleFlowArrows.forEach(function(mfa) {
     mfa.progress += mfa.speed * delta;
     if (mfa.progress > 1.0) mfa.progress -= 1.0;
@@ -4789,7 +4804,7 @@ function animate() {
     mfa.mesh.position.copy(pt);
   });
 
-  // v0.1.40-node-spread.12: Hub node pulse animation
+  // v0.1.40-node-spread.15: Hub node pulse animation
   Object.keys(nodeMeshes).forEach(function(id) {
     var nm = nodeMeshes[id];
     if (nm.data && nm.data._isHub) {
@@ -4846,6 +4861,6 @@ if (embeddedData && embeddedData.nodes) {
 
 })();
 </script>
-<!-- 3d-monitor v0.1.40-node-spread.14 -->
+<!-- 3d-monitor v0.1.40-node-spread.15 -->
 </body>
 </html>
