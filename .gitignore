@@ -1,0 +1,24 @@
+# 临时文件
+*.bak
+*.bak.*
+*.swp
+*.swo
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/
+
+# 测试输出
+packages/3d-monitor/output/
+packages/3d-monitor/test-*.html
+packages/3d-monitor/test_v3_fix.html
+packages/3d-monitor/test_debug*.html
+packages/3d-monitor/*_data.json
+packages/3d-monitor/accept_data.json
+packages/3d-monitor/cg_data.json
+packages/3d-monitor/_inspect_*.py
+packages/3d-monitor/port_tag_result*.json
+packages/3d-monitor/codegraph_*.json
+
+# 临时任务文档
+.hermes/tasks/
