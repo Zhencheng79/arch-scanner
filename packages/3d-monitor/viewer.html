@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.19 — 修复模块台面/箭头/详情面板渲染</title>
+<title>3D Monitor v0.1.40-node-spread.20 — 修复穿模 + 图例多类型展示</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -96,23 +96,28 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 <div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点选中 · 双击/双指脱选 · 悬停查看信息</div>
 <button id="legendToggle" aria-label="Toggle legend">🎨</button>
 <button id="cancelSelectBtn" style="display:none">✕ 取消选中</button>
-<div id="legend">
-<div style="font-size:10px;color:#666;margin-bottom:4px;letter-spacing:0.5px">模块配色</div>
-<div class="row"><span class="dot" style="background:#4CAF50"></span>提取模块</div>
-<div class="row"><span class="dot" style="background:#2196F3"></span>存储模块</div>
-<div class="row"><span class="dot" style="background:#FF9800"></span>解析模块</div>
-<div class="row"><span class="dot" style="background:#9C27B0"></span>图查询模块</div>
-<div class="row"><span class="dot" style="background:#E91E63"></span>上下文模块</div>
-<div class="row"><span class="dot" style="background:#00BCD4"></span>MCP服务模块</div>
-<div class="row"><span class="dot" style="background:#795548"></span>安装模块</div>
-<div class="row"><span class="dot" style="background:#607D8B"></span>CLI模块</div>
-<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06)">
-<span class="line-sample" style="background:#3B82F6"></span>control
-<span class="line-sample" style="background:#60A5FA;margin-left:6px"></span>data
-<span class="line-sample" style="background:#34D399;margin-left:6px"></span>event
-<span class="line-sample" style="background:#FBBF24;margin-left:6px"></span>knowledge
+<div id="legend" style="right:20px;bottom:20px;left:auto;background:rgba(8,8,16,0.88);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);max-width:220px">
+<div style="font-size:10px;color:#666;margin-bottom:4px;letter-spacing:0.5px;font-weight:600">节点分层</div>
+<div class="row"><span class="dot" style="background:#F87171"></span>external<span style="color:#666;margin-left:4px;font-size:10px">（外部依赖）</span></div>
+<div class="row"><span class="dot" style="background:#FBBF24"></span>presentation<span style="color:#666;margin-left:4px;font-size:10px">（展示层）</span></div>
+<div class="row"><span class="dot" style="background:#34D399"></span>business<span style="color:#666;margin-left:4px;font-size:10px">（业务逻辑层）</span></div>
+<div class="row"><span class="dot" style="background:#60A5FA"></span>data<span style="color:#666;margin-left:4px;font-size:10px">（数据层）</span></div>
+<div class="row"><span class="dot" style="background:#3B82F6"></span>infrastructure<span style="color:#666;margin-left:4px;font-size:10px">（基础设施层）</span></div>
+<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px">
+<div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">连接类型</div>
+<div class="row"><span class="line-sample" style="background:#3B82F6"></span>control<span style="color:#666;margin-left:4px;font-size:10px">（控制流）</span></div>
+<div class="row"><span class="line-sample" style="background:#60A5FA"></span>data<span style="color:#666;margin-left:4px;font-size:10px">（数据流）</span></div>
+<div class="row"><span class="line-sample" style="background:#34D399"></span>event<span style="color:#666;margin-left:4px;font-size:10px">（事件流）</span></div>
+<div class="row"><span class="line-sample" style="background:#FBBF24"></span>config<span style="color:#666;margin-left:4px;font-size:10px">（配置流）</span></div>
 </div>
-<div class="row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#888">排布: Y轴分层排列 | X轴业务领域参考 | Z轴内外边界参考</div>
+<div id="legendModules" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px">
+<div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">模块分组</div>
+</div>
+<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px">
+<div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">图例</div>
+<div class="row"><span style="color:#FFD700;font-size:13px">★</span> 枢纽节点<span style="color:#666;margin-left:4px;font-size:10px">（高连接度）</span></div>
+</div>
+<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px;font-size:10px;color:#666">排布: Y轴分层排列 | X轴业务领域参考 | Z轴内外边界参考</div>
 </div>
 
 <!-- Three.js from CDN -->
@@ -2011,6 +2016,7 @@ var FLOW_COLORS = {
   data:     0x60A5FA,
   event:    0x34D399,
   knowledge: 0xFBBF24,
+  config:    0xFBBF24,
 };
 // ═══════════════════════════════════════════════════════════════════
 //  Aggregation / Folding State (v0.1.10)
@@ -2918,7 +2924,7 @@ function computeLayout(nodes) {
     Object.keys(moduleMembers).forEach(function(modId) {
       var members = moduleMembers[modId];
       if (members.length === 0) return;
-      var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      var minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, minY = Infinity;
       var ySum = 0, count = 0;
       members.forEach(function(n) {
         var p = positions[n.id];
@@ -2927,6 +2933,7 @@ function computeLayout(nodes) {
         if (p.x > maxX) maxX = p.x;
         if (p.z < minZ) minZ = p.z;
         if (p.z > maxZ) maxZ = p.z;
+        if (p.y < minY) minY = p.y;
         ySum += p.y; count++;
       });
       if (count === 0) return;
@@ -2934,6 +2941,7 @@ function computeLayout(nodes) {
         minX: minX, maxX: maxX,
         minZ: minZ, maxZ: maxZ,
         avgY: ySum / count,
+        minY: minY,
         nodeCount: count,
         color: MODULE_CONFIG[modId] ? MODULE_CONFIG[modId].color : 0x888888,
         label: MODULE_CONFIG[modId] ? MODULE_CONFIG[modId].label : modId,
@@ -2995,7 +3003,7 @@ function getNodeBox(nodeId, positions) {
   var pos = positions[nodeId];
   if (!pos) return null;
   var size = 1.2;
-  var margin = 0.5; // v0.1.45-spread-fix: increased margin to prevent pipe penetration
+  var margin = 0.8; // v0.1.40-node-spread.20: increased margin for better obstacle detection
   return {
     minX: pos.x - size * 0.5 - margin,
     maxX: pos.x + size * 0.5 + margin,
@@ -3063,7 +3071,7 @@ function findObstacles(fromId, toId, nodeIds, positions) {
     if (nid === fromId || nid === toId) return;
     var box = getNodeBox(nid, positions);
     if (!box) return;
-    if (linePenetratesBox(fromPos.x, fromPos.y, fromPos.z, toPos.x, toPos.y, toPos.z, box, 24)) {
+    if (linePenetratesBox(fromPos.x, fromPos.y, fromPos.z, toPos.x, toPos.y, toPos.z, box, 36)) {
       obstacles.push({ id: nid, box: box, pos: positions[nid] });
     }
   });
@@ -3350,7 +3358,7 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
     var centerFactor = 1.0 - Math.abs(projT - 0.5) * 1.8;
     centerFactor = Math.max(0.3, centerFactor);
     // v0.1.13: 3D push — push in X, Y, Z independently
-    var pushDist = 2.8 + centerFactor * 1.5; // v0.1.45: moderate lateral push
+    var pushDist = 3.5 + centerFactor * 2.0; // v0.1.40-node-spread.20: stronger lateral push to avoid boxes
     var pushUp = 1.0 + baseElev * 0.3 + centerFactor * 0.4; // v0.1.45: reduced upward arc
     var pushZ = 1.8 + baseZOff * 0.5 + centerFactor * 0.6; // v0.1.45: moderate Z push
 
@@ -3368,7 +3376,7 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
 
     // Keep away from obstacle center
     var dw = wayPos.distanceTo(bPos);
-    var minDist = NODE_RADIUS * 2.2;
+    var minDist = NODE_RADIUS * 2.8;
     if (dw < minDist) {
       var pushAway = new THREE.Vector3().subVectors(wayPos, bPos).normalize();
       wayPos.x += pushAway.x * (minDist - dw);
@@ -3737,6 +3745,21 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   });
 
 
+
+  // ─── v0.1.40-node-spread.20: Populate dynamic module legend ──
+  (function populateModuleLegend() {
+    var legendModules = document.getElementById('legendModules');
+    if (!legendModules || !window.MODULE_CONFIG) return;
+    Object.keys(window.MODULE_CONFIG).forEach(function(modId) {
+      if (modId === 'other') return;
+      var cfg = window.MODULE_CONFIG[modId];
+      var c = '#' + new THREE.Color(cfg.color).getHexString();
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = '<span class="dot" style="background:' + c + '"></span>' + cfg.label;
+      legendModules.appendChild(row);
+    });
+  })();
     // ─── v0.1.40-node-spread.11: Module background boxes (rounded rect) ──
   if (window._moduleLayoutInfo) {
     Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
@@ -3746,7 +3769,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var cZ = (info.minZ + info.maxZ) / 2;
       var sX = info.maxX - info.minX + 5.0;
       var sZ = info.maxZ - info.minZ + 5.0;
-      var cY = info.avgY - 1.8;
+      var cY = info.minY - 1.8; // v0.1.40-node-spread.20: use minY to prevent node overlap
       var mc = info.color;
       var mc3 = new THREE.Color(mc);
       // Rounded rectangle shape
@@ -3803,9 +3826,31 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       moduleGroup.add(modLabelObj);
     });
   }
+
+  // ─── v0.1.40-node-spread.20: Fix Z-overlap between module platforms ──
+  (function fixModulePlatformZOverlap() {
+    var modIds = Object.keys(window._moduleLayoutInfo);
+    for (var i = 0; i < modIds.length; i++) {
+      for (var j = i + 1; j < modIds.length; j++) {
+        var a = window._moduleLayoutInfo[modIds[i]];
+        var b = window._moduleLayoutInfo[modIds[j]];
+        if (!a || !b || a.nodeCount < 1 || b.nodeCount < 1) continue;
+        var aZmin = a.minZ - 2.5;
+        var aZmax = a.maxZ + 2.5;
+        var bZmin = b.minZ - 2.5;
+        var bZmax = b.maxZ + 2.5;
+        // Check Z overlap
+        if (aZmax > bZmin && aZmin < bZmax) {
+          // Overlap detected — shift platform B in Z by 1.5 units
+          b.minZ += 1.5;
+          b.maxZ += 1.5;
+        }
+      }
+    }
+  })();
     // ─── v0.1.40-node-spread.11: Module flow arrows (TubeGeometry curves) ─
   function buildModuleFlowArrow(srcMod, dstMod, colorA, colorB, srcInfo, dstInfo) {
-    var sX = srcInfo.maxX + 2.0, eX = dstInfo.minX - 2.0;
+    var sX = srcInfo.maxX + 3.0, eX = dstInfo.minX - 3.0;
     var sY = srcInfo.avgY, eY = dstInfo.avgY;
     var sZ = (srcInfo.minZ + srcInfo.maxZ) / 2;
     var eZ = (dstInfo.minZ + dstInfo.maxZ) / 2;
@@ -4582,7 +4627,7 @@ function updateNodeInfoPanel(nodeData) {
       if (conn.from === nodeId) downstream.push({ toNodeId: conn.to, connLabel: conn.label || '', flowType: conn.flowType || 'data' });
     });
   }
-  var flowColors = { control: '#3B82F6', data: '#60A5FA', event: '#34D399', knowledge: '#FBBF24' };
+  var flowColors = { control: '#3B82F6', data: '#60A5FA', event: '#34D399', knowledge: '#FBBF24', config: '#FBBF24' };
 
   // Pure vertical link diagram (no two-part layout)
   var html = '';
@@ -4894,6 +4939,6 @@ if (embeddedData && embeddedData.nodes) {
 
 })();
 </script>
-<!-- 3d-monitor v0.1.40-node-spread.19 -->
+<!-- 3d-monitor v0.1.40-node-spread.20 -->
 </body>
 </html>
