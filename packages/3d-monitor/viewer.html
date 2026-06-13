@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.40-node-spread.18 — 修复模块台面/箭头/详情面板渲染</title>
+<title>3D Monitor v0.1.40-node-spread.19 — 修复模块台面/箭头/详情面板渲染</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -1916,30 +1916,26 @@ var LAYER_CONFIG = {
 };
 
 
-// ─── v0.1.40-node-spread.09: Module detection ─────────────────────────
-var MODULE_CONFIG = {
-  'extraction': { label: '提取模块', color: 0x4CAF50 },
-  'db': { label: '存储模块', color: 0x2196F3 },
-  'resolution': { label: '解析模块', color: 0xFF9800 },
-  'graph': { label: '图查询模块', color: 0x9C27B0 },
-  'context': { label: '上下文模块', color: 0xE91E63 },
-  'mcp': { label: 'MCP服务模块', color: 0x00BCD4 },
-  'installer': { label: '安装模块', color: 0x795548 },
-  'cli': { label: 'CLI模块', color: 0x607D8B },
-  'other': { label: '其他', color: 0x888888 },
-};
-var MODULE_PREFIXES = {
-  'extraction-': 'extraction', 'db-': 'db', 'resolution-': 'resolution',
-  'graph-': 'graph', 'context-': 'context', 'mcp-': 'mcp',
-  'installer-': 'installer', 'bin-': 'cli',
-};
-var MODULE_Y_ORDER = ['extraction', 'db', 'resolution', 'graph', 'context', 'mcp', 'installer', 'cli', 'other'];
-var MODULE_Y_SPACING = 1.5;
+// ─── v0.1.40-node-spread.19: Dynamic module detection ─────────────────
+var MODULE_PALETTE = [0x4CAF50, 0x2196F3, 0xFF9800, 0x9C27B0, 0xE91E63, 0x00BCD4, 0x795548, 0x607D8B, 0xFF5722, 0x3F51B5, 0x009688, 0xCDDC39];
+var MODULE_CONFIG = { 'other': { label: '其他', color: 0x888888 } };
+window.MODULE_CONFIG = MODULE_CONFIG;
 function detectModule(nodeId) {
-  for (var prefix in MODULE_PREFIXES) {
-    if (nodeId.indexOf(prefix) === 0) return MODULE_PREFIXES[prefix];
-  }
+  if (!nodeId || nodeId === 'project-root') return 'other';
+  var parts = nodeId.split('--');
+  if (parts.length > 1 && parts[0]) return parts[0];
   return 'other';
+}
+function buildModuleConfig(dataNodes) {
+  var modSet = {};
+  dataNodes.forEach(function(n) {
+    var m = detectModule(n.id);
+    if (m && m !== 'other') modSet[m] = true;
+  });
+  var mods = Object.keys(modSet).sort();
+  mods.forEach(function(m, i) {
+    MODULE_CONFIG[m] = { label: m, color: MODULE_PALETTE[i % MODULE_PALETTE.length] };
+  });
 }
 
 // Alias map: old layer names -> new 5-layer keys (backward compat)
@@ -2773,8 +2769,8 @@ function computeLayout(nodes) {
     });
 
     // v0.1.17: Assign X positions by group ordering
-    var groupSpacing = 2.5;     // spacing between groups (v0.1.40-node-spread.18)
-    var intraGroupSpacing = 1.1; // spacing within a group (v0.1.40-node-spread.18)
+    var groupSpacing = 2.5;     // spacing between groups (v0.1.40-node-spread.19)
+    var intraGroupSpacing = 1.1; // spacing within a group (v0.1.40-node-spread.19)
     var groupWidths = {};
     GROUP_X_ORDER.forEach(function(g) {
       var gb = groupBuckets[g] || [];
@@ -2805,7 +2801,7 @@ function computeLayout(nodes) {
       var groupZBase = GROUP_Z_OFFSETS[g] || 0;
 
       // v0.1.18: Multi-row layout — max 6 nodes per row, auto wrap on Z axis
-      var MAX_PER_ROW = 16; // v0.1.40-node-spread.18
+      var MAX_PER_ROW = 16; // v0.1.40-node-spread.19
       var rowCount = Math.ceil(gb.length / MAX_PER_ROW);
       var totalRows = rowCount;
 
@@ -2820,7 +2816,7 @@ function computeLayout(nodes) {
         var gx = offsetX + groupStarts[g] + colIndex * intraGroupSpacing;
 
         // Z: row depth offset — each new row shifts along Z axis
-        var rowZOffset = rowIndex * (NODE_SIZE_Z * 1.2); // v0.1.40-node-spread.18
+        var rowZOffset = rowIndex * (NODE_SIZE_Z * 1.2); // v0.1.40-node-spread.19
         var gz = groupZBase + rowZOffset + (Math.random() - 0.5) * 0.6;
 
         // v0.1.46: Y = layer center + random internal spread
@@ -2904,11 +2900,11 @@ function computeLayout(nodes) {
   });
 
 
-  // ─── v0.1.40-node-spread.18: Module clustering layout for all module-prefixed nodes ───
+  // ─── v0.1.40-node-spread.19: Module clustering layout for all module-prefixed nodes ───
   window._moduleLayoutInfo = {};
   var moduleMembers = {};
   var moduleNodes = [];
-  // v0.1.40-node-spread.18: Collect all nodes with a detectable module prefix (not just presentation layer)
+  // v0.1.40-node-spread.19: Collect all nodes with a detectable module prefix (not just presentation layer)
   nodes.forEach(function(n) {
     var mod = detectModule(n.id);
     if (mod && mod !== 'other') moduleNodes.push(n);
@@ -2945,12 +2941,18 @@ function computeLayout(nodes) {
     });
   }
 
-  // ─── v0.1.40-node-spread.10: Module Y-layering ─────────────────────
+  // ─── v0.1.40-node-spread.19: Dynamic module Y-layering by X position ───
   var moduleYLevels = {};
+  var sortedModuleIds = Object.keys(window._moduleLayoutInfo)
+    .filter(function(m) { return m !== 'other'; })
+    .map(function(m) { return { id: m, avgX: (window._moduleLayoutInfo[m].minX + window._moduleLayoutInfo[m].maxX) / 2 }; })
+    .sort(function(a, b) { return a.avgX - b.avgX; })
+    .map(function(m) { return m.id; });
+  var moduleYSpacing = 1.5;
   moduleNodes.forEach(function(n) {
     var mod = detectModule(n.id);
-    var idx = MODULE_Y_ORDER.indexOf(mod);
-    if (idx === -1) idx = MODULE_Y_ORDER.indexOf('other');
+    var idx = sortedModuleIds.indexOf(mod);
+    if (idx === -1) idx = 0;
     var p = positions[n.id];
     if (!p) return;
     if (!moduleYLevels[mod]) {
@@ -2958,7 +2960,7 @@ function computeLayout(nodes) {
       var info = window._moduleLayoutInfo[mod];
       if (info) {
         var baseY = info.avgY;
-        info.avgY = baseY + idx * MODULE_Y_SPACING;
+        info.avgY = baseY + idx * moduleYSpacing;
       }
     }
     var info = window._moduleLayoutInfo[mod];
@@ -2967,7 +2969,7 @@ function computeLayout(nodes) {
     }
   });
 
-  // ─── v0.1.40-node-spread.16: Recompute _moduleLayoutInfo avgY after Y-layering ───
+  // ─── v0.1.40-node-spread.16/19: Recompute _moduleLayoutInfo avgY after Y-layering ───
   Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
     var info = window._moduleLayoutInfo[modId];
     var ySum = 0, count = 0;
@@ -3514,6 +3516,9 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   window._aggDataNodes = dataNodes;
   window._aggDataConns = dataConns;
 
+  // v0.1.40-node-spread.19: Build dynamic module config
+  buildModuleConfig(dataNodes);
+
   var positions = computeLayout(dataNodes);
   var nodeMap = {}; // nodeId -> node data
   window.nodeDataMap = nodeMap; // expose for panel name resolution
@@ -3577,7 +3582,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     var edgeWire = new THREE.LineSegments(edgeGeo, edgeMat);
     mesh.add(edgeWire);
 
-    // v0.1.40-node-spread.18: Hub node detection
+    // v0.1.40-node-spread.19: Hub node detection
     var connCount = 0;
     if (dataConns) {
       dataConns.forEach(function(c) {
@@ -3855,42 +3860,43 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     moduleGroup.add(plObj);
   }
 
-  var PIPELINE = ['extraction', 'db', 'resolution', 'graph', 'context', 'mcp'];
+  // ─── v0.1.40-node-spread.19: Dynamic X-sorted module flow arrows ─
   if (window._moduleLayoutInfo) {
-    for (var pi = 0; pi < PIPELINE.length - 1; pi++) {
-      var srcMod = PIPELINE[pi], dstMod = PIPELINE[pi + 1];
+    var sortedModules = Object.keys(window._moduleLayoutInfo)
+      .filter(function(m) { return m !== 'other'; })
+      .map(function(m) { return { id: m, avgX: (window._moduleLayoutInfo[m].minX + window._moduleLayoutInfo[m].maxX) / 2 }; })
+      .sort(function(a, b) { return a.avgX - b.avgX; });
+    for (var pi = 0; pi < sortedModules.length - 1; pi++) {
+      var srcMod = sortedModules[pi].id, dstMod = sortedModules[pi + 1].id;
       var srcInfo = window._moduleLayoutInfo[srcMod];
       var dstInfo = window._moduleLayoutInfo[dstMod];
       if (!srcInfo || !dstInfo) continue;
       if (srcInfo.nodeCount < 1 || dstInfo.nodeCount < 1) continue;
+      var srcMidX = (srcInfo.minX + srcInfo.maxX) / 2;
+      var dstMidX = (dstInfo.minX + dstInfo.maxX) / 2;
+      if (Math.abs(dstMidX - srcMidX) > 15) continue;
       buildModuleFlowArrow(srcMod, dstMod, srcInfo.color, dstInfo.color, srcInfo, dstInfo);
     }
-    // Branch arrows: resolution→installer, context→cli
-    var branchArrows = [
-      ['resolution', 'installer'],
-      ['context', 'cli']
-    ];
-    branchArrows.forEach(function(br) {
-      var srcMod = br[0], dstMod = br[1];
-      var srcInfo = window._moduleLayoutInfo[srcMod];
-      var dstInfo = window._moduleLayoutInfo[dstMod];
-      if (!srcInfo || !dstInfo) return;
-      if (srcInfo.nodeCount < 1 || dstInfo.nodeCount < 1) return;
-      buildModuleFlowArrow(srcMod, dstMod, srcInfo.color, dstInfo.color, srcInfo, dstInfo);
-    });
   }
-  // ─── v0.1.40-node-spread.09: Integration glow bands ───────────────
-  if (window._moduleLayoutInfo) {
-    var bands = [
-      { a: 'extraction', b: 'db', color: 0x4CAF50, label: '数据管道集成' },
-      { a: 'graph', b: 'resolution', color: 0x9C27B0, label: '查询引擎集成' },
-      { a: 'mcp', b: 'context', color: 0xE91E63, label: '交付层集成' },
-    ];
-    bands.forEach(function(band) {
+  // ─── v0.1.40-node-spread.19: Dynamic integration glow bands from module connections ─
+  if (window._moduleLayoutInfo && dataConns) {
+    var connCounts = {};
+    dataConns.forEach(function(conn) {
+      var fromMod = detectModule(conn.from);
+      var toMod = detectModule(conn.to);
+      if (!fromMod || !toMod || fromMod === 'other' || toMod === 'other' || fromMod === toMod) return;
+      var key = fromMod < toMod ? fromMod + '--' + toMod : toMod + '--' + fromMod;
+      if (!connCounts[key]) connCounts[key] = { a: fromMod, b: toMod, count: 0 };
+      connCounts[key].count++;
+    });
+    var bandIdx = 0;
+    Object.keys(connCounts).forEach(function(key) {
+      var band = connCounts[key];
       var infoA = window._moduleLayoutInfo[band.a];
       var infoB = window._moduleLayoutInfo[band.b];
       if (!infoA || !infoB) return;
       if (infoA.nodeCount < 1 || infoB.nodeCount < 1) return;
+      var bc = MODULE_PALETTE[bandIdx % MODULE_PALETTE.length];
       var leftEdge = infoA.maxX + 2.0, rightEdge = infoB.minX - 2.0;
       if (leftEdge > rightEdge) { leftEdge = infoB.maxX + 2.0; rightEdge = infoA.minX - 2.0; }
       if (leftEdge >= rightEdge) return;
@@ -3900,23 +3906,24 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var bZ = (Math.min(infoA.minZ, infoB.minZ) + Math.max(infoA.maxZ, infoB.maxZ)) / 2;
       var bD = Math.max(infoA.maxZ - infoA.minZ, infoB.maxZ - infoB.minZ) + 4.0;
       var gg = new THREE.BoxGeometry(bw, 0.06, bD);
-      var gm = new THREE.MeshBasicMaterial({ color: band.color, transparent: true, opacity: 0.12, depthWrite: false });
+      var gm = new THREE.MeshBasicMaterial({ color: bc, transparent: true, opacity: 0.12, depthWrite: false });
       var gMesh = new THREE.Mesh(gg, gm);
       gMesh.position.set(bcX, bY, bZ);
       moduleGroup.add(gMesh);
       var geg = new THREE.EdgesGeometry(gg);
-      var gem = new THREE.LineBasicMaterial({ color: band.color, transparent: true, opacity: 0.25 });
+      var gem = new THREE.LineBasicMaterial({ color: bc, transparent: true, opacity: 0.25 });
       var gEdge = new THREE.LineSegments(geg, gem);
       gEdge.position.copy(gMesh.position);
       moduleGroup.add(gEdge);
       var gld = document.createElement('div');
       gld.className = 'pipe-label-3d';
-      var glc = '#' + new THREE.Color(band.color).getHexString();
+      var glc = '#' + new THREE.Color(bc).getHexString();
       gld.style.borderColor = glc; gld.style.color = glc; gld.style.fontSize = '12px';
-      gld.textContent = band.label;
+      gld.textContent = band.a + ' ↔ ' + band.b + ' (' + band.count + ')';
       var glo = new THREE.CSS2DObject(gld);
       glo.position.set(bcX, bY - 0.8, bZ);
       moduleGroup.add(glo);
+      bandIdx++;
     });
   }
 
@@ -4014,16 +4021,21 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var glowOpacity = THREE.MathUtils.clamp(0.25 * (0.8 + pipeDepthFactor * 0.4), 0.15, 0.8);
       var coreOpacity = THREE.MathUtils.clamp(0.6 * (0.8 + pipeDepthFactor * 0.4), 0.15, 0.8);
 
-      // v0.1.40-node-spread.09: Module-based edge noise reduction
+      // v0.1.40-node-spread.19: Dynamic X-adjacency pipeline detection (replaces hardcoded PC list)
       var fromModule = detectModule(conn.from);
       var toModule = detectModule(conn.to);
       if (fromModule && toModule && fromModule !== toModule) {
         var isPipelineAdj = false;
-        var PC = ['extraction','db','resolution','graph','context','mcp'];
-        for (var _pci = 0; _pci < PC.length - 1; _pci++) {
-          if ((fromModule === PC[_pci] && toModule === PC[_pci+1]) ||
-              (toModule === PC[_pci] && fromModule === PC[_pci+1])) {
-            isPipelineAdj = true; break;
+        if (window._moduleLayoutInfo) {
+          var xAdjMods = Object.keys(window._moduleLayoutInfo)
+            .filter(function(m) { return m !== 'other'; })
+            .map(function(m) { return { id: m, avgX: (window._moduleLayoutInfo[m].minX + window._moduleLayoutInfo[m].maxX) / 2 }; })
+            .sort(function(a, b) { return a.avgX - b.avgX; });
+          for (var _pci = 0; _pci < xAdjMods.length - 1; _pci++) {
+            if ((fromModule === xAdjMods[_pci].id && toModule === xAdjMods[_pci+1].id) ||
+                (toModule === xAdjMods[_pci].id && fromModule === xAdjMods[_pci+1].id)) {
+              isPipelineAdj = true; break;
+            }
           }
         }
         if (isPipelineAdj) { colorHex = 0xFFD700; flowType = 'pipeline'; }
@@ -4601,6 +4613,7 @@ function updateNodeInfoPanel(nodeData) {
     html += '<div class="nip-section">功能说明</div>';
     html += '<div style="font-size:12px;color:#ccc;line-height:1.5;margin-bottom:8px">' + funcDesc + '</div>';
   }
+  var archRole = nodeData.archRole || '';
   if (!archRole) {
     var layerMap = {
       'presentation': '展示层', 'service': '服务层', 'gateway': '网关层',
@@ -4816,7 +4829,7 @@ function animate() {
     fd.mesh.position.copy(pos);
   });
 
-  // v0.1.40-node-spread.18: Module flow arrows animation (moved from applyDimming)
+  // v0.1.40-node-spread.19: Module flow arrows animation (moved from applyDimming)
   _moduleFlowArrows.forEach(function(mfa) {
     mfa.progress += mfa.speed * delta;
     if (mfa.progress > 1.0) mfa.progress -= 1.0;
@@ -4824,7 +4837,7 @@ function animate() {
     mfa.mesh.position.copy(pt);
   });
 
-  // v0.1.40-node-spread.18: Hub node pulse animation
+  // v0.1.40-node-spread.19: Hub node pulse animation
   Object.keys(nodeMeshes).forEach(function(id) {
     var nm = nodeMeshes[id];
     if (nm.data && nm.data._isHub) {
@@ -4845,7 +4858,7 @@ function animate() {
 init();
 initOrbitIdle();
 
-var embeddedData = window.__EMBEDDED_DATA__;
+var embeddedData = window.__EMBEDDED_DATA__ || (function(){try{var ls=localStorage.getItem('__EMBEDDED_DATA__');return ls?JSON.parse(ls):null}catch(e){return null}})();
 if (embeddedData && embeddedData.nodes) {
   // v0.1.37 fix: ports may be object {stats, nodePorts} instead of array
   var ports = [];
@@ -4881,6 +4894,6 @@ if (embeddedData && embeddedData.nodes) {
 
 })();
 </script>
-<!-- 3d-monitor v0.1.40-node-spread.18 -->
+<!-- 3d-monitor v0.1.40-node-spread.19 -->
 </body>
 </html>
