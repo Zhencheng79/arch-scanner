@@ -117,7 +117,7 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 <div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">图例</div>
 <div class="row"><span style="color:#FFD700;font-size:13px">★</span> 枢纽节点<span style="color:#666;margin-left:4px;font-size:10px">（高连接度）</span></div>
 </div>
-<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px;font-size:10px;color:#666">排布: Y轴分层排列 | X轴业务领域参考 | Z轴内外边界参考</div>
+<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px;font-size:10px;color:#666">排布: 模块优先布局 | 跨模块粗管道渐变 | other节点独立薄层</div>
 </div>
 
 <!-- Three.js from CDN -->
@@ -1911,6 +1911,7 @@ var _isDragging = false;
 var _mouseDownPos = {x: 0, y: 0};
 var _dragThreshold = 5;
 
+var USE_MODULE_LAYOUT = true;  // true = 模块优先布局, false = 旧布局
 // ─── Layer config (v0.1.10 — 5-layer adaptive + aggregation) ──────────────────
 var LAYER_CONFIG = {
   infrastructure: { y: 0, color: 0x3B82F6, label: '基础设施层' },
@@ -2707,6 +2708,174 @@ function onOrbitUserInteract() {
 // ═══════════════════════════════════════════════════════════════════
 //  Layout — Layer-based stacking with horizontal grid
 // ═══════════════════════════════════════════════════════════════════
+
+
+function computeModuleLayout(nodes) {
+  // P0: 用现有 detectModule 分组
+  var moduleBuckets = {};
+  nodes.forEach(function(n) {
+    var mod = detectModule(n.id);
+    if (!moduleBuckets[mod]) moduleBuckets[mod] = [];
+    moduleBuckets[mod].push(n);
+  });
+  
+  // P1: other节点放在z=5的独立薄层
+  var otherNodes = moduleBuckets["other"] || [];
+  delete moduleBuckets["other"];
+  
+  var positions = {};
+  var MODULE_COLORS = {};
+  
+  // 给每个模块分配颜色（来自MODULE_PALETTE）
+  var modIds = Object.keys(moduleBuckets).sort();
+  modIds.forEach(function(modId, idx) {
+    MODULE_COLORS[modId] = MODULE_PALETTE[idx % MODULE_PALETTE.length];
+  });
+  MODULE_COLORS["other"] = 0x888888;
+  
+  // P2: 模块优先布局
+  // 计算每个模块的台面
+  var Z_BASE = 0;
+  var moduleSpacing = 3.0;       // 台面间X间距
+  var MAX_PER_ROW = 8;           // 每行最多8个模块
+  var ROW_SPACING_Z = 4.0;       // 行间Z间距
+  var NODE_SPACE_X = 1.5;        // 模块内节点X间距
+  var NODE_SPACE_Z = 1.2;        // 模块内节点Z间距
+  var PLATFORM_MARGIN = 1.5;     // 台面边距
+  
+  // 计算每个模块的台面宽度和深度
+  var moduleSizes = {};
+  modIds.forEach(function(modId) {
+    var mNodes = moduleBuckets[modId];
+    var count = mNodes.length;
+    var width = Math.max(6, count * NODE_SPACE_X + 2 * PLATFORM_MARGIN);
+    var depth = 4;
+    moduleSizes[modId] = { width: width, depth: depth, count: count };
+  });
+  
+  // 多行布局：一行放不下时换行
+  var modulePositions = {};
+  var rowModules = [];
+  var currentRow = [];
+  var currentRowWidth = 0;
+  
+  modIds.forEach(function(modId) {
+    var ms = moduleSizes[modId];
+    if (currentRowWidth > 0 && currentRowWidth + ms.width + moduleSpacing > 60) {
+      rowModules.push(currentRow);
+      currentRow = [modId];
+      currentRowWidth = ms.width;
+    } else {
+      currentRow.push(modId);
+      currentRowWidth += (currentRow.length > 1 ? moduleSpacing : 0) + ms.width;
+    }
+  });
+  if (currentRow.length > 0) rowModules.push(currentRow);
+  
+  // 分配台面位置
+  rowModules.forEach(function(row, rowIdx) {
+    var totalW = 0;
+    row.forEach(function(modId) { totalW += moduleSizes[modId].width; });
+    totalW += (row.length - 1) * moduleSpacing;
+    var startX = -totalW / 2;
+    var curX = startX;
+    row.forEach(function(modId) {
+      var ms = moduleSizes[modId];
+      modulePositions[modId] = {
+        x: curX + ms.width / 2,
+        z: rowIdx * ROW_SPACING_Z,
+        width: ms.width,
+        depth: ms.depth
+      };
+      curX += ms.width + moduleSpacing;
+    });
+  });
+  
+  // 把节点散布到模块台面内
+  var LAYER_KEYS = Object.keys(LAYER_CONFIG);
+  modIds.forEach(function(modId) {
+    var mNodes = moduleBuckets[modId];
+    var mp = modulePositions[modId];
+    var count = mNodes.length;
+    
+    mNodes.forEach(function(n, i) {
+      var lk = resolveLayer(n);
+      var layerCfg = LAYER_CONFIG[lk] || { y: 0 };
+      var LAYER_Y_SPREAD = 6.17;
+      var nY = (layerCfg.y / (LAYER_KEYS.length - 1) - 0.5) * LAYER_Y_SPREAD + (Math.random() - 0.5) * 0.3;
+      
+      // X轴：在台面宽度内均匀分布
+      var xMin = mp.x - mp.width/2 + PLATFORM_MARGIN;
+      var xMax = mp.x + mp.width/2 - PLATFORM_MARGIN;
+      var spread = xMax - xMin;
+      var nx = count > 1 ? xMin + (i / (count - 1)) * spread : (xMin + xMax) / 2;
+      nx += (Math.random() - 0.5) * 0.3;
+      
+      // Z轴：在台面深度内均匀分布
+      var zMin = mp.z - mp.depth/2 + PLATFORM_MARGIN;
+      var zMax = mp.z + mp.depth/2 - PLATFORM_MARGIN;
+      var zSpread = zMax - zMin;
+      var nz = count > 1 ? zMin + (i / (count - 1)) * zSpread : (zMin + zMax) / 2;
+      nz += (Math.random() - 0.5) * 0.3;
+      
+      positions[n.id] = { x: nx, y: nY, z: nz };
+    });
+  });
+  
+  // other节点：z=5独立薄层
+  otherNodes.forEach(function(n, i) {
+    var lk = resolveLayer(n);
+    var layerCfg = LAYER_CONFIG[lk] || { y: 0 };
+    var LAYER_KEYS2 = Object.keys(LAYER_CONFIG);
+    var LAYER_Y_SPREAD = 6.17;
+    var nY = (layerCfg.y / (LAYER_KEYS2.length - 1) - 0.5) * LAYER_Y_SPREAD + (Math.random() - 0.5) * 0.5;
+    var oX = (i % 6) * 2.0 - 5;
+    var oZ = 5 + Math.floor(i / 6) * 2.0;
+    positions[n.id] = { x: oX, y: nY, z: oZ, isOther: true, scale: 0.7 };
+  });
+  
+  // 写入 _moduleLayoutInfo 供下游台面渲染使用
+  window._moduleLayoutInfo = {};
+  modIds.forEach(function(modId) {
+    var mp = modulePositions[modId];
+    var mNodes = moduleBuckets[modId];
+    window._moduleLayoutInfo[modId] = {
+      minX: mp.x - mp.width/2,
+      maxX: mp.x + mp.width/2,
+      minZ: mp.z - mp.depth/2,
+      maxZ: mp.z + mp.depth/2,
+      minY: -1,
+      maxY: 1,
+      width: mp.width,
+      depth: mp.depth,
+      x: mp.x,
+      z: mp.z,
+      color: MODULE_COLORS[modId],
+      label: modId,
+      nodeCount: mNodes.length,
+      avgY: 0,
+      nodes: mNodes.map(function(n) { return n.id; })
+    };
+  });
+  
+  // 计算 avgY
+  modIds.forEach(function(modId) {
+    var info = window._moduleLayoutInfo[modId];
+    var ySum = 0;
+    var mNodes = moduleBuckets[modId];
+    mNodes.forEach(function(n) {
+      var p = positions[n.id];
+      if (p) ySum += p.y;
+    });
+    info.avgY = ySum / mNodes.length;
+  });
+  
+  // P3: 跨模块粗管道信息（聚合）
+  window._crossModulePipes = [];
+  window._moduleConnections = {};
+  
+  return positions;
+}
 
 function computeLayout(nodes) {
   var LAYERS = {
@@ -3527,7 +3696,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   // v0.1.40-node-spread.19: Build dynamic module config
   buildModuleConfig(dataNodes);
 
-  var positions = computeLayout(dataNodes);
+  var positions;
+  if (USE_MODULE_LAYOUT) {
+    positions = computeModuleLayout(dataNodes);
+  } else {
+    positions = computeLayout(dataNodes);
+  }
   var nodeMap = {}; // nodeId -> node data
   window.nodeDataMap = nodeMap; // expose for panel name resolution
 
@@ -3608,6 +3782,18 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     }
 
     // Store
+
+    // v0.1.50: Module layout — other node scaling/opacity
+    if (pos.isOther) {
+      mesh.scale.set(0.7, 0.7, 0.7);
+      mat.opacity = 0.5;
+      mat.emissiveIntensity = 0.02;
+      if (edgeWire) edgeWire.material.opacity = 0.2;
+      // Dim label
+      if (mesh.userData.labelObj) {
+        mesh.userData.labelObj.element.style.opacity = "0.5";
+      }
+    }
     mesh.userData.nodeId = n.id;
     mesh.userData.isNode = true;
     nodeMeshes[n.id] = { mesh: mesh, data: n, ports: [], edges: [] };
@@ -4087,23 +4273,50 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         else { glowOpacity *= 0.5; coreOpacity *= 0.5; }
       }
 
+      // v0.1.50: Cross-module thick pipe detection (USE_MODULE_LAYOUT)
+      var _crossModEdge = USE_MODULE_LAYOUT && fromModule && toModule && fromModule !== toModule;
+      var _glowRadius = _crossModEdge ? 0.06 : 0.04;
+      var _coreRadius = _crossModEdge ? 0.035 : 0.022;
       // Main glow tube (thicker pipe)
-      var tubeGeo = new THREE.TubeGeometry(curve, 20, 0.04, 8, false);
-      var glowMat = new THREE.MeshBasicMaterial({
-        color: colorHex,
-        transparent: true,
-        opacity: glowOpacity,
-      });
+      var tubeGeo = new THREE.TubeGeometry(curve, 20, _glowRadius, 8, false);
+      var glowMat;
+      if (_crossModEdge) {
+        // Gradient: source module color -> target module color
+        var _srcModColor = new THREE.Color((window._moduleLayoutInfo[fromModule] ? window._moduleLayoutInfo[fromModule].color : colorHex));
+        var _dstModColor = new THREE.Color((window._moduleLayoutInfo[toModule] ? window._moduleLayoutInfo[toModule].color : colorHex));
+        var posAttr = tubeGeo.getAttribute("position");
+        var colors = new Float32Array(posAttr.count * 3);
+        for (var _vi = 0; _vi < posAttr.count; _vi++) {
+          var _t = _vi / posAttr.count;
+          var _c = _srcModColor.clone().lerp(_dstModColor, _t);
+          colors[_vi*3] = _c.r; colors[_vi*3+1] = _c.g; colors[_vi*3+2] = _c.b;
+        }
+        tubeGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+        glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: glowOpacity });
+      } else {
+        glowMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: glowOpacity });
+      }
       var glowTube = new THREE.Mesh(tubeGeo, glowMat);
       edgeGroup.add(glowTube);
-
       // Core bright tube
-      var coreTubeGeo = new THREE.TubeGeometry(curve, 20, 0.022, 8, false);
-      var coreMat = new THREE.MeshBasicMaterial({
-        color: colorHex,
-        transparent: true,
-        opacity: coreOpacity,
-      });
+      var coreTubeGeo = new THREE.TubeGeometry(curve, 20, _coreRadius, 8, false);
+      var coreMat;
+      if (_crossModEdge) {
+        // Gradient: source module color -> target module color
+        var _srcModColor2 = new THREE.Color((window._moduleLayoutInfo[fromModule] ? window._moduleLayoutInfo[fromModule].color : colorHex));
+        var _dstModColor2 = new THREE.Color((window._moduleLayoutInfo[toModule] ? window._moduleLayoutInfo[toModule].color : colorHex));
+        var posAttr2 = coreTubeGeo.getAttribute("position");
+        var colors2 = new Float32Array(posAttr2.count * 3);
+        for (var _vi2 = 0; _vi2 < posAttr2.count; _vi2++) {
+          var _t2 = _vi2 / posAttr2.count;
+          var _c2 = _srcModColor2.clone().lerp(_dstModColor2, _t2);
+          colors2[_vi2*3] = _c2.r; colors2[_vi2*3+1] = _c2.g; colors2[_vi2*3+2] = _c2.b;
+        }
+        coreTubeGeo.setAttribute("color", new THREE.BufferAttribute(colors2, 3));
+        coreMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: coreOpacity });
+      } else {
+        coreMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: coreOpacity });
+      }
       var coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
       edgeGroup.add(coreTube);
 
