@@ -4554,6 +4554,12 @@ function getIntersects(event) {
   nodeGroup.children.forEach(function(c) {
     if (c.isMesh && c.userData.isNode) allMeshes.push(c);
   });
+  // Also include module platform meshes
+  if (moduleGroup) {
+    moduleGroup.children.forEach(function(c) {
+      if (c.isMesh && c.userData._isModulePlatform) allMeshes.push(c);
+    });
+  }
   return raycaster.intersectObjects(allMeshes);
 }
 
