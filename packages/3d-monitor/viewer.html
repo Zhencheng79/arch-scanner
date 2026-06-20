@@ -2357,6 +2357,21 @@ function showGroupNode(grp) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  Global keydown: ESC closes module info panel
+// ═══════════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var panel = document.getElementById('nodeInfoPanel');
+    if (panel && panel.style.display !== 'none' && panel._showingModule) {
+      panel.style.display = 'none';
+      panel._showingModule = false;
+      panel._moduleHistory = null;
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
 //  Init
 // ═══════════════════════════════════════════════════════════════════
 
@@ -2711,6 +2726,10 @@ function onOrbitUserInteract() {
 
 
 function computeModuleLayout(nodes) {
+  // 折叠模式护壁：如果模块数量 >= 10 ，启用折叠模式
+  // 折叠模式下台面只显示模块名+成员数，双击标签展开（暂不实现）
+  // 暂时保留此护壁以备后续扩展
+
   // P0: 用现有 detectModule 分组
   var moduleBuckets = {};
   nodes.forEach(function(n) {
@@ -2727,7 +2746,22 @@ function computeModuleLayout(nodes) {
   var MODULE_COLORS = {};
   
   // 给每个模块分配颜色（来自MODULE_PALETTE）
-  var modIds = Object.keys(moduleBuckets).sort();
+  var modIds = Object.keys(moduleBuckets);
+  // Sort by total connection count descending (inter-module + intra-module)
+  var connCounts = {};
+  if (typeof dataConns !== 'undefined' && dataConns) {
+    dataConns.forEach(function(c) {
+      var fromMod = detectModule(c.from);
+      var toMod = detectModule(c.to);
+      if (fromMod && moduleBuckets[fromMod]) { connCounts[fromMod] = (connCounts[fromMod] || 0) + 1; }
+      if (toMod && moduleBuckets[toMod] && toMod !== fromMod) { connCounts[toMod] = (connCounts[toMod] || 0) + 1; }
+    });
+  }
+  modIds.sort(function(a, b) {
+    var ca = connCounts[a] || 0, cb = connCounts[b] || 0;
+    if (ca !== cb) return cb - ca;
+    return a < b ? -1 : 1;
+  });
   modIds.forEach(function(modId, idx) {
     MODULE_COLORS[modId] = MODULE_PALETTE[idx % MODULE_PALETTE.length];
   });
@@ -2736,7 +2770,7 @@ function computeModuleLayout(nodes) {
   // P2: 模块优先布局
   // 计算每个模块的台面
   var Z_BASE = 0;
-  var moduleSpacing = 3.0;       // 台面间X间距
+  var moduleSpacing = Math.min(modIds.length * 0.3 + 2, 6); // 动态间距：最少2.0，最大6.0
   var MAX_PER_ROW = 8;           // 每行最多8个模块
   var ROW_SPACING_Z = 4.0;       // 行间Z间距
   var NODE_SPACE_X = 1.5;        // 模块内节点X间距
@@ -3978,6 +4012,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       });
       var bgMesh = new THREE.Mesh(bgGeo, bgMat);
       bgMesh.position.set(cX, cY, cZ);
+      bgMesh.userData._isModulePlatform = true;
+      bgMesh.userData._moduleId = modId;
       bgMesh.rotation.x = -Math.PI / 2;
       moduleGroup.add(bgMesh);
       // Dashed border
@@ -4007,8 +4043,14 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       modLabelDiv.className = 'module-label-3d';
       modLabelDiv.textContent = window.MODULE_CONFIG[modId] ? window.MODULE_CONFIG[modId].label : modId;
       modLabelDiv.style.borderColor = '#' + mc3.getHexString();
+      modLabelDiv.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showModuleInfo(modId);
+      });
       var modLabelObj = new THREE.CSS2DObject(modLabelDiv);
       modLabelObj.position.set(cX, info.avgY + 3.0, cZ);
+      modLabelObj.userData._isModuleLabel = true;
+      modLabelObj.userData._moduleId = modId;
       moduleGroup.add(modLabelObj);
     });
   }
@@ -4750,6 +4792,7 @@ function onClick(event) {
 
   var intersects = getIntersects(event);
   var clickedNodeId = null;
+  var clickedModuleId = null;
 
   for (var i = 0; i < intersects.length; i++) {
     var obj = intersects[i].object;
@@ -4759,11 +4802,27 @@ function onClick(event) {
     } else if (obj.userData.isPort) {
       clickedNodeId = obj.userData.nodeId;
       break;
+    } else if (obj.userData._isModulePlatform) {
+      clickedModuleId = obj.userData._moduleId;
+      break;
     }
   }
 
+  if (clickedModuleId) {
+    // Clicked a module platform → show module info panel
+    onOrbitUserInteract();
+    showModuleInfo(clickedModuleId);
+    return;
+  }
+
   if (!clickedNodeId) {
-    // Fix 1: No node clicked — preserve current selection state
+    // No node or module clicked — close panels if showing module info
+    var panel = document.getElementById('nodeInfoPanel');
+    if (panel && panel.style.display !== 'none' && panel._showingModule) {
+      panel.style.display = 'none';
+      panel._showingModule = false;
+      panel._moduleHistory = null;
+    }
     return;
   }
 
@@ -4955,6 +5014,200 @@ window.handleDblClick = handleDblClick;
 window.handleClick = handleClick;
 window.highlightPathway = highlightPathway;
 window.toggleClickSelect = toggleClickSelect;
+window.showModuleInfo = showModuleInfo;
+
+// ═══════════════════════════════════════════════════════════════════
+//  showModuleInfo — Module detail panel
+// ═══════════════════════════════════════════════════════════════════
+
+function showModuleInfo(modId) {
+  var panel = document.getElementById('nodeInfoPanel');
+  if (!panel) return;
+
+  // Save previous nodeId if we were showing a node detail (for 'back' button)
+  var prevNodeId = (panel._showingModule && panel._moduleHistory) ? null : (selectedNodeId && nodeMeshes[selectedNodeId] ? selectedNodeId : null);
+  if (!panel._showingModule) {
+    panel._moduleHistory = prevNodeId;
+  }
+
+  var info = window._moduleLayoutInfo && window._moduleLayoutInfo[modId];
+  if (!info) {
+    panel.innerHTML = '<div style="color:#888;padding:12px;text-align:center">模块数据未找到</div>';
+    panel.style.display = 'block';
+    panel._showingModule = true;
+    return;
+  }
+
+  var modLabel = window.MODULE_CONFIG && window.MODULE_CONFIG[modId] ? window.MODULE_CONFIG[modId].label : modId;
+  var modColor = '#' + new THREE.Color(info.color).getHexString();
+
+  // Gather module members
+  var memberNodes = info.nodes || [];
+  // Layer distribution
+  var layerCount = {};
+  memberNodes.forEach(function(nid) {
+    var nd = window.nodeDataMap && window.nodeDataMap[nid];
+    var lk = nd ? (nd.layer || resolveLayer(nd)) : 'unknown';
+    if (!layerCount[lk]) layerCount[lk] = 0;
+    layerCount[lk]++;
+  });
+  var layerParts = [];
+  var LAYER_LABELS = {};
+  Object.keys(LAYER_CONFIG).forEach(function(k) { LAYER_LABELS[k] = LAYER_CONFIG[k].label; });
+  Object.keys(layerCount).forEach(function(lk) {
+    layerParts.push((LAYER_LABELS[lk] || lk) + '(' + layerCount[lk] + ')');
+  });
+  var layerStr = layerParts.join(' ');
+
+  // Count intra-module and inter-module connections
+  var intraCount = 0;
+  var interMap = {}; // targetModId -> { data: N, control: N, event: N, config: N, total: N, direction: 'out'|'in' }
+  var interInMap = {}; // sourceModId -> stats (incoming)
+  var dataConns = window._aggDataConns || [];
+
+  dataConns.forEach(function(conn) {
+    var fromMod = detectModule(conn.from);
+    var toMod = detectModule(conn.to);
+    var ft = conn.flowType || 'data';
+    if (fromMod === modId && toMod === modId) {
+      intraCount++;
+    } else if (fromMod === modId && toMod && toMod !== modId) {
+      if (!interMap[toMod]) interMap[toMod] = { data:0, control:0, event:0, config:0, total:0 };
+      interMap[toMod][ft] = (interMap[toMod][ft] || 0) + 1;
+      interMap[toMod].total++;
+    } else if (toMod === modId && fromMod && fromMod !== modId) {
+      if (!interInMap[fromMod]) interInMap[fromMod] = { data:0, control:0, event:0, config:0, total:0 };
+      interInMap[fromMod][ft] = (interInMap[fromMod][ft] || 0) + 1;
+      interInMap[fromMod].total++;
+    }
+  });
+
+  var totalConns = intraCount;
+  var interOutTotal = 0, interInTotal = 0;
+  Object.keys(interMap).forEach(function(k) { interOutTotal += interMap[k].total; });
+  Object.keys(interInMap).forEach(function(k) { interInTotal += interInMap[k].total; });
+  totalConns += interOutTotal + interInTotal;
+
+  var flowTypeLabels = { data:'数据流', control:'控制流', event:'事件流', config:'配置流' };
+
+  function fmtFlowTypeCounts(stats) {
+    var parts = [];
+    ['data','control','event','config'].forEach(function(ft) {
+      if (stats[ft]) parts.push(stats[ft] + '条' + (flowTypeLabels[ft] || ft));
+    });
+    return parts.join(', ');
+  }
+
+  // Build HTML
+  var html = '';
+
+  // Back button
+  var hasHistory = !!panel._moduleHistory;
+  html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
+  if (hasHistory) {
+    html += '<span onclick="showModuleInfoBack()" style="cursor:pointer;color:#888;font-size:14px;padding:2px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);hover:background:rgba(255,255,255,0.05)">← 返回</span>';
+  }
+  html += '<span class="nip-name" style="flex:1">' + modLabel + '</span></div>';
+
+  html += '<div style="font-size:11px;color:#888;margin-bottom:4px">模块ID: ' + modId + '</div>';
+
+  // Module color bar
+  html += '<div style="height:3px;border-radius:2px;background:' + modColor + ';margin-bottom:10px;opacity:0.6"></div>';
+
+  // Stats
+  html += '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-size:12px">';
+  html += '<div><span style="color:#999">成员节点:</span> <span style="color:#fff;font-weight:600">' + memberNodes.length + '</span></div>';
+  html += '<div><span style="color:#999">层级分布:</span> <span style="color:#ccc">' + layerStr + '</span></div>';
+  html += '<div><span style="color:#999">连接总数:</span> <span style="color:#fff;font-weight:600">' + totalConns + '</span>';
+  html += ' <span style="color:#888;font-size:11px">（模块内' + intraCount + '，模块间' + (interOutTotal + interInTotal) + '）</span></div>';
+  html += '</div>';
+
+  // Member nodes
+  html += '<hr class="nip-divider">';
+  html += '<div class="nip-section">成员节点（单击跳转节点详情）</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px">';
+  memberNodes.forEach(function(nid) {
+    var nd = window.nodeDataMap && window.nodeDataMap[nid];
+    var displayName = nd ? (nd.chineseName || nd.label || nid) : nid;
+    var lk = nd ? (nd.layer || resolveLayer(nd)) : '';
+    var dotColor = '#888';
+    if (lk && LAYER_CONFIG[lk]) dotColor = '#' + new THREE.Color(LAYER_CONFIG[lk].color).getHexString();
+    html += '<div onclick="selectUpstreamNodeFromModule(\'' + nid + '\')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:4px;font-size:12px;color:#ccc;transition:background 0.15s">';
+    html += '<span style="width:6px;height:6px;border-radius:50%;background:' + dotColor + ';flex-shrink:0"></span>';
+    html += '<span>' + displayName + '</span></div>';
+  });
+  html += '</div>';
+
+  // Inter-module connections (outgoing)
+  var outModIds = Object.keys(interMap);
+  if (outModIds.length > 0) {
+    html += '<hr class="nip-divider">';
+    html += '<div class="nip-section">模块间连接（发出）</div>';
+    outModIds.sort(function(a,b) { return interMap[b].total - interMap[a].total; });
+    outModIds.forEach(function(tMod) {
+      var stats = interMap[tMod];
+      var tLabel = window.MODULE_CONFIG && window.MODULE_CONFIG[tMod] ? window.MODULE_CONFIG[tMod].label : tMod;
+      var tColor = '#888';
+      if (window._moduleLayoutInfo && window._moduleLayoutInfo[tMod]) {
+        tColor = '#' + new THREE.Color(window._moduleLayoutInfo[tMod].color).getHexString();
+      }
+      html += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px">';
+      html += '<span style="color:#4FC3F7;font-weight:500">→</span>';
+      html += '<span style="color:' + tColor + '">' + tLabel + '</span>';
+      html += '<span style="color:#888;font-size:11px">（' + fmtFlowTypeCounts(stats) + '）</span></div>';
+    });
+  }
+
+  // Inter-module connections (incoming)
+  var inModIds = Object.keys(interInMap);
+  if (inModIds.length > 0) {
+    html += '<hr class="nip-divider">';
+    html += '<div class="nip-section">模块间连接（接收）</div>';
+    inModIds.sort(function(a,b) { return interInMap[b].total - interInMap[a].total; });
+    inModIds.forEach(function(sMod) {
+      var stats = interInMap[sMod];
+      var sLabel = window.MODULE_CONFIG && window.MODULE_CONFIG[sMod] ? window.MODULE_CONFIG[sMod].label : sMod;
+      var sColor = '#888';
+      if (window._moduleLayoutInfo && window._moduleLayoutInfo[sMod]) {
+        sColor = '#' + new THREE.Color(window._moduleLayoutInfo[sMod].color).getHexString();
+      }
+      html += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px">';
+      html += '<span style="color:#FFA726;font-weight:500">←</span>';
+      html += '<span style="color:' + sColor + '">' + sLabel + '</span>';
+      html += '<span style="color:#888;font-size:11px">（' + fmtFlowTypeCounts(stats) + '）</span></div>';
+    });
+  }
+
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+  panel._showingModule = true;
+}
+
+// Back button for module detail panel
+function showModuleInfoBack() {
+  var panel = document.getElementById('nodeInfoPanel');
+  if (!panel || !panel._moduleHistory) return;
+  var prevId = panel._moduleHistory;
+  panel._moduleHistory = null;
+  panel._showingModule = false;
+  if (prevId && nodeMeshes[prevId]) {
+    selectedNodeId = prevId;
+    onOrbitUserInteract();
+    applyDimming(prevId);
+    updateNodeInfoPanel(nodeMeshes[prevId].data);
+  }
+}
+
+// Called when clicking a member node in the module panel
+function selectUpstreamNodeFromModule(nid) {
+  var panel = document.getElementById('nodeInfoPanel');
+  // Save current module as history for back navigation
+  if (panel) {
+    panel._showingModule = false;
+  }
+  selectUpstreamNode(nid);
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  Double-click handler (Fix 1) — deselect only on blank dblclick
 // ═══════════════════════════════════════════════════════════════════
