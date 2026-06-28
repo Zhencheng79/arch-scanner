@@ -1,33 +1,38 @@
-# arch-scanner Project — Agent Instructions
+# ArchScanner — 架构认知引擎
 
-## 项目简介
-arch-scanner（架构扫描器）是一个 MCP-powered 项目架构扫描与 3D 可视化工具。
-包含两个核心工具：端口标签工具（port-tag-tool）和 3D 监视器（3d-monitor）。
+## 项目状态：v0.1.53（稳定版）
 
-## 对 Codex CLI 的要求
+### 核心能力
+- **一键分析**：`npm run analyze -- --project <路径>` → 扫描→诊断→3D展示
+- **模块级聚合**：大项目（>20节点）自动聚合为模块级视图
+- **Agent诊断**：启发式自动标注（Phase 2a），每模块状态评分
+- **诊断文本**：全局评分 + 问题清单 + 优化建议
 
-### 通用要求
-- 改 JS/TS 代码时，加载 js-code-quality skill 确保代码质量
-- 改 3D 视觉相关代码（Three.js 场景、渲染、动画）时，注意视觉品味和交互细节
-- 所有代码修改前先备份原文件
-- 不要在 console.log 删除时用 sed 整行删除——用替换为空行
+### 当前已知问题
+1. **帧数卡顿**（P0）：大项目（3349节点）全景拖拽时帧数极低
+2. **聚合节点展开/折叠**（P0）：双击展开功能不工作
+3. **0边线显示**（P1）：聚合模式下边束渲染未显示
 
-### 端口标签工具（port-tag-tool）
-- 代码位置：`packages/port-tag-tool/`
-- 核心文件：`projectScanner.js`（扫描引擎）
-- 技能：加载 `port-tag-scan-enhancement` skill 了解扫描强化流程
-- 注意事项：
-  - npm install 需要网络，Codex 沙箱无网络时需要 X 专员手动安装
-  - AST 解析用 acorn + acorn-jsx
-  - 跨目录相对路径（`../data/systemData`）需解析到子模块（`data--systemData`）
+### 版本树
+```
+v0.1.40  →  模块级聚合 + 通用化
+v0.1.51  →  性能优化 Layer 0+1（CSS2D + 聚合）
+v0.1.52  →  聚合体验修复 A-E（诊断注入 + 详情路由）
+v0.1.53  →  诊断文本填充 + 边束分层 + 模块数据修复（当前）
+```
 
-### 3D 监视器（3d-monitor）
-- 代码位置：`packages/3d-monitor/`
-- 核心文件：`viewer.html`（单文件内联 Three.js）
-- 注意：viewer.html 是单文件，所有代码内联，不要拆分成多文件
-- force-layout分支已存档（tag: archive/force-layout-v0.1.40-force.15）
+### 文件说明
+- `packages/3d-monitor/viewer.html` — 3D可视化核心（~6100行单文件）
+- `packages/3d-monitor/scripts/auto_diagnose.js` — 启发式自动标注
+- `packages/3d-monitor/scripts/analyze.js` — 一键分析命令
+- `packages/port-tag-tool/` — 端口标签扫描工具
 
-### 交互规范
-- 代码修改走 Kanban 任务
-- 改完后生成测试页验证效果
-- 验收后方可汇报完成
+### 团队循环规则（参考）
+```
+我+军师出方案(≥9) → 派Codex → 轮询完成
+                               ↓
+                         我自查(≥9?) + 军师评审(≥9?)
+                               ↓
+                         都≥9 → 主公验收
+                         任一<9 → 分析根因 → 回方案阶段
+```
