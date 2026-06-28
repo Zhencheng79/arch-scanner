@@ -4140,6 +4140,11 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   if (USE_MODULE_LAYOUT && dataNodes.length >= 20) {
     // 三级流水线：先按功能模块聚合，再按技术模块聚合
     var level2 = buildModuleAggregation(dataNodes, dataConns);
+    // Save level2 positions for toggleGroup expand
+    var _level2Positions = computeModuleLayout(level2.nodes);
+    window.__level2Positions = _level2Positions;
+    window.__level2Nodes = level2.nodes;
+    window.__level2Conns = level2.conns;
     if (DISPLAY_LEVEL === 'function') {
       aggResult = buildFunctionAggregation(level2.nodes, level2.conns);
     } else {
@@ -4284,6 +4289,28 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     mesh.userData.isNode = true;
     nodeMeshes[n.id] = { mesh: mesh, data: n, ports: [], edges: [] };
     nodeGroup.add(mesh);
+    
+    // v0.1.55: Pre-create hidden meshes for level2 children of functional groups
+    if (DISPLAY_LEVEL === 'function' && n._isGroupNode && n._isFunctionGroup && window.__level2Positions) {
+      (n._childIds || []).forEach(function(cid) {
+        if (!nodeMeshes[cid] && window.__level2Positions[cid]) {
+          var _cPos = window.__level2Positions[cid];
+          var _cData = null;
+          (window.__level2Nodes || []).forEach(function(ln) { if (ln.id === cid) _cData = ln; });
+          if (_cData) {
+            var _cSize = _cData._isGroupNode ? 1.2 : 0.9;
+            var _cGeo = new THREE.BoxGeometry(_cSize, _cSize * 0.5, _cSize);
+            var _cMat = new THREE.MeshStandardMaterial({ color: resolveNodeColor(_cData), roughness: 0.5, metalness: 0.1 });
+            var _cMesh = new THREE.Mesh(_cGeo, _cMat);
+            _cMesh.position.set(_cPos.x, _cPos.y, _cPos.z);
+            _cMesh.visible = false;
+            _cMesh.userData.isNode = true;
+            nodeGroup.add(_cMesh);
+            nodeMeshes[cid] = { mesh: _cMesh, data: _cData, ports: [], edges: [] };
+          }
+        }
+      });
+    }
 
     // Label (CSS2D)
     var skipLabel = false;
