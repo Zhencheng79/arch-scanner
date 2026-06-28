@@ -15,10 +15,10 @@ canvas{display:block}
 #info{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:12px;z-index:10;text-align:center;letter-spacing:0.5px;pointer-events:none;text-shadow:0 0 8px rgba(0,0,0,0.8)}
 #stats{position:fixed;top:16px;left:16px;z-index:10;font-size:12px;color:rgba(255,255,255,0.4);pointer-events:none;font-family:'SF Mono','Fira Code',monospace;line-height:1.6}
 #stats b{color:#4FC3F7}
-#legend{position:fixed;bottom:20px;left:20px;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(6px)}
-#legend .row{display:flex;align-items:center;gap:8px}
-#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
-#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+
+
+#legend .dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0} /* kept for backward compat */
+
 .label-2d{position:absolute;pointer-events:none;color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 10px rgba(0,0,0,0.95),0 0 20px rgba(0,0,0,0.7);white-space:nowrap;z-index:5;letter-spacing:0.3px}
 .pipe-label-3d{position:absolute;pointer-events:none;font-size:11px;font-weight:600;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 12px rgba(0,0,0,0.98),0 0 24px rgba(0,0,0,0.8),0 0 40px rgba(0,0,0,0.6);white-space:nowrap;z-index:4;letter-spacing:0.5px;padding:2px 8px;border-radius:8px;border:1px solid;background:rgba(8,8,16,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .module-label-3d{position:absolute;pointer-events:none;font-size:14px;font-weight:700;font-family:-apple-system,'SF Pro','PingFang SC','Microsoft YaHei',sans-serif;transform:translate(-50%,-50%);text-shadow:0 0 12px rgba(0,0,0,0.98);white-space:nowrap;z-index:6;letter-spacing:0.5px;padding:4px 12px;border-radius:10px;border:1.5px solid;background:rgba(8,8,16,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#fff}
@@ -62,6 +62,42 @@ canvas{display:block}
 #nodeInfoPanel .ld-port-out{border:1px solid}
 #nodeInfoPanel .ld-port-in{border:1px solid}
 #nodeInfoPanel .nip-desc-text{font-size:11px;color:#999;text-align:center;line-height:1.3}
+/* v0.1.50: Agent diagnosis panel styles */
+#moduleInfoPanel{position:fixed;top:20px;left:20px;z-index:100;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;min-width:280px;max-width:380px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;pointer-events:auto;font-size:13px;color:#e0e0e0;line-height:1.6;max-height:80vh;overflow-y:auto}
+#moduleInfoPanel .nip-name{color:#fff;font-weight:600;font-size:16px;margin-bottom:6px}
+#moduleInfoPanel .nip-section{font-size:11px;color:#999;margin-bottom:4px;font-weight:500;letter-spacing:0.3px;text-transform:uppercase}
+#moduleInfoPanel .nip-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:8px 0}
+#globalDiagnosisPanel{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(8,8,16,0.92);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 20px;min-width:320px;max-width:600px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none;pointer-events:auto;font-size:12px;color:#e0e0e0;line-height:1.5;max-height:25vh;overflow-y:auto}
+#globalDiagnosisPanel .gd-title{color:#fff;font-weight:600;font-size:15px;margin-bottom:6px}
+#globalDiagnosisPanel .gd-section{font-size:10px;color:#999;margin-bottom:3px;font-weight:500;letter-spacing:0.3px;text-transform:uppercase}
+#globalDiagnosisPanel .gd-score{font-size:28px;font-weight:700;display:inline-block;margin-right:8px}
+#globalDiagnosisPanel .gd-divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:5px 0}
+#globalDiagnosisPanel .gd-issue{font-size:11px;color:#ccc;padding:2px 0;line-height:1.4}
+#globalDiagnosisPanel .gd-suggestion{font-size:11px;color:#4FC3F7;padding:2px 0;line-height:1.4}
+.agent-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;margin:2px 4px 2px 0;font-weight:600;letter-spacing:0.3px}
+.agent-badge-healthy{background:rgba(76,175,80,0.2);border:1px solid rgba(76,175,80,0.4);color:#4CAF50}
+.agent-badge-warning{background:rgba(255,152,0,0.2);border:1px solid rgba(255,152,0,0.4);color:#FF9800}
+.agent-badge-risk{background:rgba(244,67,54,0.2);border:1px solid rgba(244,67,54,0.4);color:#F44336}
+.agent-badge-overloaded{background:rgba(183,28,28,0.2);border:1px solid rgba(183,28,28,0.4);color:#B71C1C}
+.agent-badge-needs-split{background:rgba(255,152,0,0.2);border:1px solid rgba(255,152,0,0.4);color:#FF9800}
+.agent-badge-hub{background:rgba(255,215,0,0.2);border:1px solid rgba(255,215,0,0.4);color:#FFD700}
+.agent-badge-bridge{background:rgba(156,39,176,0.2);border:1px solid rgba(156,39,176,0.4);color:#9C27B0}
+.agent-badge-leaf{background:rgba(158,158,158,0.2);border:1px solid rgba(158,158,158,0.4);color:#9E9E9E}
+.agent-badge-normal{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#FFFFFF}
+.agent-suggestion{font-size:11px;color:#ccc;padding:3px 6px;border-left:2px solid rgba(79,195,247,0.4);margin:2px 0;line-height:1.4}
+.agent-summary{font-size:12px;color:#aaa;line-height:1.5;margin-bottom:6px;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px}
+.agent-detail{font-size:11px;color:#888;line-height:1.5;margin-bottom:8px;padding:6px 8px;background:rgba(255,255,255,0.02);border-radius:4px}
+/* Collapsible legend */
+#legend{position:fixed;top:16px;right:20px;left:auto;bottom:auto;z-index:10;background:rgba(8,8,16,0.85);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 14px;font-size:11px;color:#999;line-height:1.6;pointer-events:auto;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);max-width:280px;transition:all 0.2s ease}
+#legend .legend-title{display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:10px;color:#666;font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-bottom:2px;padding:2px 0;pointer-events:auto;user-select:none}
+#legend .legend-title:hover{color:#999}
+#legend .legend-body{transition:max-height 0.2s ease;overflow:hidden}
+#legend .legend-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0}
+#legend .legend-row-label{font-size:9px;color:#666;font-weight:500;min-width:28px}
+#legend .legend-dot{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0}
+#legend .line-sample{width:18px;height:2px;display:inline-block;flex-shrink:0;border-radius:1px}
+#legend .legend-sep{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:3px 0}
+#legend.collapsed .legend-body{max-height:0 !important}
 
 /* ═══ v0.1.45: iOS Safari / Mobile Responsive ═══ */
 body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
@@ -92,35 +128,36 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 <body>
 <div id="tooltip"></div>
 <div id="nodeInfoPanel"></div>
+<div id="moduleInfoPanel"></div>
+<div id="globalDiagnosisPanel"></div>
 <div id="stats"><b id="fps">0</b> FPS · <b id="nodeCount">0</b> nodes · <b id="edgeCount">0</b> edges</div>
 <div id="info">🖱 拖拽旋转 · 滚轮缩放 · 点击节点选中 · 双击/双指脱选 · 悬停查看信息</div>
 <button id="legendToggle" aria-label="Toggle legend">🎨</button>
 <button id="cancelSelectBtn" style="display:none">✕ 取消选中</button>
-<div id="legend" style="right:20px;bottom:20px;left:auto;background:rgba(8,8,16,0.88);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;font-size:11px;color:#999;line-height:1.8;pointer-events:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);max-width:220px">
-<div style="font-size:10px;color:#666;margin-bottom:4px;letter-spacing:0.5px;font-weight:600">节点分层</div>
-<div class="row"><span class="dot" style="background:#F87171"></span>external<span style="color:#666;margin-left:4px;font-size:10px">（外部依赖）</span></div>
-<div class="row"><span class="dot" style="background:#FBBF24"></span>presentation<span style="color:#666;margin-left:4px;font-size:10px">（展示层）</span></div>
-<div class="row"><span class="dot" style="background:#34D399"></span>business<span style="color:#666;margin-left:4px;font-size:10px">（业务逻辑层）</span></div>
-<div class="row"><span class="dot" style="background:#60A5FA"></span>data<span style="color:#666;margin-left:4px;font-size:10px">（数据层）</span></div>
-<div class="row"><span class="dot" style="background:#3B82F6"></span>infrastructure<span style="color:#666;margin-left:4px;font-size:10px">（基础设施层）</span></div>
-<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px">
+<div id="legend">
+<div class="legend-title" onclick="toggleLegend()"><span>📋 图例</span><span id="legendToggleIcon" style="font-size:12px">&#x25B2;</span></div>
+<div class="legend-body">
+<div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">节点分层</div>
+<div class="legend-row"><span class="dot" style="background:#F87171"></span>external<span style="color:#888;margin-left:4px;font-size:10px">（外部依赖）</span></div>
+<div class="legend-row"><span class="dot" style="background:#FBBF24"></span>presentation<span style="color:#888;margin-left:4px;font-size:10px">（展示层）</span></div>
+<div class="legend-row"><span class="dot" style="background:#34D399"></span>business<span style="color:#888;margin-left:4px;font-size:10px">（业务逻辑层）</span></div>
+<div class="legend-row"><span class="dot" style="background:#60A5FA"></span>data<span style="color:#888;margin-left:4px;font-size:10px">（数据层）</span></div>
+<div class="legend-row"><span class="dot" style="background:#3B82F6"></span>infrastructure<span style="color:#888;margin-left:4px;font-size:10px">（基础设施层）</span></div>
+<div class="legend-sep"></div>
 <div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">连接类型</div>
-<div class="row"><span class="line-sample" style="background:#3B82F6"></span>control<span style="color:#666;margin-left:4px;font-size:10px">（控制流）</span></div>
-<div class="row"><span class="line-sample" style="background:#60A5FA"></span>data<span style="color:#666;margin-left:4px;font-size:10px">（数据流）</span></div>
-<div class="row"><span class="line-sample" style="background:#34D399"></span>event<span style="color:#666;margin-left:4px;font-size:10px">（事件流）</span></div>
-<div class="row"><span class="line-sample" style="background:#FBBF24"></span>config<span style="color:#666;margin-left:4px;font-size:10px">（配置流）</span></div>
+<div class="legend-row"><span class="line-sample" style="background:#3B82F6"></span>control<span style="color:#888;margin-left:4px;font-size:10px">（控制流）</span></div>
+<div class="legend-row"><span class="line-sample" style="background:#60A5FA"></span>data<span style="color:#888;margin-left:4px;font-size:10px">（数据流）</span></div>
+<div class="legend-row"><span class="line-sample" style="background:#34D399"></span>event<span style="color:#888;margin-left:4px;font-size:10px">（事件流）</span></div>
+<div class="legend-sep"></div>
+<div class="legend-row"><span class="legend-row-label">节点角色</span><span class="legend-dot" style="background:#FFD700;border:1px solid #FFD700"></span>枢纽<span style="color:#888">（金）</span> <span class="legend-dot" style="background:#9C27B0;margin-left:4px;border:1px solid #9C27B0"></span>桥梁<span style="color:#888">（紫）</span> <span class="legend-dot" style="background:#9E9E9E;margin-left:4px;border:1px solid #9E9E9E"></span>叶子<span style="color:#888">（灰）</span> <span class="legend-dot" style="background:#FFFFFF;margin-left:4px;border:1px solid #FFFFFF"></span>普通<span style="color:#888">（白）</span></div>
+<div class="legend-sep"></div>
+<div class="legend-row"><span class="legend-row-label">模块状态</span><span class="legend-dot" style="background:#4CAF50"></span>健康 <span class="legend-dot" style="background:#B71C1C;margin-left:4px"></span>过载 <span class="legend-dot" style="background:#FF9800;margin-left:4px"></span>建议拆分</div>
+<div class="legend-sep"></div>
+<div class="legend-row"><span class="legend-row-label">健康状态</span><span class="legend-dot" style="background:#4CAF50"></span>正常 <span class="legend-dot" style="background:#FF9800;margin-left:4px"></span>警告 <span class="legend-dot" style="background:#F44336;margin-left:4px"></span>风险</div>
+<div class="legend-sep"></div>
+<div style="font-size:9px;color:#666;margin-top:2px">节点主体=status·边框=role</div>
 </div>
-<div id="legendModules" style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px">
-<div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">模块分组</div>
 </div>
-<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px">
-<div style="font-size:10px;color:#666;margin-bottom:2px;letter-spacing:0.5px;font-weight:600">图例</div>
-<div class="row"><span style="color:#FFD700;font-size:13px">★</span> 枢纽节点<span style="color:#666;margin-left:4px;font-size:10px">（高连接度）</span></div>
-</div>
-<div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:4px;font-size:10px;color:#666">排布: 模块优先布局 | 跨模块粗管道渐变 | other节点独立薄层</div>
-</div>
-
-<!-- Three.js from CDN -->
 <script>
 /**
  * @license
@@ -1926,7 +1963,8 @@ var LAYER_CONFIG = {
 var MODULE_PALETTE = [0x4CAF50, 0x2196F3, 0xFF9800, 0x9C27B0, 0xE91E63, 0x00BCD4, 0x795548, 0x607D8B, 0xFF5722, 0x3F51B5, 0x009688, 0xCDDC39];
 var MODULE_CONFIG = { 'other': { label: '其他', color: 0x888888 } };
 window.MODULE_CONFIG = MODULE_CONFIG;
-function detectModule(nodeId) {
+function detectModule(nodeId, nodeData) {
+  if (nodeData && nodeData.module) return nodeData.module;
   if (!nodeId || nodeId === 'project-root') return 'other';
   var parts = nodeId.split('--');
   if (parts.length > 1 && parts[0]) return parts[0];
@@ -2006,6 +2044,59 @@ function resolveModuleColor(n) {
 /**
  * Resolve the effective layer color for a node (restored v14).
  */
+// Agent diagnosis colors
+var AGENT_STATUS_COLORS = { healthy: 0x4CAF50, warning: 0xFF9800, risk: 0xF44336 };
+var AGENT_ROLE_COLORS  = { hub: 0xFFD700, bridge: 0x9C27B0, normal: 0xFFFFFF, leaf: 0x9E9E9E };
+var MODULE_STATUS_COLORS = { healthy: 0x4CAF50, overloaded: 0xB71C1C, 'needs-split': 0xFF9800 };
+
+function getAgentDiagnosis(nodeData) {
+  // Safely extract agentDiagnosis from node data, with fallbacks
+  if (!nodeData || !nodeData.agentDiagnosis) return null;
+  var ad = nodeData.agentDiagnosis;
+  if (typeof ad !== 'object') {
+    console.warn('agentDiagnosis format error for node:', nodeData.id, ad);
+    return null;
+  }
+  return ad;
+}
+
+function getAgentStatusColor(nodeData) {
+  var ad = getAgentDiagnosis(nodeData);
+  if (!ad) return null;
+  var st = ad.status;
+  if (st && AGENT_STATUS_COLORS[st]) return AGENT_STATUS_COLORS[st];
+  if (st) console.warn('Unknown agent status:', st, 'for node:', nodeData.id);
+  return null;
+}
+
+function getAgentRoleColor(nodeData) {
+  var ad = getAgentDiagnosis(nodeData);
+  if (!ad) return null;
+  var role = ad.role;
+  if (role && AGENT_ROLE_COLORS[role]) return AGENT_ROLE_COLORS[role];
+  if (role) console.warn('Unknown agent role:', role, 'for node:', nodeData.id);
+  return null;
+}
+
+function resolveNodeColor(n) {
+  // New: status-driven node body color, with fallback to layer color
+  var stColor = getAgentStatusColor(n);
+  if (stColor !== null) return stColor;
+  // Fallback to old layer-based color
+  var lk = resolveLayer(n);
+  var cfg = LAYER_CONFIG[lk];
+  return cfg ? cfg.color : (n.color ? new THREE.Color(n.color).getHex() : 0x888888);
+}
+
+function resolveNodeEdgeColor(n) {
+  // New: role-driven node border color, with fallback to module color
+  var roleColor = getAgentRoleColor(n);
+  if (roleColor !== null) return roleColor;
+  // Fallback to old module-based border
+  return n.module && MODULE_CONFIG[n.module] ? MODULE_CONFIG[n.module].color : 0x888888;
+}
+
+// Keep old function for backward compat (used by other parts of code)
 function resolveLayerColor(n) {
   var lk = resolveLayer(n);
   var cfg = LAYER_CONFIG[lk];
@@ -2362,12 +2453,18 @@ function showGroupNode(grp) {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    var panel = document.getElementById('nodeInfoPanel');
-    if (panel && panel.style.display !== 'none' && panel._showingModule) {
-      panel.style.display = 'none';
-      panel._showingModule = false;
-      panel._moduleHistory = null;
+    var modPanel = document.getElementById('moduleInfoPanel');
+    if (modPanel) modPanel.style.display = 'none';
+    var nodePanel = document.getElementById('nodeInfoPanel');
+    if (nodePanel) {
+      nodePanel.style.display = 'none';
     }
+    var globalPanel = document.getElementById('globalDiagnosisPanel');
+    // (fixed) keep globalDiagnosisPanel visible on deselect
+    selectedNodeId = null;
+    onOrbitUserInteract();
+    applyDimming(null);
+    updateNodeInfoPanel(null);
   }
 });
 
@@ -2500,7 +2597,7 @@ function init() {
     _touchStartPos2 = {x:0, y:0};
   });
 
-  // Legend toggle button
+  // Legend toggle button (mobile only)
   var legendToggle = document.getElementById('legendToggle');
   var legendEl = document.getElementById('legend');
   if (legendToggle && legendEl) {
@@ -3743,10 +3840,10 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   dataNodes.forEach(function(n) {
     nodeMap[n.id] = n;
     var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
-    n.module = detectModule(n.id);
+    n.module = detectModule(n.id, n);
     var layerKey = resolveLayer(n);
     var layerCfg = LAYER_CONFIG[layerKey] || { color: 0x888888 };
-    var chipColor = resolveLayerColor(n);
+    var chipColor = resolveNodeColor(n);
     n.layer = layerKey; // stamp back for downstream
 
     // v0.1.10: Group nodes get larger size and different appearance
@@ -3788,7 +3885,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     mesh.add(lines);
 
     // Highlight border (edge glow) — v14: module color, higher opacity
-    var modEdgeColor = n.module && MODULE_CONFIG[n.module] ? MODULE_CONFIG[n.module].color : 0x888888;
+    var modEdgeColor = resolveNodeEdgeColor(n);
     var edgeMat = new THREE.LineBasicMaterial({
       color: modEdgeColor,
       transparent: true,
@@ -3811,7 +3908,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     if (n._isHub) {
       mesh.scale.set(1.5, 1.5, 1.5);
       mat.emissiveIntensity = 0.6;
-      mat.color.setHex(0xFFD700);
+      // v0.1.50: Hub color now comes from agent status, not overridden to gold
+      // mat.color.setHex(0xFFD700);
       if (edgeWire) edgeWire.scale.set(1.1, 1.1, 1.1);
     }
 
@@ -3966,20 +4064,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
 
 
-  // ─── v0.1.40-node-spread.20: Populate dynamic module legend ──
-  (function populateModuleLegend() {
-    var legendModules = document.getElementById('legendModules');
-    if (!legendModules || !window.MODULE_CONFIG) return;
-    Object.keys(window.MODULE_CONFIG).forEach(function(modId) {
-      if (modId === 'other') return;
-      var cfg = window.MODULE_CONFIG[modId];
-      var c = '#' + new THREE.Color(cfg.color).getHexString();
-      var row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = '<span class="dot" style="background:' + c + '"></span>' + cfg.label;
-      legendModules.appendChild(row);
-    });
-  })();
+  // v0.1.50: Module legend is now part of the top-right collapsible legend panel
+  // (individual module colors shown via module platform rendering)
     // ─── v0.1.40-node-spread.11: Module background boxes (rounded rect) ──
   if (window._moduleLayoutInfo) {
     Object.keys(window._moduleLayoutInfo).forEach(function(modId) {
@@ -3991,6 +4077,19 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var sZ = info.maxZ - info.minZ + 5.0;
       var cY = info.minY - 1.8; // v0.1.40-node-spread.20: use minY to prevent node overlap
       var mc = info.color;
+      // v0.1.50: Override module platform color with module.status from agent diagnosis
+      if (window._agentDiagnosisData && window._agentDiagnosisData.modules) {
+        for (var mi = 0; mi < window._agentDiagnosisData.modules.length; mi++) {
+          var mDiag = window._agentDiagnosisData.modules[mi];
+          if ((mDiag.name === modId || mDiag.id === modId) && mDiag.agentDiagnosis && mDiag.agentDiagnosis.status) {
+            var modStColor = { healthy: 0x4CAF50, overloaded: 0xB71C1C, 'needs-split': 0xFF9800 }[mDiag.agentDiagnosis.status];
+            if (modStColor !== undefined) {
+              mc = modStColor;
+            }
+            break;
+          }
+        }
+      }
       var mc3 = new THREE.Color(mc);
       // Rounded rectangle shape
       var shape = new THREE.Shape();
@@ -4280,7 +4379,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
       var flowType = conn.flowType || 'data';
       var targetNodeData = nodeMeshes[conn.to] ? nodeMeshes[conn.to].data : null;
-      var colorHex = targetNodeData ? resolveLayerColor(targetNodeData) : (FLOW_COLORS[flowType] || 0x888888);
+      var colorHex = targetNodeData ? resolveNodeColor(targetNodeData) : (FLOW_COLORS[flowType] || 0x888888);
 
       // Compute obstacle avoidance
       var nodeIdList = Object.keys(positions);
@@ -4411,7 +4510,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (!pos) return;
       nodeMap[n.id] = n;
       var layerKey = resolveLayer(n);
-      var chipColor = resolveLayerColor(n);
+      var chipColor = resolveNodeColor(n);
       n.layer = layerKey;
 
       var size = 0.9; // smaller size for child nodes
@@ -4466,7 +4565,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         var tp = new THREE.Vector3(toPos3d.x, toPos3d.y, toPos3d.z);
         var flowType = conn.flowType || 'data';
         var targetNodeData = nodeMeshes[conn.to] ? nodeMeshes[conn.to].data : null;
-        var colorHex = targetNodeData ? resolveLayerColor(targetNodeData) : (FLOW_COLORS[flowType] || 0x888888);
+        var colorHex = targetNodeData ? resolveNodeColor(targetNodeData) : (FLOW_COLORS[flowType] || 0x888888);
         var internalCurve = new THREE.CubicBezierCurve3(fp, fp.clone().add(new THREE.Vector3(0, 0.5, 0)), tp.clone().add(new THREE.Vector3(0, 0.5, 0)), tp);
         // Thin line for internal edges
         var tubeGeo = new THREE.TubeGeometry(internalCurve, 12, 0.02, 6, false);
@@ -4521,7 +4620,7 @@ function buildFlowDots() {
       var prog = (baseProgress + i * 0.5) % 1.0;
       var dotGeo = new THREE.SphereGeometry(0.065, 8, 8);
       var dotMat = new THREE.MeshBasicMaterial({
-        color: (ei.toId && nodeMeshes[ei.toId] ? resolveLayerColor(nodeMeshes[ei.toId].data) : ei.colorHex),
+        color: (ei.toId && nodeMeshes[ei.toId] ? resolveNodeColor(nodeMeshes[ei.toId].data) : ei.colorHex),
         transparent: true,
         opacity: 1.0,
       });
@@ -4822,13 +4921,9 @@ function onClick(event) {
   }
 
   if (!clickedNodeId) {
-    // No node or module clicked — close panels if showing module info
-    var panel = document.getElementById('nodeInfoPanel');
-    if (panel && panel.style.display !== 'none' && panel._showingModule) {
-      panel.style.display = 'none';
-      panel._showingModule = false;
-      panel._moduleHistory = null;
-    }
+    // No node or module clicked — close module info panel if open
+    var modPanel = document.getElementById('moduleInfoPanel');
+    if (modPanel) modPanel.style.display = 'none';
     return;
   }
 
@@ -4952,6 +5047,40 @@ function updateNodeInfoPanel(nodeData) {
     html += '<div class="nip-section">架构角色</div>';
     html += '<div style="font-size:12px;color:#aaa;line-height:1.5;margin-bottom:8px">' + archRole + '</div>';
   }
+  // --- Agent诊断 section ---
+  var ad = getAgentDiagnosis(nodeData);
+  if (ad) {
+    html += '<hr class="nip-divider">';
+    html += '<div class="nip-section">Agent诊断</div>';
+    // Status & role badges
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">';
+    if (ad.status) {
+      var stClass = 'agent-badge agent-badge-' + ad.status;
+      var stLabels = { healthy: '健康', warning: '警告', risk: '风险' };
+      html += '<span class="' + stClass + '">' + (stLabels[ad.status] || ad.status) + '</span>';
+    }
+    if (ad.role) {
+      var rlClass = 'agent-badge agent-badge-' + ad.role;
+      var rlLabels = { hub: '枢纽', bridge: '桥梁', normal: '普通', leaf: '叶子' };
+      html += '<span class="' + rlClass + '">' + (rlLabels[ad.role] || ad.role) + '</span>';
+    }
+    html += '</div>';
+    // Summary
+    if (ad.summary) {
+      html += '<div class="agent-summary">' + ad.summary + '</div>';
+    }
+    // Detail
+    if (ad.detail) {
+      html += '<div class="agent-detail">' + ad.detail + '</div>';
+    }
+    // Suggestions
+    if (ad.suggestions && ad.suggestions.length > 0) {
+      html += '<div class="nip-section" style="margin-top:4px">建议</div>';
+      ad.suggestions.forEach(function(s) {
+        html += '<div class="agent-suggestion">' + s + '</div>';
+      });
+    }
+  }
   // --- 所属模块 section ---
   var moduleId = nodeData.module || '';
   var moduleLabel = '';
@@ -4996,6 +5125,7 @@ function updateNodeInfoPanel(nodeData) {
   }
   panel.innerHTML = html;
   panel.style.display = 'block';
+  autoCollapseLegend();
 }
 
 var _clickTimer = null;
@@ -5020,6 +5150,77 @@ window.handleDblClick = handleDblClick;
 window.handleClick = handleClick;
 window.highlightPathway = highlightPathway;
 window.toggleClickSelect = toggleClickSelect;
+// ═══════════════════════════════════════════════════════════════════
+//  v0.1.50: Agent cognition functions
+// ═══════════════════════════════════════════════════════════════════
+
+// Agent diagnosis data (populated from __EMBEDDED_DATA__ at startup)
+window._agentDiagnosisData = null;
+
+function toggleLegend() {
+  var legendEl = document.getElementById('legend');
+  if (!legendEl) return;
+  var isCollapsed = legendEl.classList.toggle('collapsed');
+  var icon = document.getElementById('legendToggleIcon');
+  if (icon) icon.innerHTML = isCollapsed ? '&#x25BC;' : '&#x25B2;';
+}
+
+// Auto-collapse legend when any detail panel opens
+function autoCollapseLegend() {
+  var legendEl = document.getElementById('legend');
+  if (!legendEl) return;
+  var modPanel = document.getElementById('moduleInfoPanel');
+  var nodePanel = document.getElementById('nodeInfoPanel');
+  var isAnyOpen = (modPanel && modPanel.style.display === 'block') ||
+                  (nodePanel && nodePanel.style.display === 'block');
+  if (isAnyOpen && !legendEl.classList.contains('collapsed')) {
+    legendEl.classList.add('collapsed');
+    var icon = document.getElementById('legendToggleIcon');
+    if (icon) icon.innerHTML = '&#x25BC;';
+  }
+}
+
+function showGlobalDiagnosis() {
+  var panel = document.getElementById('globalDiagnosisPanel');
+  if (!panel) return;
+  var gd = window._agentDiagnosisData && window._agentDiagnosisData.global;
+  if (!gd) {
+    panel.style.display = 'none';
+    return;
+  }
+  var scoreColor = gd.score >= 8 ? '#4CAF50' : (gd.score >= 5 ? '#FF9800' : '#F44336');
+  var html = '';
+  html += '<div class="gd-title">架构综合诊断</div>';
+  html += '<div style="display:flex;align-items:center;margin-bottom:6px">';
+  html += '<span class="gd-score" style="color:' + scoreColor + '">' + gd.score + '</span>';
+  html += '<span style="font-size:12px;color:#888">/ 10</span>';
+  if (gd.summary) {
+    html += '<span style="font-size:11px;color:#aaa;margin-left:12px;flex:1">' + gd.summary + '</span>';
+  }
+  html += '</div>';
+  if (gd.issues && gd.issues.length > 0) {
+    html += '<hr class="gd-divider">';
+    html += '<div class="gd-section">存在问题（' + gd.issues.length + '条）</div>';
+    gd.issues.forEach(function(issue) {
+      html += '<div class="gd-issue">&#x26A0;&#xFE0F; ' + issue + '</div>';
+    });
+  }
+  if (gd.suggestions && gd.suggestions.length > 0) {
+    html += '<hr class="gd-divider">';
+    html += '<div class="gd-section">优化建议（' + gd.suggestions.length + '条）</div>';
+    gd.suggestions.forEach(function(s) {
+      html += '<div class="gd-suggestion">&#x1F4A1; ' + s + '</div>';
+    });
+  }
+  panel.innerHTML = html;
+  panel.style.display = 'block';
+  autoCollapseLegend();
+}
+
+// Expose functions globally
+window.showGlobalDiagnosis = showGlobalDiagnosis;
+window.toggleLegend = toggleLegend;
+
 window.showModuleInfo = showModuleInfo;
 
 // ═══════════════════════════════════════════════════════════════════
@@ -5027,20 +5228,17 @@ window.showModuleInfo = showModuleInfo;
 // ═══════════════════════════════════════════════════════════════════
 
 function showModuleInfo(modId) {
-  var panel = document.getElementById('nodeInfoPanel');
+  // v0.1.50: Module detail now renders in left panel (#moduleInfoPanel)
+  var panel = document.getElementById('moduleInfoPanel');
+  var rightPanel = document.getElementById('nodeInfoPanel');
   if (!panel) return;
 
-  // Save previous nodeId if we were showing a node detail (for 'back' button)
-  var prevNodeId = (panel._showingModule && panel._moduleHistory) ? null : (selectedNodeId && nodeMeshes[selectedNodeId] ? selectedNodeId : null);
-  if (!panel._showingModule) {
-    panel._moduleHistory = prevNodeId;
-  }
-
+  // Close right-side node info panel if open (modules in left, nodes in right - can coexist)
+  
   var info = window._moduleLayoutInfo && window._moduleLayoutInfo[modId];
   if (!info) {
     panel.innerHTML = '<div style="color:#888;padding:12px;text-align:center">模块数据未找到</div>';
     panel.style.display = 'block';
-    panel._showingModule = true;
     return;
   }
 
@@ -5108,11 +5306,8 @@ function showModuleInfo(modId) {
   var html = '';
 
   // Back button
-  var hasHistory = !!panel._moduleHistory;
   html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
-  if (hasHistory) {
-    html += '<span onclick="showModuleInfoBack()" style="cursor:pointer;color:#888;font-size:14px;padding:2px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);hover:background:rgba(255,255,255,0.05)">← 返回</span>';
-  }
+  html += '<span onclick="showModuleInfoBack()" style="cursor:pointer;color:#888;font-size:14px;padding:2px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);hover:background:rgba(255,255,255,0.05)">✕ 关闭</span>';
   html += '<span class="nip-name" style="flex:1">' + modLabel + '</span></div>';
 
   html += '<div style="font-size:11px;color:#888;margin-bottom:4px">模块ID: ' + modId + '</div>';
@@ -5186,16 +5381,17 @@ function showModuleInfo(modId) {
 
   panel.innerHTML = html;
   panel.style.display = 'block';
-  panel._showingModule = true;
+  autoCollapseLegend();
 }
 
-// Back button for module detail panel
+// Back button for module detail panel (v0.1.50: now hides moduleInfoPanel)
 function showModuleInfoBack() {
-  var panel = document.getElementById('nodeInfoPanel');
-  if (!panel || !panel._moduleHistory) return;
-  var prevId = panel._moduleHistory;
-  panel._moduleHistory = null;
-  panel._showingModule = false;
+  var panel = document.getElementById('moduleInfoPanel');
+  if (!panel) return;
+  panel.style.display = 'none';
+  // If we navigated from a node detail, restore it
+  var prevId = window._lastModuleHistory || null;
+  window._lastModuleHistory = null;
   if (prevId && nodeMeshes[prevId]) {
     selectedNodeId = prevId;
     onOrbitUserInteract();
@@ -5206,10 +5402,13 @@ function showModuleInfoBack() {
 
 // Called when clicking a member node in the module panel
 function selectUpstreamNodeFromModule(nid) {
-  var panel = document.getElementById('nodeInfoPanel');
-  // Save current module as history for back navigation
-  if (panel) {
-    panel._showingModule = false;
+  var modPanel = document.getElementById('moduleInfoPanel');
+  // When opening node detail from module, save module as history
+  window._lastModuleHistory = null;
+  if (modPanel && modPanel.style.display === 'block') {
+    // Find the active module ID from panel content
+    window._lastModuleHistory = nid;
+    modPanel.style.display = 'none';
   }
   selectUpstreamNode(nid);
 }
@@ -5222,6 +5421,7 @@ function onDblClick(event) {
   // v0.1.10: Check if double-clicking a group node → toggle expand/collapse
   var intersects = getIntersects(event);
   var hitGroupNode = false;
+  var hitNodeId = null;
   for (var i = 0; i < intersects.length; i++) {
     var obj = intersects[i].object;
     if (obj.userData.isNode) {
@@ -5239,9 +5439,25 @@ function onDblClick(event) {
         updateNodeInfoPanel(null);
         break;
       }
+      hitNodeId = nid;
+    } else if (obj.userData._isModulePlatform) {
+      // Double-click module platform → show module detail
+      showModuleInfo(obj.userData._moduleId);
+      autoCollapseLegend();
+      return;
     }
   }
   if (hitGroupNode) return;
+  
+  // v0.1.50: Double-click a node → show its module detail (left panel)
+  if (hitNodeId && nodeMeshes[hitNodeId] && nodeMeshes[hitNodeId].data) {
+    var modId = nodeMeshes[hitNodeId].data.module || detectModule(hitNodeId);
+    if (modId && modId !== 'other') {
+      showModuleInfo(modId);
+      autoCollapseLegend();
+      return;
+    }
+  }
 
   if (!selectedNodeId) return;
   var hitNode = false;
@@ -5253,7 +5469,11 @@ function onDblClick(event) {
     }
   }
   if (!hitNode) {
-    // Blank area double-click — deselect
+    // Blank area double-click — deselect and close all panels
+    var modPanel = document.getElementById('moduleInfoPanel');
+    if (modPanel) modPanel.style.display = 'none';
+    var globalPanel = document.getElementById('globalDiagnosisPanel');
+    // (fixed) keep globalDiagnosisPanel visible on deselect
     selectedNodeId = null;
     onOrbitUserInteract();
     applyDimming(null);
@@ -5400,12 +5620,36 @@ if (embeddedData && embeddedData.nodes) {
       });
     }
   }
+  // v0.1.50: Inject agent diagnosis data onto nodes and modules
+  if (embeddedData.agentDiagnosis) {
+    window._agentDiagnosisData = embeddedData.agentDiagnosis;
+    // Map node diagnosis data onto individual node data objects
+    if (embeddedData.agentDiagnosis.nodes && embeddedData.nodes) {
+      var diagNodes = embeddedData.agentDiagnosis.nodes;
+      embeddedData.nodes.forEach(function(n) {
+        for (var di = 0; di < diagNodes.length; di++) {
+          if (diagNodes[di].id === n.id || diagNodes[di].id === (n.id || '')) {
+            n.agentDiagnosis = diagNodes[di].agentDiagnosis;
+            break;
+          }
+        }
+      });
+    }
+    // Map module diagnosis data
+    if (embeddedData.agentDiagnosis.modules && window._moduleLayoutInfo) {
+      window._agentDiagnosisData.modules = embeddedData.agentDiagnosis.modules;
+    }
+  }
   buildScene(
     embeddedData.nodes,
     embeddedData.connections || [],
     ports,
     embeddedData.tags || {}
   );
+  // v0.1.50: Show global diagnosis panel at startup
+  setTimeout(function() {
+    showGlobalDiagnosis();
+  }, 500);
 } else {
 }
 

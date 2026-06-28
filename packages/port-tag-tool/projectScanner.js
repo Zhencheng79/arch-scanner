@@ -546,6 +546,7 @@ function discoverModules(projectPath, fileList) {
 
       childNodes.set(childId, {
         id: childId,
+        module: inferModule(childId),
         label: childLabel,
         layer: parentMod.layer,
         description: childDescription,
@@ -869,6 +870,7 @@ function buildDependencyNodes(pkg) {
   for (const [depName, depVersion] of Object.entries(allDeps)) {
     nodes.push({
       id: `dep-${depName}`,
+      module: inferModule(`dep-${depName}`),
       label: depName,
       layer: 'external',
       description: `External dependency: ${depName}@${depVersion}`,
@@ -892,6 +894,7 @@ function buildEntryNodes(projectPath, pkg) {
   // === 问题1修复：根节点 layer 改为 infrastructure ===
   nodes.push({
     id: 'project-root',
+    module: inferModule('project-root'),
     label: projectName,
     layer: 'infrastructure',
     description: projectDesc || `Project: ${projectName}`,
@@ -955,6 +958,24 @@ function buildQualityReport(projectPath, modules, nodes, connections, files) {
  * @param {number} [options.maxDepth=6] - 最大扫描深度
  * @returns {Object} { nodes, connections, ports, tags, conflicts, source, projectPath, quality }
  */
+
+/**
+ * Infer module name from node id.
+ * Rules:
+ *   - If id contains '--': use the part before the first '--'
+ *   - If id contains '-' (but no '--'): use the part before the first '-'
+ *   - Otherwise: use the entire id
+ *   - Underscores are NOT separators
+ */
+function inferModule(id) {
+  if (!id) return 'other';
+  var idx = id.indexOf('--');
+  if (idx !== -1 && idx > 0) return id.substring(0, idx);
+  idx = id.indexOf('-');
+  if (idx !== -1 && idx > 0) return id.substring(0, idx);
+  return id;
+}
+
 export async function scanProject(projectPath, options = {}) {
   const maxDepth = options.maxDepth || 6;
   const resolvedPath = resolvePath(projectPath);
@@ -1014,6 +1035,7 @@ export async function scanProject(projectPath, options = {}) {
     const layer = mod.layer || 'infrastructure';
     const node = {
       id: mod.id,
+      module: inferModule(mod.id),
       label: mod.label,
       layer: layer,
       description: mod.description,
