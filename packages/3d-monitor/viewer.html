@@ -1965,17 +1965,22 @@ var MODULE_CONFIG = { 'other': { label: '其他', color: 0x888888 } };
 window.MODULE_CONFIG = MODULE_CONFIG;
 // ─── v0.1.53+: 三级流水线 — 功能模块映射表 ─────────────────
 var FUNCTION_MODULE_MAP = {
-  "调度中心":        { technicalModules: ["kanban", "cron", "webhook", "dispatcher", "gateway"],    color: 0x4CAF50 },
-  "智能体核心":      { technicalModules: ["agent", "agent-lsp", "agent-transports", "acp_adapter"], color: 0x2196F3 },
-  "系统部":          { technicalModules: ["system", "devops", "cli", "config"],                      color: 0xFF9800 },
-  "研究部":          { technicalModules: ["research", "data-collection", "analysis"],                color: 0x9C27B0 },
-  "风控部":          { technicalModules: ["risk-control", "compliance"],                             color: 0xE91E63 },
-  "知识管理":        { technicalModules: ["knowledge-mgmt", "obsidian", "plur"],                     color: 0x00BCD4 },
-  "内容运营":        { technicalModules: ["operations", "content", "social-media"],                  color: 0x795548 },
-  "用户界面":        { technicalModules: ["web", "tui", "apps", "desktop"],                          color: 0x607D8B },
-  "other":           { technicalModules: [],                                                          color: 0x888888 }
+  "调度中心":        { technicalModules: ["gateway", "cron", "hermes_cli", "tui_gateway"],             color: 0x4CAF50 },
+  "智能体核心":      { technicalModules: ["agent", "acp_adapter"],                                      color: 0x2196F3 },
+  "用户界面":        { technicalModules: ["web", "ui", "apps", "website"],                              color: 0x607D8B },
+  "插件系统":        { technicalModules: ["plugins", "skills", "optional"],                             color: 0xFF9800 },
+  "测试":            { technicalModules: ["tests"],                                                     color: 0x9C27B0 },
+  "工具":            { technicalModules: ["tools", "scripts", "providers", "packaging", "project-root"], color: 0x795548 },
+  "other":           { technicalModules: [],                                                             color: 0x888888 }
 };
 window.FUNCTION_MODULE_MAP = FUNCTION_MODULE_MAP;
+console.log('[FUNC_MAP] modules:', Object.keys(FUNCTION_MODULE_MAP).join(', '));
+// Print all technical modules per function module
+var _fmKeys = Object.keys(FUNCTION_MODULE_MAP);
+_fmKeys.forEach(function(fk) {
+  var tms = (FUNCTION_MODULE_MAP[fk].technicalModules || []);
+  console.log('[FUNC_MAP] ' + fk + ':', tms.length, 'tech modules');
+});
 
 // 三级流水线显示级别："function" | "module" | "detail"
 var DISPLAY_LEVEL = "function";
