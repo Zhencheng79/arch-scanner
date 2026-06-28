@@ -5960,6 +5960,15 @@ function onDblClick(event) {
         hitGroupNode = true;
         var nData = nodeMeshes[nid].data;
         var grp = AGGREGATION.groupMap[nid];
+        // Debug: show what we found
+        var _dEl = document.getElementById('dblDebug');
+        if (!_dEl) {
+          _dEl = document.createElement('div');
+          _dEl.id = 'dblDebug';
+          _dEl.style.cssText = 'position:fixed;bottom:200px;right:16px;z-index:999;background:rgba(0,0,0,0.9);color:#ff0;font-size:11px;font-family:monospace;padding:6px 10px;border-radius:4px;border:1px solid #ff0;max-width:300px';
+          document.body.appendChild(_dEl);
+        }
+        _dEl.textContent = '双击: ' + nid + ' | _moduleName=' + (nData._moduleName||'none') + ' _functionName=' + (nData._functionName||'none') + ' | grp=' + (grp ? 'found' : 'NOT_FOUND');
         if (grp) {
           toggleGroup(nid, window._aggDataNodes, window._aggDataConns, {});
         }
