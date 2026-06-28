@@ -14,40 +14,81 @@ code{background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;font-si
 </div>
 <script>
 var t = Date.now();
+var statusEl = document.getElementById('status');
 
-// 1. 尝试加载已含诊断的JSON
-var xhr = new XMLHttpRequest();
-xhr.open('GET', 'port_tag_result_with_diagnosis.json?_t=' + t, false);
-try { xhr.send(); } catch(e) {}
-if (xhr.status === 200) {
-  localStorage.setItem('__EMBEDDED_DATA__', xhr.responseText);
+function setProgress(nodeCount) {
+  statusEl.innerHTML = '<h2>⏳ 正在加载架构数据 (' + nodeCount + '节点)...</h2>';
+}
+
+function jumpViewer(data) {
+  localStorage.setItem('__EMBEDDED_DATA__', data);
   window.location.href = 'viewer.html';
-} else {
-  // 2. 尝试加载原始扫描JSON（无诊断）
-  var xhr2 = new XMLHttpRequest();
-  xhr2.open('GET', 'port_tag_result.json?_t=' + t, false);
-  try { xhr2.send(); } catch(e) {}
-  if (xhr2.status === 200) {
-    // 有原始扫描数据但无诊断——提醒用户
-    document.getElementById('status').innerHTML =
-      '<h2>📡 扫描数据已加载</h2>' +
-      '<p>未找到诊断数据。运行以下命令生成：</p>' +
-      '<p><code>npm run diagnose < port_tag_result.json > port_tag_result_with_diagnosis.json</code></p>' +
-      '<p class="hint">或者直接加载原始数据（无颜色编码和诊断信息）</p>' +
-      '<p><button onclick="loadRaw()" style="background:#4FC3F7;border:none;border-radius:8px;padding:8px 24px;color:#fff;font-size:14px;cursor:pointer">加载原始数据</button></p>';
-    window._rawData = xhr2.responseText;
-  } else {
-    // 3. 没有任何数据
-    document.getElementById('status').innerHTML =
-      '<h2>⚠️ 未找到扫描数据</h2>' +
-      '<p>请先运行端口标签工具扫描项目：</p>' +
-      '<p><code>node cli.js --action json --project 项目路径 > port_tag_result.json</code></p>';
-  }
 }
 
 function loadRaw() {
   localStorage.setItem('__EMBEDDED_DATA__', window._rawData);
   window.location.href = 'viewer.html';
 }
+
+function showDiagnosePrompt(rawData) {
+  window._rawData = rawData;
+  statusEl.innerHTML =
+    '<h2>📡 扫描数据已加载</h2>' +
+    '<p>未找到诊断数据。运行以下命令生成：</p>' +
+    '<p><code>npm run diagnose < port_tag_result.json > port_tag_result_with_diagnosis.json</code></p>' +
+    '<p class="hint">或者直接加载原始数据（无颜色编码和诊断信息）</p>' +
+    '<p><button onclick="loadRaw()" style="background:#4FC3F7;border:none;border-radius:8px;padding:8px 24px;color:#fff;font-size:14px;cursor:pointer">加载原始数据</button></p>';
+}
+
+function showNoData() {
+  statusEl.innerHTML =
+    '<h2>⚠️ 未找到扫描数据</h2>' +
+    '<p>请先运行端口标签工具扫描项目：</p>' +
+    '<p><code>node cli.js --action json --project 项目路径 > port_tag_result.json</code></p>';
+}
+
+function getNodeCount(data) {
+  try {
+    var parsed = JSON.parse(data);
+    if (Array.isArray(parsed)) return parsed.length;
+    if (parsed && typeof parsed === 'object') {
+      var keys = Object.keys(parsed);
+      return keys.length;
+    }
+    return 0;
+  } catch(e) {
+    return 0;
+  }
+}
+
+(async function() {
+  try {
+    var resp = await fetch('port_tag_result_with_diagnosis.json?_t=' + t);
+    if (resp.ok) {
+      var text = await resp.text();
+      var count = getNodeCount(text);
+      setProgress(count);
+      jumpViewer(text);
+      return;
+    }
+  } catch(e) {
+    // fall through to next fallback
+  }
+
+  try {
+    var resp2 = await fetch('port_tag_result.json?_t=' + t);
+    if (resp2.ok) {
+      var rawText = await resp2.text();
+      var count2 = getNodeCount(rawText);
+      setProgress(count2);
+      showDiagnosePrompt(rawText);
+      return;
+    }
+  } catch(e) {
+    // fall through to no-data
+  }
+
+  showNoData();
+})();
 </script>
 </body></html>
