@@ -1963,6 +1963,25 @@ var LAYER_CONFIG = {
 var MODULE_PALETTE = [0x4CAF50, 0x2196F3, 0xFF9800, 0x9C27B0, 0xE91E63, 0x00BCD4, 0x795548, 0x607D8B, 0xFF5722, 0x3F51B5, 0x009688, 0xCDDC39];
 var MODULE_CONFIG = { 'other': { label: '其他', color: 0x888888 } };
 window.MODULE_CONFIG = MODULE_CONFIG;
+// ─── v0.1.53+: 三级流水线 — 功能模块映射表 ─────────────────
+var FUNCTION_MODULE_MAP = {
+  "调度中心":        { technicalModules: ["kanban", "cron", "webhook", "dispatcher", "gateway"],    color: 0x4CAF50 },
+  "智能体核心":      { technicalModules: ["agent", "agent-lsp", "agent-transports", "acp_adapter"], color: 0x2196F3 },
+  "系统部":          { technicalModules: ["system", "devops", "cli", "config"],                      color: 0xFF9800 },
+  "研究部":          { technicalModules: ["research", "data-collection", "analysis"],                color: 0x9C27B0 },
+  "风控部":          { technicalModules: ["risk-control", "compliance"],                             color: 0xE91E63 },
+  "知识管理":        { technicalModules: ["knowledge-mgmt", "obsidian", "plur"],                     color: 0x00BCD4 },
+  "内容运营":        { technicalModules: ["operations", "content", "social-media"],                  color: 0x795548 },
+  "用户界面":        { technicalModules: ["web", "tui", "apps", "desktop"],                          color: 0x607D8B },
+  "other":           { technicalModules: [],                                                          color: 0x888888 }
+};
+window.FUNCTION_MODULE_MAP = FUNCTION_MODULE_MAP;
+
+// 三级流水线显示级别："function" | "module" | "detail"
+var DISPLAY_LEVEL = "function";
+window.DISPLAY_LEVEL = DISPLAY_LEVEL;
+
+
 function detectModule(nodeId, nodeData) {
   if (nodeData && nodeData.module) return nodeData.module;
   if (!nodeId || nodeId === 'project-root') return 'other';
@@ -2575,6 +2594,143 @@ function extractDirPrefix(id) {
   var m4 = id.match(/^([a-zA-Z0-9_-]+)[.]/);
   if (m4) return m4[1];
   return null;
+}
+
+/**
+ * 三级流水线：功能模块级聚合
+ * 输入：技术模块级聚合后的 nodes/conns
+ * 输出：功能模块级聚合后的 nodes/conns
+ */
+function buildFunctionAggregation(nodes, conns) {
+  // 三级流水线：功能模块级聚合
+  // 1. 为每个节点查找其所属的功能模块
+  // 2. 将同一功能模块内的节点合并为一个组节点
+  // 3. 合并组之间的连接
+  // 4. 返回 { nodes, conns }
+  
+  // 如果数据量小，直接返回原数据
+  if (nodes.length < 15) {
+    return { nodes: nodes, conns: conns || [] };
+  }
+  
+  var funcBuckets = {};          // 功能模块名 -> 组成员
+  var unassignedNodes = [];       // 未归属到任何功能模块的节点
+  
+  // 构建反向映射：技术模块 -> 功能模块
+  var techToFunc = {};
+  Object.keys(FUNCTION_MODULE_MAP).forEach(function(funcName) {
+    var funcDef = FUNCTION_MODULE_MAP[funcName];
+    (funcDef.technicalModules || []).forEach(function(techMod) {
+      techToFunc[techMod] = funcName;
+    });
+  });
+  
+  nodes.forEach(function(n) {
+    // 先检查节点是否已有 _moduleName（技术模块）
+    var techMod = n._moduleName || detectModule(n.id, n);
+    var funcMod = techToFunc[techMod] || 'other';
+    
+    if (!funcBuckets[funcMod]) funcBuckets[funcMod] = [];
+    funcBuckets[funcMod].push(n);
+  });
+  
+  // 创建功能模块组节点
+  var funcGroupNodes = [];
+  var flatFuncNodes = [];
+  var funcGroupCounter = 0;
+  var funcChildGroupMap = {};
+  
+  Object.keys(funcBuckets).forEach(function(funcName) {
+    var children = funcBuckets[funcName];
+    if (children.length < 1) return;
+    
+    // 单节点不聚合
+    if (children.length === 1) {
+      children.forEach(function(c) { flatFuncNodes.push(c); });
+      return;
+    }
+    
+    var groupId = '__funcgroup_' + (funcGroupCounter++);
+    var childIds = children.map(function(c) { return c.id; });
+    
+    var funcDef = FUNCTION_MODULE_MAP[funcName];
+    var funcColor = funcDef ? (funcDef.color || 0x888888) : 0x888888;
+    var funcLabel = funcName === 'other' ? '其他' : funcName;
+    
+    // 收集子节点的统计信息
+    var techModSet = {};
+    children.forEach(function(c) {
+      var tm = c._moduleName || detectModule(c.id, c);
+      if (tm) techModSet[tm] = (techModSet[tm] || 0) + 1;
+    });
+    var techModSummary = Object.keys(techModSet).sort().map(function(tm) {
+      return tm + '(' + techModSet[tm] + ')';
+    }).join(', ');
+    
+    var funcGroupNode = {
+      id: groupId,
+      label: funcLabel,
+      chineseName: funcLabel,
+      description: funcLabel + ': ' + children.length + ' nodes (' + techModSummary + ')',
+      _isGroupNode: true,
+      _isFunctionGroup: true,
+      _functionName: funcName,
+      _childIds: childIds,
+      _expanded: false,
+      _childNodes: children,
+      _techModules: Object.keys(techModSet),
+      color: funcColor,
+    };
+    
+    childIds.forEach(function(cid) {
+      funcChildGroupMap[cid] = groupId;
+    });
+    
+    funcGroupNodes.push(funcGroupNode);
+  });
+  
+  // 合并结果
+  var resultNodes = funcGroupNodes.concat(flatFuncNodes);
+  
+  // 构建功能模块级别的连接
+  var resultConns = [];
+  var seenConns = {};
+  (conns || []).forEach(function(c) {
+    var fromGroup = funcChildGroupMap[c.from];
+    var toGroup = funcChildGroupMap[c.to];
+    
+    if (fromGroup && toGroup) {
+      var key = fromGroup + '->' + toGroup;
+      if (!seenConns[key]) {
+        seenConns[key] = true;
+        resultConns.push({
+          from: fromGroup,
+          to: toGroup,
+          label: c.label || '',
+          flowType: c.flowType || 'data',
+          _bundleCount: 1,
+        });
+      }
+    } else if (fromGroup) {
+      resultConns.push({
+        from: fromGroup,
+        to: c.to,
+        label: c.label || '',
+        flowType: c.flowType || 'data',
+      });
+    } else if (toGroup) {
+      resultConns.push({
+        from: c.from,
+        to: toGroup,
+        label: c.label || '',
+        flowType: c.flowType || 'data',
+      });
+    } else {
+      resultConns.push(c);
+    }
+  });
+  
+  return { nodes: resultNodes, conns: resultConns };
 }
 
 // ─── Expand/collapse a group node ──────────────────────────────
@@ -3926,7 +4082,13 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   // v0.1.51: Use module-level aggregation when USE_MODULE_LAYOUT and >= 20 nodes
   var aggResult;
   if (USE_MODULE_LAYOUT && dataNodes.length >= 20) {
-    aggResult = buildModuleAggregation(dataNodes, dataConns);
+    // 三级流水线：先按功能模块聚合，再按技术模块聚合
+    var level2 = buildModuleAggregation(dataNodes, dataConns);
+    if (DISPLAY_LEVEL === 'function') {
+      aggResult = buildFunctionAggregation(level2.nodes, level2.conns);
+    } else {
+      aggResult = level2;
+    }
   } else {
     aggResult = buildAggregation(dataNodes, dataConns);
   }

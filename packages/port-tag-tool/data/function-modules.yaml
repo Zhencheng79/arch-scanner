@@ -1,0 +1,63 @@
+# function-modules.yaml — Hermes Agent 功能模块 → 技术模块映射表
+# Created by Phase 1 task
+
+modules:
+  调度中心:
+    description: 任务调度、事件分发、网关管理
+    technical_modules:
+      - kanban
+      - cron
+      - webhook
+      - dispatcher
+      - gateway
+
+  智能体核心:
+    description: 智能推理、意图识别、会话管理
+    technical_modules:
+      - agent
+      - agent-lsp
+      - agent-transports
+      - acp_adapter
+
+  系统部:
+    description: 系统操作、DevOps、命令行
+    technical_modules:
+      - system
+      - devops
+      - cli
+      - config
+
+  研究部:
+    description: 投资研究、数据采集、数据分析
+    technical_modules:
+      - research
+      - data-collection
+      - analysis
+
+  风控部:
+    description: 风险控制、合规审查
+    technical_modules:
+      - risk-control
+      - compliance
+
+  知识管理:
+    description: 知识库、笔记、联网查询
+    technical_modules:
+      - knowledge-mgmt
+      - obsidian
+      - plur
+
+  内容运营:
+    description: 运营操作、内容创作、社交媒
+    technical_modules:
+      - operations
+      - content
+      - social-media
+
+  用户界面:
+    description: 用户交互界面、桌面应用
+    technical_modules:
+      - web
+      - tui
+      - apps
+      - desktop
