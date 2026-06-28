@@ -4302,11 +4302,24 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
             var _cGeo = new THREE.BoxGeometry(_cSize, _cSize * 0.5, _cSize);
             var _cMat = new THREE.MeshStandardMaterial({ color: resolveNodeColor(_cData), roughness: 0.5, metalness: 0.1 });
             var _cMesh = new THREE.Mesh(_cGeo, _cMat);
+            // Position relative to parent function node
+            var _parentPos = positions[n.id] || { x: 0, y: 0, z: 0 };
             _cMesh.position.set(_cPos.x, _cPos.y, _cPos.z);
             _cMesh.visible = false;
             _cMesh.userData.isNode = true;
+            _cMesh.userData.nodeId = cid;
             nodeGroup.add(_cMesh);
             nodeMeshes[cid] = { mesh: _cMesh, data: _cData, ports: [], edges: [] };
+            // Also create CSS2D label
+            var _cLabelDiv = document.createElement('div');
+            _cLabelDiv.className = 'label-2d';
+            _cLabelDiv.textContent = _cData.label || cid;
+            _cLabelDiv.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.7);text-shadow:0 0 6px rgba(0,0,0,0.9);pointer-events:none;white-space:nowrap';
+            var _cLabel = new THREE.CSS2DObject(_cLabelDiv);
+            _cLabel.position.set(_cPos.x, _cPos.y + 1.0, _cPos.z);
+            _cLabel.visible = false;
+            _cLabel.userData.nodeId = cid;
+            nodeGroup.add(_cLabel);
           }
         }
       });
