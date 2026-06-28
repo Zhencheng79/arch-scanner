@@ -162,7 +162,7 @@ function determineNodeRole(nodeId, connInfo) {
  * - risk:       死代码存根（skeleton/stub）、废弃代码（deprecated）、
  *               过时版本号脚本（v0117/0_old/legacy）
  * - warning:    架构组件零连接（孤立组件）
- * - overloaded: 连接数 ≥ top 5% 阈值
+ * - core: 核心枢纽（连接数≥top5%）
  * - healthy:    默认状态
  */
 function determineNodeStatus(nodeId, nodeData, connInfo, overloadedThreshold) {
@@ -202,9 +202,9 @@ function determineNodeStatus(nodeId, nodeData, connInfo, overloadedThreshold) {
     return 'healthy';
   }
 
-  // === overloaded 判定 ===
+  // === core 判定 ===
   if (connInfo && connInfo.total >= overloadedThreshold) {
-    return 'overloaded';
+    return 'core';
   }
 
   // === healthy（默认）===
@@ -212,7 +212,7 @@ function determineNodeStatus(nodeId, nodeData, connInfo, overloadedThreshold) {
 }
 
 /**
- * 计算 overloaded 阈值（架构组件连接数的 95 百分位）
+ * 计算 core 阈值（架构组件连接数的 95 百分位）
  */
 function computeOverloadedThreshold(connMap, nodes) {
   const connCounts = [];
@@ -251,7 +251,7 @@ function groupNodesByModule(nodes) {
  * （仅考虑架构组件节点的诊断结果）
  */
 function determineModuleStatus(nodes) {
-  const statusRank = { healthy: 0, warning: 1, overloaded: 2, risk: 3, 'needs-split': 4 };
+  const statusRank = { healthy: 0, warning: 1, core: 2, risk: 3, 'needs-split': 4 };
   let worst = 'healthy';
   let worstRank = 0;
   for (const n of nodes) {
@@ -275,7 +275,8 @@ function determineModuleStatus(nodes) {
  * - 基础分 10.0
  * - 每个 warning 架构组件 -0.3
  * - 每个 risk 架构组件 -0.5
- * - 每个 overloaded/needs-split 架构组件 -0.5
+ * - 每个 risk/needs-split 架构组件 -0.5
+ * - core 是正面状态，不扣分
  */
 function computeGlobalScore(nodes) {
   let score = 10.0;
@@ -289,7 +290,6 @@ function computeGlobalScore(nodes) {
       case 'risk':
         score -= 0.5;
         break;
-      case 'overloaded':
       case 'needs-split':
         score -= 0.5;
         break;
@@ -335,7 +335,7 @@ async function main() {
   // ---- 节点级标注 ----
 
   // 诊断文本生成：状态/角色中文标签
-  const _sl = { healthy: '健康', warning: '警告', overloaded: '过载', risk: '风险', 'needs-split': '需拆分' };
+  const _sl = { healthy: '健康', warning: '警告', core: '核心', risk: '风险', 'needs-split': '需拆分' };
   const _rl = { leaf: '终端', normal: '普通', hub: '枢纽', bridge: '桥接' };
 
   // 为每个节点添加 agentDiagnosis 字段
@@ -356,7 +356,7 @@ async function main() {
       suggestions: (() => {
         const s = [];
         if (status === 'warning') s.push(`孤立组件：${n.id} 零连接，检查是否缺少引用或为废弃代码`);
-        if (status === 'overloaded') s.push(`${n.id} 连接数过高（${_t}），考虑拆分为子模块`);
+        if (status === 'core') s.push(`${n.id} 核心枢纽节点，承担最多连接，架构关键节点，建议监控连接健康度`);
         if (status === 'risk') s.push(`${n.id} 标记为存根/废弃代码，建议清理或重构`);
         if (role === 'bridge') s.push(`${n.id} 跨模块桥接节点，关注其稳定性`);
         if (status === 'healthy' && role === 'hub') s.push(`${n.id} 核心枢纽节点，建议监控连接健康度`);
@@ -387,7 +387,7 @@ async function main() {
         detail: `模块 ${prefix} 包含${group.nodes.length}个节点，综合状态为${_sl[mStatus] || mStatus}${group.layer ? `，所属层级：${group.layer}` : ''}`,
         suggestions: (() => {
           const s = [];
-          if (mStatus === 'warning' || mStatus === 'overloaded' || mStatus === 'risk') {
+          if (mStatus === 'warning' || mStatus === 'core' || mStatus === 'risk') {
             const cnt = group.nodes.filter(n => n.agentDiagnosis && n.agentDiagnosis.status === mStatus).length;
             s.push(`${prefix} 有 ${cnt} 个节点处于 ${_sl[mStatus]} 状态`);
           }
@@ -416,23 +416,23 @@ async function main() {
         issues: (() => {
           const issues = [];
           const wc = modules.filter(m => m.agentDiagnosis.status === 'warning').length;
-          const oc = modules.filter(m => m.agentDiagnosis.status === 'overloaded').length;
+          const cc = modules.filter(m => m.agentDiagnosis.status === 'core').length;
           const rc = modules.filter(m => m.agentDiagnosis.status === 'risk').length;
           if (wc > 0) issues.push(`${wc} 个模块处于警告状态`);
-          if (oc > 0) issues.push(`${oc} 个模块处于过载状态`);
+          if (cc > 0) issues.push(`${cc} 个模块处于核心枢纽状态`);
           if (rc > 0) issues.push(`${rc} 个模块处于风险状态`);
           if (issues.length === 0 && globalScore < 7) issues.push('全局评分偏低，建议系统性检查架构');
           return issues;
         })(),
-        summary: `项目状态：${modules.length}个模块，${nodes.length}个节点。${modules.filter(m => m.agentDiagnosis.status === 'warning').length}个模块处于警告状态，${modules.filter(m => m.agentDiagnosis.status === 'overloaded').length}个模块处于过载状态。`,
-        detail: `全局评分：${globalScore}/10。警告模块${modules.filter(m => m.agentDiagnosis.status === 'warning').length}个，过载模块${modules.filter(m => m.agentDiagnosis.status === 'overloaded').length}个，风险模块${modules.filter(m => m.agentDiagnosis.status === 'risk').length}个。评分规则：基础10分，每个警告减0.3分，每个过载/风险减0.5分。`,
+        summary: `项目状态：${modules.length}个模块，${nodes.length}个节点。${modules.filter(m => m.agentDiagnosis.status === 'warning').length}个模块处于警告状态，${modules.filter(m => m.agentDiagnosis.status === 'core').length}个核心枢纽模块（连接密集，架构关键节点）。`,
+        detail: `全局评分：${globalScore}/10。警告模块${modules.filter(m => m.agentDiagnosis.status === 'warning').length}个，核心枢纽模块${modules.filter(m => m.agentDiagnosis.status === 'core').length}个，风险模块${modules.filter(m => m.agentDiagnosis.status === 'risk').length}个。评分规则：基础10分，每个警告减0.3分，每个风险/需拆分减0.5分。`,
         suggestions: (() => {
           const s = [];
           const wc = modules.filter(m => m.agentDiagnosis.status === 'warning').length;
-          const oc = modules.filter(m => m.agentDiagnosis.status === 'overloaded').length;
+          const cc = modules.filter(m => m.agentDiagnosis.status === 'core').length;
           const rc = modules.filter(m => m.agentDiagnosis.status === 'risk').length;
           if (wc > 0) s.push(`有 ${wc} 个模块处于警告状态，建议优先审查孤立组件`);
-          if (oc > 0) s.push(`有 ${oc} 个模块处于过载状态，考虑拆分为子模块`);
+          if (cc > 0) s.push(`有 ${cc} 个核心枢纽模块（连接密集，架构关键节点）`);
           if (rc > 0) s.push(`有 ${rc} 个模块含风险节点，建议清理存根/废弃代码`);
           if (globalScore < 7) s.push(`全局评分较低（${globalScore}/10），建议系统性架构重构`);
           if (globalScore >= 9) s.push(`全局架构健康度良好（${globalScore}/10）`);

@@ -78,7 +78,7 @@ canvas{display:block}
 .agent-badge-healthy{background:rgba(76,175,80,0.2);border:1px solid rgba(76,175,80,0.4);color:#4CAF50}
 .agent-badge-warning{background:rgba(255,152,0,0.2);border:1px solid rgba(255,152,0,0.4);color:#FF9800}
 .agent-badge-risk{background:rgba(244,67,54,0.2);border:1px solid rgba(244,67,54,0.4);color:#F44336}
-.agent-badge-overloaded{background:rgba(183,28,28,0.2);border:1px solid rgba(183,28,28,0.4);color:#B71C1C}
+.agent-badge-core{background:rgba(255,215,0,0.2);border:1px solid rgba(255,215,0,0.4);color:#FFD700}
 .agent-badge-needs-split{background:rgba(255,152,0,0.2);border:1px solid rgba(255,152,0,0.4);color:#FF9800}
 .agent-badge-hub{background:rgba(255,215,0,0.2);border:1px solid rgba(255,215,0,0.4);color:#FFD700}
 .agent-badge-bridge{background:rgba(156,39,176,0.2);border:1px solid rgba(156,39,176,0.4);color:#9C27B0}
@@ -151,7 +151,7 @@ body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 <div class="legend-sep"></div>
 <div class="legend-row"><span class="legend-row-label">节点角色</span><span class="legend-dot" style="background:#FFD700;border:1px solid #FFD700"></span>枢纽<span style="color:#888">（金）</span> <span class="legend-dot" style="background:#9C27B0;margin-left:4px;border:1px solid #9C27B0"></span>桥梁<span style="color:#888">（紫）</span> <span class="legend-dot" style="background:#9E9E9E;margin-left:4px;border:1px solid #9E9E9E"></span>叶子<span style="color:#888">（灰）</span> <span class="legend-dot" style="background:#FFFFFF;margin-left:4px;border:1px solid #FFFFFF"></span>普通<span style="color:#888">（白）</span></div>
 <div class="legend-sep"></div>
-<div class="legend-row"><span class="legend-row-label">模块状态</span><span class="legend-dot" style="background:#4CAF50"></span>健康 <span class="legend-dot" style="background:#B71C1C;margin-left:4px"></span>过载 <span class="legend-dot" style="background:#FF9800;margin-left:4px"></span>建议拆分</div>
+<div class="legend-row"><span class="legend-row-label">模块状态</span><span class="legend-dot" style="background:#4CAF50"></span>健康 <span class="legend-dot" style="background:#FFD700;margin-left:4px"></span>核心 <span class="legend-dot" style="background:#FF9800;margin-left:4px"></span>建议拆分</div>
 <div class="legend-sep"></div>
 <div class="legend-row"><span class="legend-row-label">健康状态</span><span class="legend-dot" style="background:#4CAF50"></span>正常 <span class="legend-dot" style="background:#FF9800;margin-left:4px"></span>警告 <span class="legend-dot" style="background:#F44336;margin-left:4px"></span>风险</div>
 <div class="legend-sep"></div>
@@ -2047,7 +2047,7 @@ function resolveModuleColor(n) {
 // Agent diagnosis colors
 var AGENT_STATUS_COLORS = { healthy: 0x4CAF50, warning: 0xFF9800, risk: 0xF44336 };
 var AGENT_ROLE_COLORS  = { hub: 0xFFD700, bridge: 0x9C27B0, normal: 0xFFFFFF, leaf: 0x9E9E9E };
-var MODULE_STATUS_COLORS = { healthy: 0x4CAF50, overloaded: 0xB71C1C, 'needs-split': 0xFF9800 };
+var MODULE_STATUS_COLORS = { healthy: 0x4CAF50, core: 0xFFD700, 'needs-split': 0xFF9800 };
 
 function getAgentDiagnosis(nodeData) {
   // Safely extract agentDiagnosis from node data, with fallbacks
@@ -2410,7 +2410,7 @@ function buildModuleAggregation(nodes, conns) {
         if ((_adMod.name === mod || _adMod.id === mod) && _adMod.agentDiagnosis && _adMod.agentDiagnosis.status) {
           groupNode._diagnosisStatus = _adMod.agentDiagnosis.status;
           groupNode.agentDiagnosis = _adMod.agentDiagnosis;
-          var _stClrMap = { healthy: 0x4CAF50, warning: 0xFF9800, risk: 0xF44336, overloaded: 0xB71C1C };
+          var _stClrMap = { healthy: 0x4CAF50, warning: 0xFF9800, risk: 0xF44336, core: 0xFFD700 };
           if (_stClrMap[_adMod.agentDiagnosis.status] !== undefined) {
             groupNode.color = _stClrMap[_adMod.agentDiagnosis.status];
           }
@@ -4219,7 +4219,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         for (var mi = 0; mi < window._agentDiagnosisData.modules.length; mi++) {
           var mDiag = window._agentDiagnosisData.modules[mi];
           if ((mDiag.name === modId || mDiag.id === modId) && mDiag.agentDiagnosis && mDiag.agentDiagnosis.status) {
-            var modStColor = { healthy: 0x4CAF50, overloaded: 0xB71C1C, 'needs-split': 0xFF9800 }[mDiag.agentDiagnosis.status];
+            var modStColor = { healthy: 0x4CAF50, core: 0xFFD700, 'needs-split': 0xFF9800 }[mDiag.agentDiagnosis.status];
             if (modStColor !== undefined) {
               mc = modStColor;
             }
@@ -4283,7 +4283,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
           if ((_mD.name === modId || _mD.id === modId) && _mD.agentDiagnosis) {
             var _st = _mD.agentDiagnosis.status;
             if (_st) {
-              var _emojiMap = {healthy: '\uD83D\uDCD7', warning: '\uD83D\uDCD9', risk: '\uD83D\uDCD5', overloaded: '\uD83D\uDD25', 'needs-split': '\uD83D\uDD25'};
+              var _emojiMap = {healthy: '\uD83D\uDCD7', warning: '\uD83D\uDCD9', risk: '\uD83D\uDCD5', core: '\u2B50', 'needs-split': '\uD83D\uDD25'};
               modEmoji = _emojiMap[_st] || '';
             }
             break;
@@ -5631,9 +5631,9 @@ function showModuleInfo(modId) {
         html += '<hr class="nip-divider">';
         html += '<div class="nip-section">Agent 诊断</div>';
         if (_ag.status) {
-          var _emojiMap2 = {healthy: '📗', warning: '📙', risk: '📕', overloaded: '🔥', 'needs-split': '🔥'};
-          var _stLabelMap2 = {healthy: '健康', warning: '预警', risk: '风险', overloaded: '过载', 'needs-split': '需拆分'};
-          var _stColorMap2 = {healthy: '#4CAF50', warning: '#FF9800', risk: '#F44336', overloaded: '#B71C1C', 'needs-split': '#FF9800'};
+          var _emojiMap2 = {healthy: '📗', warning: '📙', risk: '📕', core: '⭐', 'needs-split': '🔥'};
+          var _stLabelMap2 = {healthy: '健康', warning: '预警', risk: '风险', core: '核心', 'needs-split': '需拆分'};
+          var _stColorMap2 = {healthy: '#4CAF50', warning: '#FF9800', risk: '#F44336', core: '#FFD700', 'needs-split': '#FF9800'};
           var _em = _emojiMap2[_ag.status] || '';
           var _sl2 = _stLabelMap2[_ag.status] || _ag.status;
           var _sc2 = _stColorMap2[_ag.status] || '#888';
