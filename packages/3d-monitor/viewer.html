@@ -2612,8 +2612,8 @@ function showGroupChildren(grp) {
   edgeLines.forEach(function(ei) {
     var inGroup = grp.childIds.indexOf(ei.fromId) >= 0 && grp.childIds.indexOf(ei.toId) >= 0;
     if (inGroup) {
-      if (ei.coreTube) ei.coreTube.visible = true;
-      if (ei.glowTube) ei.glowTube.visible = true;
+      if (ei.line) ei.line.visible = true;
+      if (ei.glowLine) ei.glowLine.visible = true;
       // CSS2D labels
       if (ei._labelObj) ei._labelObj.visible = true;
     }
@@ -2636,8 +2636,8 @@ function hideGroupChildren(grp) {
   edgeLines.forEach(function(ei) {
     var inGroup = grp.childIds.indexOf(ei.fromId) >= 0 && grp.childIds.indexOf(ei.toId) >= 0;
     if (inGroup) {
-      if (ei.coreTube) ei.coreTube.visible = false;
-      if (ei.glowTube) ei.glowTube.visible = false;
+      if (ei.line) ei.line.visible = false;
+      if (ei.glowLine) ei.glowLine.visible = false;
       if (ei._labelObj) ei._labelObj.visible = false;
     }
   });
@@ -2656,8 +2656,8 @@ function hideGroupNode(grp) {
   // Hide group-level bus edges that go to/from this group
   edgeLines.forEach(function(ei) {
     if (ei.fromId === grp.groupId || ei.toId === grp.groupId) {
-      if (ei.coreTube) ei.coreTube.visible = false;
-      if (ei.glowTube) ei.glowTube.visible = false;
+      if (ei.line) ei.line.visible = false;
+      if (ei.glowLine) ei.glowLine.visible = false;
       if (ei._labelObj) ei._labelObj.visible = false;
     }
   });
@@ -2676,8 +2676,8 @@ function showGroupNode(grp) {
   // Show group-level bus edges
   edgeLines.forEach(function(ei) {
     if (ei.fromId === grp.groupId || ei.toId === grp.groupId) {
-      if (ei.coreTube) ei.coreTube.visible = true;
-      if (ei.glowTube) ei.glowTube.visible = true;
+      if (ei.line) ei.line.visible = true;
+      if (ei.glowLine) ei.glowLine.visible = true;
       if (ei._labelObj) ei._labelObj.visible = true;
     }
   });
@@ -4454,10 +4454,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
   // ─── Build Edges ───────────────────────────────────────
 
-  // All edges rendered as merged LineSegments
-  var _minorEdgePts = [];
-  var _minorEdgeColors = [];
-  var _minorLineOpacity = 0.35;
+  // All edges rendered as individual LineSegments per edge (not merged — need per-edge control for interactions)
+  var _edgeBaseOpacity = 0.35;
   if (dataConns) {
     dataConns.forEach(function(conn) {
       var fromData = nodeMap[conn.from];
@@ -4576,20 +4574,28 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (_crossModEdge) {
         _crossModColorHex = FLOW_COLORS[flowType] || 0x60A5FA;
       }
-      // All edges use merged LineSegments (no TubeGeometry)
-      var glowTube = null, coreTube = null;
-      // Collect edge segments into merged LineSegments buffer
+      // All edges use individual LineSegments per edge (no TubeGeometry)
+      // Build per-edge LineSegments for individual opacity/visibility control
       var _minorPts = curve.getPoints(8);
       var _minorC = new THREE.Color(_crossModColorHex);
+      var _perEdgePositions = [];
       for (var _pi = 0; _pi < _minorPts.length - 1; _pi++) {
-        _minorEdgePts.push(_minorPts[_pi].x, _minorPts[_pi].y, _minorPts[_pi].z);
-        _minorEdgePts.push(_minorPts[_pi+1].x, _minorPts[_pi+1].y, _minorPts[_pi+1].z);
-        _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
-        _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
+        _perEdgePositions.push(_minorPts[_pi].x, _minorPts[_pi].y, _minorPts[_pi].z);
+        _perEdgePositions.push(_minorPts[_pi+1].x, _minorPts[_pi+1].y, _minorPts[_pi+1].z);
       }
+      var _perGeo = new THREE.BufferGeometry();
+      _perGeo.setAttribute('position', new THREE.Float32BufferAttribute(_perEdgePositions, 3));
+      var _perMat = new THREE.LineBasicMaterial({
+        color: _crossModColorHex,
+        transparent: true,
+        opacity: _edgeBaseOpacity,
+      });
+      var _perSeg = new THREE.LineSegments(_perGeo, _perMat);
+      edgeGroup.add(_perSeg);
+
       // Store edge data
       var edgeInfo = {
-        line: null,
+        line: _perSeg,
         glowLine: null,
         glowTube: null,
         coreTube: null,
@@ -4624,20 +4630,6 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (nodeMeshes[conn.from]) nodeMeshes[conn.from].edges.push(edgeInfo);
       if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
     });
-
-    // All edges rendered as merged LineSegments
-    if (_minorEdgePts.length > 0) {
-      var _minorLineGeo = new THREE.BufferGeometry();
-      _minorLineGeo.setAttribute('position', new THREE.Float32BufferAttribute(_minorEdgePts, 3));
-      _minorLineGeo.setAttribute('color', new THREE.Float32BufferAttribute(_minorEdgeColors, 3));
-      var _minorLineMat = new THREE.LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        opacity: _minorLineOpacity,
-      });
-      var _minorLineSeg = new THREE.LineSegments(_minorLineGeo, _minorLineMat);
-      edgeGroup.add(_minorLineSeg);
-    }
   }
 
   document.getElementById('nodeCount').textContent = (AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)')) + (AGGREGATION.highDensity ? ' [dense]' : '');
@@ -4807,10 +4799,10 @@ function getIntersects(event) {
       if (c.isMesh && c.userData._isModulePlatform) allMeshes.push(c);
     });
   }
-  // P0: Include edge tubes for bundleCount hover detection
+  // P0: Include edge LineSegments for hover detection
   if (edgeGroup) {
     edgeGroup.children.forEach(function(c) {
-      if (c.isMesh) allMeshes.push(c);
+      if (c.isMesh || c.isLineSegments) allMeshes.push(c);
     });
   }
   return raycaster.intersectObjects(allMeshes);
@@ -4836,11 +4828,11 @@ function onMouseMove(event) {
         break;
       }
     }
-    // Edge hover — tube-based detection disabled (edges render as merged LineSegments)
+    // Edge hover — detect via per-edge LineSegments
     if (edgeLines && edgeLines.length > 0) {
       for (var _ei = 0; _ei < edgeLines.length; _ei++) {
         var _eInfo = edgeLines[_ei];
-        if (_eInfo.glowTube === obj || _eInfo.coreTube === obj) {
+        if (_eInfo.line === obj) {
           found = { id: 'edge:' + _eInfo.fromId + '->' + _eInfo.toId, _isEdge: true, _edgeInfo: _eInfo };
           break;
         }
@@ -5034,8 +5026,6 @@ function applyDimming(selectedId) {
       var glowOpacity = isConnected ? 0.25 : 0.05;
       var coreOpacity = isConnected ? 0.6 : 0.2;
 
-      if (ei.coreTube) ei.coreTube.material.opacity = coreOpacity;
-      if (ei.glowTube) ei.glowTube.material.opacity = glowOpacity;
       if (ei.line) ei.line.material.opacity = lineOpacity;
       if (ei.glowLine) ei.glowLine.material.opacity = glowOpacity;
     });
@@ -5078,8 +5068,6 @@ function applyDimming(selectedId) {
     });
 
     edgeLines.forEach(function(ei) {
-      if (ei.coreTube) ei.coreTube.material.opacity = 0.25;
-      if (ei.glowTube) ei.glowTube.material.opacity = 0.25;
       if (ei.line) ei.line.material.opacity = 0.6;
       if (ei.glowLine) ei.glowLine.material.opacity = 0.25;
       if (ei._labelObj) {
@@ -5858,7 +5846,6 @@ function animate() {
   edgeLines.forEach(function(ei, idx) {
     var pulse = 0.5 + 0.3 * Math.sin(t * 0.8 + idx * 0.5);
     if (ei.glowLine) ei.glowLine.material.opacity = 0.15 + 0.2 * pulse;
-    if (ei.glowTube) ei.glowTube.material.opacity = 0.15 + 0.2 * pulse;
   });
 
   // Flow dot animation
