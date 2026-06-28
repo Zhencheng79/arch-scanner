@@ -199,7 +199,7 @@ function determineNodeStatus(nodeId, nodeData, connInfo, overloadedThreshold) {
   }
   // 外部依赖零连接
   if (isExternalDep(nodeData) && connInfo && connInfo.total === 0) {
-    return 'warning';
+    return 'healthy';
   }
 
   // === overloaded 判定 ===
@@ -223,7 +223,7 @@ function computeOverloadedThreshold(connMap, nodes) {
   }
   connCounts.sort((a, b) => a - b);
   if (connCounts.length === 0) return Infinity;
-  const idx = Math.min(Math.floor(connCounts.length * 0.95), connCounts.length - 1);
+  const idx = Math.min(Math.floor(connCounts.length * 0.99), connCounts.length - 1);
   return connCounts[idx];
 }
 
