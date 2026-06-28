@@ -3620,136 +3620,6 @@ function findObstacles(fromId, toId, nodeIds, positions) {
 // ═══════════════════════════════════════════════════════════════════
 // Detect crossing pipes in XZ plane and assign elevation offsets so
 // crossing pipes are vertically separated, mimicking PCB routing.
-var pipeElevations = {};  // "fromId->toId" -> { yBump: N, zOff: M } 3D offset (v0.1.12)
-var pipeCrossings = [];   // metadata about which pipes cross
-
-function computePipeCrossings(allConns, positions) {
-  pipeElevations = {};
-  pipeCrossings = [];
-
-  // Build segment list with full 3D info
-  var segs = [];
-  allConns.forEach(function(conn) {
-    var fp = positions[conn.from];
-    var tp = positions[conn.to];
-    if (!fp || !tp) return;
-    var key = conn.from + '->' + conn.to;
-    segs.push({
-      key: key, from: conn.from, to: conn.to,
-      fromPos: fp, toPos: tp,
-      dx: tp.x - fp.x, dy: tp.y - fp.y, dz: tp.z - fp.z,
-    });
-  });
-
-  // v0.1.13: True 3D crossing — check intersection in XY, XZ, and YZ planes
-  for (var i = 0; i < segs.length; i++) {
-    for (var j = i + 1; j < segs.length; j++) {
-      var a = segs[i], b = segs[j];
-      // Skip if they share an endpoint
-      if (a.from === b.from || a.from === b.to || a.to === b.from || a.to === b.to) continue;
-
-      // Check XY plane intersection
-      var xyCross = lineIntersect2D(
-        a.fromPos.x, a.fromPos.y, a.toPos.x, a.toPos.y,
-        b.fromPos.x, b.fromPos.y, b.toPos.x, b.toPos.y
-      );
-      // Check XZ plane intersection
-      var xzCross = lineIntersect2D(
-        a.fromPos.x, a.fromPos.z, a.toPos.x, a.toPos.z,
-        b.fromPos.x, b.fromPos.z, b.toPos.x, b.toPos.z
-      );
-      // Check YZ plane intersection
-      var yzCross = lineIntersect2D(
-        a.fromPos.y, a.fromPos.z, a.toPos.y, a.toPos.z,
-        b.fromPos.y, b.fromPos.z, b.toPos.y, b.toPos.z
-      );
-
-      // True 3D crossing: both XY and XZ intersect, OR the pipes pass close enough in 3D
-      var close3D = false;
-      var samplePtsA = 8;
-      var samplePtsB = 8;
-      for (var si = 1; si < samplePtsA && !close3D; si++) {
-        var ta = si / samplePtsA;
-        var pax = a.fromPos.x + (a.toPos.x - a.fromPos.x) * ta;
-        var pay = a.fromPos.y + (a.toPos.y - a.fromPos.y) * ta;
-        var paz = a.fromPos.z + (a.toPos.z - a.fromPos.z) * ta;
-        for (var sj = 1; sj < samplePtsB && !close3D; sj++) {
-          var tb = sj / samplePtsB;
-          var pbx = b.fromPos.x + (b.toPos.x - b.fromPos.x) * tb;
-          var pby = b.fromPos.y + (b.toPos.y - b.fromPos.y) * tb;
-          var pbz = b.fromPos.z + (b.toPos.z - b.fromPos.z) * tb;
-          var dx3 = pax - pbx, dy3 = pay - pby, dz3 = paz - pbz;
-          if (dx3*dx3 + dy3*dy3 + dz3*dz3 < 0.64) { // < 0.8 distance threshold
-            close3D = true;
-          }
-        }
-      }
-
-      if (!close3D) continue;
-
-      pipeCrossings.push({
-        pipeA: a.key, pipeB: b.key,
-        a: a, b: b,
-      });
-    }
-  }
-
-  // v0.1.13: Assign true 3D offsets — Y elevation AND Z lateral shift for each crossing pipe
-  var crossingCount = {};
-  pipeCrossings.forEach(function(cr) {
-    crossingCount[cr.pipeA] = (crossingCount[cr.pipeA] || 0) + 1;
-    crossingCount[cr.pipeB] = (crossingCount[cr.pipeB] || 0) + 1;
-  });
-
-  allConns.forEach(function(conn) {
-    var key = conn.from + '->' + conn.to;
-    var cnt = crossingCount[key] || 0;
-    // v0.1.13: Randomize initial Z offset so not all pipes share the same plane
-    var hash = 0;
-    for (var _hi = 0; _hi < key.length; _hi++) hash = ((hash << 5) - hash) + key.charCodeAt(_hi);
-    var zRand = ((hash % 17) - 8) / 10; // -0.8 to 0.8
-    pipeElevations[key] = { yBump: cnt * 0.25, zOff: zRand };
-  });
-
-  // For each crossing pair, assign Z offsets so one pipe goes +Z and the other goes -Z
-  pipeCrossings.forEach(function(cr) {
-    var elA = pipeElevations[cr.pipeA] || { yBump: 0, zOff: 0 };
-    var elB = pipeElevations[cr.pipeB] || { yBump: 0, zOff: 0 };
-    var cntA = crossingCount[cr.pipeA] || 0;
-    var cntB = crossingCount[cr.pipeB] || 0;
-
-    // Z separation: pipe with more crossings keeps its zOff, the other shifts opposite
-    var zSep = 0.8 + cntB * 0.1;
-    if (cntA >= cntB) {
-      elB.zOff -= zSep;
-    } else {
-      elA.zOff += zSep;
-    }
-    // Y separation: ensure minimum 0.5 vertical gap
-    if (Math.abs(elA.yBump - elB.yBump) < 0.5) {
-      if (cntA > cntB) {
-        elA.yBump = Math.max(elA.yBump, elB.yBump) + 0.5;
-      } else {
-        elB.yBump = Math.max(elA.yBump, elB.yBump) + 0.5;
-      }
-    }
-    pipeElevations[cr.pipeA] = elA;
-    pipeElevations[cr.pipeB] = elB;
-  });
-}
-
-// v0.1.13: 2D line intersection helper
-function lineIntersect2D(x1, y1, x2, y2, x3, y3, x4, y4) {
-  var denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-  if (Math.abs(denom) < 0.0001) return null;
-  var t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
-  var u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
-  var m = 0.01;
-  if (t >= m && t <= 1 - m && u >= m && u <= 1 - m) {
-    return { x: x1 + t * (x2 - x1), y: y1 + t * (y2 - y1), t: t, u: u };
-  }
-  return null;
-}
 
 // ═══════════════════════════════════════════════════════════════════
 //  Improved Compute Avoidance Curve
@@ -3759,10 +3629,8 @@ function computeAvoidanceCurve(p1, p2, obstacles, fromId, toId) {
   var dist = p1.distanceTo(p2);
   var mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
   var pipeElevKey = (fromId || '') + '->' + (toId || '');
-  var pipeElev = pipeElevations[pipeElevKey] || { yBump: 0, zOff: 0 };
-  var baseElev = pipeElev.yBump;
-  var baseZOff = pipeElev.zOff;
-
+  var baseElev = 0;
+  var baseZOff = 0;
   // v0.1.13: True 3D bounding box
   var minX = Math.min(p1.x, p2.x);
   var maxX = Math.max(p1.x, p2.x);
@@ -4585,10 +4453,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   }
 
   // ─── Build Edges ───────────────────────────────────────
-  // Compute pipe-vs-pipe crossings to assign elevation offsets
-  computePipeCrossings(dataConns, positions);
 
-  // P0: Edge layer rendering — minor edges (bundleCount < 5) use merged LineSegments
+  // All edges rendered as merged LineSegments
   var _minorEdgePts = [];
   var _minorEdgeColors = [];
   var _minorLineOpacity = 0.35;
@@ -4679,8 +4545,6 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       // v0.1.12: Depth visual — vary pipe opacity by midpoint Z position
       var midPt = curve.getPoint(0.5);
       var pipeDepthFactor = THREE.MathUtils.clamp((midPt.z + 6) / 12, 0, 1);
-      var glowOpacity = THREE.MathUtils.clamp(0.25 * (0.8 + pipeDepthFactor * 0.4), 0.15, 0.8);
-      var coreOpacity = THREE.MathUtils.clamp(0.6 * (0.8 + pipeDepthFactor * 0.4), 0.15, 0.8);
 
       // v0.1.40-node-spread.19: Dynamic X-adjacency pipeline detection (replaces hardcoded PC list)
       var fromModule = detectModule(conn.from);
@@ -4700,50 +4564,35 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
           }
         }
         if (isPipelineAdj) { colorHex = 0xFFD700; flowType = 'pipeline'; }
-        else { glowOpacity *= 0.5; coreOpacity *= 0.5; }
+        else { /* no opacity adjustment needed */ }
       }
 
       // v0.1.51: Cross-module edge with flowType colors + bundleCount radius
       var _crossModEdge = USE_MODULE_LAYOUT && fromModule && toModule && fromModule !== toModule;
-      // P0: Cross-module edge uses flowType color mapping, tube radius tied to bundleCount
+      // Cross-module edge uses flowType color mapping
       var _bundleCount = conn._bundleCount || 1;
-      var _glowRadius = _crossModEdge ? (0.035 + (_bundleCount - 1) * 0.015) + 0.025 : 0.04;
-      var _coreRadius = _crossModEdge ? 0.035 + (_bundleCount - 1) * 0.015 : 0.022;
       // Use flowType color for cross-mod edges instead of module gradient
       var _crossModColorHex = colorHex;
       if (_crossModEdge) {
         _crossModColorHex = FLOW_COLORS[flowType] || 0x60A5FA;
       }
-      // P0: Edge layer rendering — bundleCount >= 5 → TubeGeometry, < 5 → merged LineSegments
+      // All edges use merged LineSegments (no TubeGeometry)
       var glowTube = null, coreTube = null;
-      if (_bundleCount < 5) {
-        // Minor edge: collect into merged LineSegments (thin line, no individual geometry)
-        var _minorPts = curve.getPoints(8);
-        var _minorC = new THREE.Color(_crossModColorHex);
-        for (var _pi = 0; _pi < _minorPts.length - 1; _pi++) {
-          _minorEdgePts.push(_minorPts[_pi].x, _minorPts[_pi].y, _minorPts[_pi].z);
-          _minorEdgePts.push(_minorPts[_pi+1].x, _minorPts[_pi+1].y, _minorPts[_pi+1].z);
-          _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
-          _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
-        }
-      } else {
-        // Major edge: TubeGeometry (glow + core) — visual weight high
-        var tubeGeo = new THREE.TubeGeometry(curve, 8, _glowRadius, 4, false);
-        var glowMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: glowOpacity });
-        glowTube = new THREE.Mesh(tubeGeo, glowMat);
-        edgeGroup.add(glowTube);
-        var coreTubeGeo = new THREE.TubeGeometry(curve, 8, _coreRadius, 4, false);
-        var coreMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: coreOpacity });
-        coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
-        edgeGroup.add(coreTube);
+      // Collect edge segments into merged LineSegments buffer
+      var _minorPts = curve.getPoints(8);
+      var _minorC = new THREE.Color(_crossModColorHex);
+      for (var _pi = 0; _pi < _minorPts.length - 1; _pi++) {
+        _minorEdgePts.push(_minorPts[_pi].x, _minorPts[_pi].y, _minorPts[_pi].z);
+        _minorEdgePts.push(_minorPts[_pi+1].x, _minorPts[_pi+1].y, _minorPts[_pi+1].z);
+        _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
+        _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
       }
-
       // Store edge data
       var edgeInfo = {
-        line: coreTube,
-        glowLine: glowTube,
-        glowTube: glowTube,
-        coreTube: coreTube,
+        line: null,
+        glowLine: null,
+        glowTube: null,
+        coreTube: null,
         conn: conn,
         fromId: conn.from,
         toId: conn.to,
@@ -4752,7 +4601,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         colorHex: colorHex,
         _bundleCount: conn._bundleCount || 1,
         _crossModEdge: !!_crossModEdge,
-        _isMinorEdge: _bundleCount < 5,
+        _isMinorEdge: true,
       };
       edgeLines.push(edgeInfo);
 
@@ -4776,7 +4625,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
     });
 
-    // P0: Create merged LineSegments for minor edges (bundleCount < 5)
+    // All edges rendered as merged LineSegments
     if (_minorEdgePts.length > 0) {
       var _minorLineGeo = new THREE.BufferGeometry();
       _minorLineGeo.setAttribute('position', new THREE.Float32BufferAttribute(_minorEdgePts, 3));
@@ -4987,11 +4836,11 @@ function onMouseMove(event) {
         break;
       }
     }
-    // P0: Edge tube hover — find matching edgeInfo for bundleCount tooltip
+    // Edge hover — tube-based detection disabled (edges render as merged LineSegments)
     if (edgeLines && edgeLines.length > 0) {
       for (var _ei = 0; _ei < edgeLines.length; _ei++) {
         var _eInfo = edgeLines[_ei];
-        if (_eInfo._crossModEdge && (_eInfo.glowTube === obj || _eInfo.coreTube === obj)) {
+        if (_eInfo.glowTube === obj || _eInfo.coreTube === obj) {
           found = { id: 'edge:' + _eInfo.fromId + '->' + _eInfo.toId, _isEdge: true, _edgeInfo: _eInfo };
           break;
         }
