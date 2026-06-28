@@ -5967,7 +5967,21 @@ function animate() {
 init();
 initOrbitIdle();
 
-var embeddedData = window.__EMBEDDED_DATA__ || (function(){try{var ls=localStorage.getItem('__EMBEDDED_DATA__');return ls?JSON.parse(ls):null}catch(e){return null}})();
+// Support ?data=filename from URL (bypasses localStorage for large files)
+var embeddedData = null;
+var urlParams = new URLSearchParams(window.location.search);
+var dataFile = urlParams.get('data');
+if (dataFile) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', dataFile, false);
+  try { xhr.send(); } catch(e) {}
+  if (xhr.status === 200) {
+    try { embeddedData = JSON.parse(xhr.responseText); } catch(e) {}
+  }
+}
+if (!embeddedData) {
+  embeddedData = window.__EMBEDDED_DATA__ || (function(){try{var ls=localStorage.getItem('__EMBEDDED_DATA__');return ls?JSON.parse(ls):null}catch(e){return null}})();
+}
 if (embeddedData && embeddedData.nodes) {
   // v0.1.37 fix: ports may be object {stats, nodePorts} instead of array
   var ports = [];
