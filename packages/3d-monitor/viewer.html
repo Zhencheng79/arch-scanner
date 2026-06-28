@@ -4586,9 +4586,11 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
   // ─── Build Edges ───────────────────────────────────────
   // Compute pipe-vs-pipe crossings to assign elevation offsets
-  computePipeCrossings(dataConns, positions);
+  // DISABLED for performance test — skipping edge rendering
+  // computePipeCrossings(dataConns, positions);
 
-  // P0: Edge layer rendering — minor edges (bundleCount < 5) use merged LineSegments
+  // P0: Edge layer rendering — DISABLED for performance test
+  /*
   var _minorEdgePts = [];
   var _minorEdgeColors = [];
   var _minorLineOpacity = 0.35;
@@ -4787,11 +4789,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         opacity: _minorLineOpacity,
       });
       var _minorLineSeg = new THREE.LineSegments(_minorLineGeo, _minorLineMat);
-      edgeGroup.add(_minorLineSeg);
+      nodeGroup.add(_minorLineSeg);
     }
   }
-
-  document.getElementById('nodeCount').textContent = (AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)')) + (AGGREGATION.highDensity ? ' [dense]' : '');
+  */ // END EDGE RENDERING DISABLE
+  // ═══════════════════════════════════════════════════════════════════
+  //  Hub node detection and highlighting
   document.getElementById('edgeCount').textContent = dataConns.length;
   if (AGGREGATION.mode !== 'none' && AGGREGATION._allOriginalNodes) {
     var existingIds = {};
