@@ -4171,6 +4171,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     dataNodes.forEach(function(n) {
       if (n._isGroupNode && n._isFunctionGroup && n._functionName && window._moduleLayoutInfo) {
         var fn = n._functionName;
+        console.log('[FUNC_RESTORE] fn=' + fn + ' existing=' + (window._moduleLayoutInfo[fn] ? 'YES' : 'NO'));
         if (!window._moduleLayoutInfo[fn]) {
           window._moduleLayoutInfo[fn] = {
             nodes: n._childIds || [],
