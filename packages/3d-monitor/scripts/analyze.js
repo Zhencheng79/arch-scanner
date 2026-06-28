@@ -18,7 +18,10 @@ import { writeFileSync, readFileSync } from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const ROOT = resolve(__dirname, "..", "..", "..");
+const PROJECT_ROOT = resolve(__dirname, "..", "..", "..");
+const OUTPUT_DIR = resolve(__dirname, ".."); // packages/3d-monitor/
+const PORT_TAG_CLI = resolve(PROJECT_ROOT, "packages", "port-tag-tool", "cli.js");
+const AUTO_DIAGNOSE = resolve(__dirname, "auto_diagnose.js");
 
 // 解析 --project <path>
 const projectIndex = process.argv.indexOf("--project");
@@ -35,15 +38,8 @@ console.log("\n[步骤 1/2] 正在扫描项目结构...");
 try {
   const stdout = execFileSync(
     "node",
-    [
-      "packages/port-tag-tool/cli.js",
-      "--action",
-      "json",
-      "--project",
-      projectPath,
-    ],
+    [PORT_TAG_CLI, "--action", "json", "--project", projectPath],
     {
-      cwd: ROOT,
       stdio: ["inherit", "pipe", "inherit"],
       encoding: "utf-8",
       maxBuffer: 50 * 1024 * 1024,
@@ -51,13 +47,13 @@ try {
   );
   // 验证输出是有效 JSON
   JSON.parse(stdout);
-  writeFileSync(resolve(ROOT, "port_tag_result.json"), stdout, "utf-8");
+  writeFileSync(resolve(OUTPUT_DIR, "port_tag_result.json"), stdout, "utf-8");
 } catch (err) {
   if (err.stdout) {
     try {
       const tmp = JSON.parse(err.stdout);
       if (tmp && typeof tmp === "object") {
-        writeFileSync(resolve(ROOT, "port_tag_result.json"), err.stdout, "utf-8");
+        writeFileSync(resolve(OUTPUT_DIR, "port_tag_result.json"), err.stdout, "utf-8");
         console.log("port-tag-tool 返回部分结果，尝试继续...");
       }
     } catch {
@@ -73,26 +69,24 @@ try {
 }
 console.log("port_tag_result.json 已生成");
 
-// 步骤2：调用 auto_diagnose.js，读取 port_tag_result.json 作为 stdin
+// 步骤2：调用 auto_diagnose.js
 console.log("\n[步骤 2/2] 正在执行自动诊断标注...");
 try {
-  const input = readFileSync(resolve(ROOT, "port_tag_result.json"), "utf-8");
+  const input = readFileSync(resolve(OUTPUT_DIR, "port_tag_result.json"), "utf-8");
   const result = execFileSync(
     "node",
-    ["packages/3d-monitor/scripts/auto_diagnose.js"],
+    [AUTO_DIAGNOSE],
     {
-      cwd: ROOT,
       input,
       stdio: ["pipe", "pipe", "inherit"],
       encoding: "utf-8",
       maxBuffer: 50 * 1024 * 1024,
     }
   );
-  writeFileSync(resolve(ROOT, "port_tag_result_with_diagnosis.json"), result, "utf-8");
+  writeFileSync(resolve(OUTPUT_DIR, "port_tag_result_with_diagnosis.json"), result, "utf-8");
 } catch (err) {
   if (err.stdout) {
-    // 将部分输出写入文件
-    writeFileSync(resolve(ROOT, "port_tag_result_with_diagnosis.json"), err.stdout, "utf-8");
+    writeFileSync(resolve(OUTPUT_DIR, "port_tag_result_with_diagnosis.json"), err.stdout, "utf-8");
   }
   console.error("auto_diagnose.js 执行失败：", err.stderr || err.message);
   exit(1);

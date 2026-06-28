@@ -22,12 +22,12 @@ function setProgress(nodeCount) {
 
 function jumpViewer(data) {
   localStorage.setItem('__EMBEDDED_DATA__', data);
-  window.location.href = 'viewer.html';
+  window.location.href = 'viewer.html?_t=' + Date.now();
 }
 
 function loadRaw() {
   localStorage.setItem('__EMBEDDED_DATA__', window._rawData);
-  window.location.href = 'viewer.html';
+  window.location.href = 'viewer.html?_t=' + Date.now();
 }
 
 function showDiagnosePrompt(rawData) {

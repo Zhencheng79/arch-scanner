@@ -380,20 +380,22 @@ async function main() {
 
   // ---- 构建输出 ----
   const output = {
+    ...data,
+
     generatedBy: 'auto_diagnose.js (启发式自动标注)',
     generatedAt: new Date().toISOString().slice(0, 10),
-    project: data.source || '',
-    version: data.version || '',
 
-    global: {
-      score: globalScore,
-      summary: '',
-      detail: '',
-      suggestions: [],
+    agentDiagnosis: {
+      global: {
+        score: globalScore,
+        summary: '',
+        detail: '',
+        suggestions: [],
+      },
+
+      modules,
+      nodes: nodeEntries,
     },
-
-    modules,
-    nodes: nodeEntries,
   };
 
   // 以人类可读格式输出到 stdout

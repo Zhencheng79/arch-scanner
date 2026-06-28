@@ -2396,6 +2396,7 @@ function buildModuleAggregation(nodes, conns) {
       _isGroupNode: true,
       _isModuleGroup: true,
       _moduleName: mod,
+      _isHub: true,
       _childIds: childIds,
       _expanded: false,
       _childNodes: children,
@@ -5773,15 +5774,14 @@ function onDblClick(event) {
       var nid = obj.userData.nodeId;
       if (nodeMeshes[nid] && nodeMeshes[nid].data && nodeMeshes[nid].data._isGroupNode) {
         hitGroupNode = true;
+        var nData = nodeMeshes[nid].data;
         var grp = AGGREGATION.groupMap[nid];
         if (grp) {
           toggleGroup(nid, window._aggDataNodes, window._aggDataConns, {});
         }
-        // Reset selection
-        selectedNodeId = null;
-        onOrbitUserInteract();
-        applyDimming(null);
-        updateNodeInfoPanel(null);
+        // Fix 3: Double-click group node → show module info panel
+        showModuleInfo(nData._moduleName || nData.module);
+        autoCollapseLegend();
         break;
       }
       hitNodeId = nid;
