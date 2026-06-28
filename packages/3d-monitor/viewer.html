@@ -2722,6 +2722,16 @@ function buildFunctionAggregation(nodes, conns) {
     
     funcGroupNodes.push(funcGroupNode);
     
+    // Write _moduleLayoutInfo for showModuleInfo
+    if (!window._moduleLayoutInfo) window._moduleLayoutInfo = {};
+    window._moduleLayoutInfo[funcName] = {
+      nodes: childIds,
+      label: funcLabel,
+      color: funcColor,
+      nodeCount: children.length,
+      description: funcDef ? funcDef.description : '',
+    };
+    
     // Register in AGGREGATION for toggleGroup
     if (typeof AGGREGATION !== 'undefined') {
       AGGREGATION.groups.push({
@@ -4155,6 +4165,21 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     dataNodes.forEach(function(n) {
       if (n._isGroupNode && n._moduleName && window._moduleLayoutInfo && !window._moduleLayoutInfo[n._moduleName]) {
         window._moduleLayoutInfo[n._moduleName] = window._moduleLayoutInfo[n.id];
+      }
+    });
+    // v0.1.55: Restore functional module _moduleLayoutInfo after computeModuleLayout reset
+    dataNodes.forEach(function(n) {
+      if (n._isGroupNode && n._isFunctionGroup && n._functionName && window._moduleLayoutInfo) {
+        var fn = n._functionName;
+        if (!window._moduleLayoutInfo[fn]) {
+          window._moduleLayoutInfo[fn] = {
+            nodes: n._childIds || [],
+            label: n.label || fn,
+            color: n.color || 0x888888,
+            nodeCount: (n._childIds || []).length,
+            description: '功能模块:' + fn,
+          };
+        }
       }
     });
   } else {
@@ -5939,7 +5964,7 @@ function onDblClick(event) {
           toggleGroup(nid, window._aggDataNodes, window._aggDataConns, {});
         }
         // Fix 3: Double-click group node → show module info panel
-        showModuleInfo(nData._moduleName || nData.module);
+        showModuleInfo(nData._moduleName || nData._functionName || nData.module);
         autoCollapseLegend();
         break;
       }
