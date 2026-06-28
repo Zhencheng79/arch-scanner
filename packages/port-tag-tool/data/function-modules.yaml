@@ -1,9 +1,8 @@
-# function-modules.yaml — Hermes Agent 功能模块 → 技术模块映射表
-# 基于实际 detectModule 输出修正
+# function-modules.yaml — 基于 hermes-agent 实际技术模块名
 
 modules:
   调度中心:
-    description: 任务调度、消息路由、事件分发
+    description: 任务调度、消息路由、事件处理
     technical_modules:
       - gateway
       - cron
@@ -14,54 +13,33 @@ modules:
     description: 智能推理、会话管理、意图识别
     technical_modules:
       - agent
-      - agent-lsp
-      - agent-transports
       - acp_adapter
 
   用户界面:
     description: Web 界面、TUI 终端、桌面应用
     technical_modules:
       - web
-      - ui-tui
-      - apps-desktop
-      - apps-bootstrap-installer
-      - apps-shared
+      - ui
+      - apps
       - website
 
   插件系统:
-    description: 第三方集成、模型提供商、浏览器、存储
+    description: 第三方集成、模型提供商、浏览器、存储、技能
     technical_modules:
       - plugins
-      - plugins-web
-      - plugins-platforms
-      - plugins-memory
-      - plugins-browser
-      - plugins-image_gen
-      - plugins-model_providers
-      - plugins-dashboard_auth
-      - plugins-cron
-      - plugins-disk-cleanup
-      - plugins-google_meet
-      - plugins-kanban-dashboard
-      - plugins-observability
-      - plugins-security
-      - plugins-spotify
-      - plugins-teams_pipeline
-      - plugins-video_gen
-      - plugins-hermes-achievements
+      - skills
+      - optional
 
-  测试与工具:
-    description: 测试套件、开发工具、CI/CD
+  测试:
+    description: 测试套件
     technical_modules:
       - tests
+
+  工具:
+    description: 开发工具、环境管理
+    technical_modules:
       - tools
       - scripts
-      - skills
-      - optional-skills
       - providers
       - packaging
       - project-root
-
-  其他:
-    description: 未归类的技术模块
-    technical_modules: []
