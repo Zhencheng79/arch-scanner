@@ -5841,14 +5841,15 @@ function animate() {
   }
   controls.update();
   // Edge pulse animation
-
-  var t = clock.getElapsedTime();
+  // Edge pulse animation — DISABLED for perf test
+  // (376 × Math.sin per frame)
+  /*
   edgeLines.forEach(function(ei, idx) {
     var pulse = 0.5 + 0.3 * Math.sin(t * 0.8 + idx * 0.5);
     if (ei.glowLine) ei.glowLine.material.opacity = 0.15 + 0.2 * pulse;
   });
 
-  // Flow dot animation
+  // Flow dot animation — DISABLED for perf test
   flowDots.forEach(function(fd) {
     fd.progress += fd.speed * delta;
     if (fd.progress > 1.0) fd.progress -= 1.0;
@@ -5856,15 +5857,19 @@ function animate() {
     fd.mesh.position.copy(pos);
   });
 
-  // v0.1.40-node-spread.19: Module flow arrows animation (moved from applyDimming)
+  // Module flow arrows animation — DISABLED for perf test
   _moduleFlowArrows.forEach(function(mfa) {
     mfa.progress += mfa.speed * delta;
     if (mfa.progress > 1.0) mfa.progress -= 1.0;
     var pt = mfa.curve.getPoint(mfa.progress);
     mfa.mesh.position.copy(pt);
   });
+  */
 
-  // v0.1.40-node-spread.19: Hub node pulse animation
+  // Hub node pulse animation — DISABLED for perf test
+  // (130 × Math.sin + emissive per frame)
+  /*
+
   Object.keys(nodeMeshes).forEach(function(id) {
     var nm = nodeMeshes[id];
     if (nm.data && nm.data._isHub) {
@@ -5872,6 +5877,8 @@ function animate() {
       nm.mesh.material.emissiveIntensity = pulse;
     }
   });
+  */
+  var t = 0;
 
   renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
