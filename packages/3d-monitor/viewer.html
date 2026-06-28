@@ -3066,7 +3066,8 @@ function computeModuleLayout(nodes) {
   // P0: 用现有 detectModule 分组
   var moduleBuckets = {};
   nodes.forEach(function(n) {
-    var mod = detectModule(n.id);
+    // v0.1.53: For groupNodes, use _moduleName instead of detectModule (returns "other" for __modgroup_*)
+    var mod = (n._isGroupNode && n._moduleName) ? n._moduleName : detectModule(n.id);
     if (!moduleBuckets[mod]) moduleBuckets[mod] = [];
     moduleBuckets[mod].push(n);
   });
