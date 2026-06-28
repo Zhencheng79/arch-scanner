@@ -2123,6 +2123,9 @@ var AGGREGATION = {
   childGroupMap: {}, // nodeId -> parent groupId
   // Edge bundles: { bundleId, fromGroup, toGroup, childEdges[] }
   bundles: [],
+  highDensity: false,
+  _lastHoveredLabel: null,
+  _lastHoveredNodeId: null,
 };
 
 // ─── Aggregation logic — directory-based module grouping ─────────
@@ -2321,6 +2324,204 @@ function buildAggregation(nodes, conns) {
   });
 
   return { nodes: resultNodes, conns: resultConns };
+}
+
+// ─── Module-level aggregation (v0.1.51) ──────────────────────
+function buildModuleAggregation(nodes, conns) {
+  var count = nodes.length;
+  var AGG = AGGREGATION;
+
+  if (count < 20) {
+    AGG.mode = 'none';
+    return { nodes: nodes, conns: conns || [] };
+  }
+
+  AGG.mode = 'module';
+  AGG.groups = [];
+  AGG.groupMap = {};
+  AGG.childGroupMap = {};
+  AGG.bundles = [];
+
+  // Group by module
+  var moduleBuckets = {};
+  var rootNodes = [];
+
+  nodes.forEach(function(n) {
+    var mod = detectModule(n.id, n);
+    if (mod && mod !== 'other') {
+      if (!moduleBuckets[mod]) moduleBuckets[mod] = [];
+      moduleBuckets[mod].push(n);
+    } else {
+      rootNodes.push(n);
+    }
+  });
+
+  var groupNodes = [];
+  var flatNodes = [];
+  var groupIdCounter = 0;
+
+  Object.keys(moduleBuckets).forEach(function(mod) {
+    var children = moduleBuckets[mod];
+    if (children.length < 2) {
+      children.forEach(function(c) { flatNodes.push(c); });
+      return;
+    }
+
+    var groupId = '__modgroup_' + (groupIdCounter++);
+    var childIds = children.map(function(c) { return c.id; });
+
+    var childLayers = {};
+    children.forEach(function(c) {
+      var lk = resolveLayer(c);
+      childLayers[lk] = (childLayers[lk] || 0) + 1;
+    });
+    var dominantLayer = 'infrastructure';
+    var maxCount = 0;
+    Object.keys(childLayers).forEach(function(lk) {
+      if (childLayers[lk] > maxCount) { maxCount = childLayers[lk]; dominantLayer = lk; }
+    });
+
+    var modColor = window.MODULE_CONFIG && window.MODULE_CONFIG[mod]
+      ? window.MODULE_CONFIG[mod].color : resolveLayerColor({ layer: dominantLayer });
+
+    var moduleLabel = window.MODULE_CONFIG && window.MODULE_CONFIG[mod]
+      ? window.MODULE_CONFIG[mod].label : mod;
+
+    var groupNode = {
+      id: groupId,
+      label: moduleLabel + ' (' + children.length + ')',
+      chineseName: moduleLabel + ' (' + children.length + ')',
+      description: children.length + ' nodes in ' + mod,
+      layer: dominantLayer,
+      _isGroupNode: true,
+      _isModuleGroup: true,
+      _moduleName: mod,
+      _childIds: childIds,
+      _expanded: false,
+      _childNodes: children,
+      color: modColor,
+    };
+
+    AGG.groups.push({
+      groupId: groupId,
+      label: moduleLabel,
+      childIds: childIds,
+      layer: dominantLayer,
+      expanded: false,
+    });
+    AGG.groupMap[groupId] = AGG.groups[AGG.groups.length - 1];
+    childIds.forEach(function(cid) {
+      AGG.childGroupMap[cid] = groupId;
+    });
+
+    groupNodes.push(groupNode);
+  });
+
+  // Root nodes grouped by layer
+  var layerBuckets = {};
+  rootNodes.forEach(function(n) {
+    var lk = resolveLayer(n);
+    if (!layerBuckets[lk]) layerBuckets[lk] = [];
+    layerBuckets[lk].push(n);
+  });
+
+  Object.keys(layerBuckets).forEach(function(lk) {
+    var children = layerBuckets[lk];
+    if (children.length < 2) {
+      children.forEach(function(c) { flatNodes.push(c); });
+      return;
+    }
+
+    var groupId = '__layergroup_' + (groupIdCounter++);
+    var childIds = children.map(function(c) { return c.id; });
+    var lCfg = LAYER_CONFIG[lk] || { color: 0x888888, label: lk };
+
+    var layerGroupNode = {
+      id: groupId,
+      label: lCfg.label + ' (' + children.length + ')',
+      chineseName: lCfg.label + ' (' + children.length + ')',
+      description: children.length + ' root nodes in ' + (lCfg.label || lk),
+      layer: lk,
+      _isGroupNode: true,
+      _isLayerGroup: true,
+      _childIds: childIds,
+      _expanded: false,
+      _childNodes: children,
+      color: lCfg.color,
+    };
+
+    AGG.groups.push({
+      groupId: groupId,
+      label: lCfg.label,
+      childIds: childIds,
+      layer: lk,
+      expanded: false,
+    });
+    AGG.groupMap[groupId] = AGG.groups[AGG.groups.length - 1];
+    childIds.forEach(function(cid) {
+      AGG.childGroupMap[cid] = groupId;
+    });
+
+    groupNodes.push(layerGroupNode);
+  });
+
+  // Build edge bundles
+  var connList = conns || [];
+  var bundleMap = {};
+
+  AGG.groups.forEach(function(grp) {
+    grp.childIds.forEach(function(cid) {
+      connList.forEach(function(c) {
+        if (c.from === cid || c.to === cid) {
+          var otherId = (c.from === cid) ? c.to : c.from;
+          var otherGroupId = AGG.childGroupMap[otherId];
+          var key = otherGroupId ? (grp.groupId + '->' + otherGroupId) : (grp.groupId + '->' + otherId);
+          if (!bundleMap[key]) bundleMap[key] = [];
+          bundleMap[key].push(c);
+        }
+      });
+    });
+  });
+
+  Object.keys(bundleMap).forEach(function(key) {
+    AGG.bundles.push({ bundleId: key, edges: bundleMap[key], count: bundleMap[key].length });
+  });
+
+  AGG._allOriginalNodes = nodes;
+  AGG._allOriginalConns = conns;
+
+  // Build filtered connections
+  var resultConns = [];
+  connList.forEach(function(c) {
+    var fromGroup = AGG.childGroupMap[c.from];
+    var toGroup = AGG.childGroupMap[c.to];
+    if (fromGroup && toGroup) {
+      var busKey = fromGroup + '->' + toGroup;
+      var already = false;
+      for (var bi = 0; bi < resultConns.length; bi++) {
+        if (resultConns[bi].from === fromGroup && resultConns[bi].to === toGroup) {
+          already = true;
+          var existing = resultConns[bi];
+          if (c.label && existing.label.indexOf(c.label) === -1) { existing.label += ', ' + c.label; }
+          break;
+        }
+      }
+      if (!already) {
+        resultConns.push({
+          from: fromGroup, to: toGroup, label: c.label || '', flowType: c.flowType || 'data',
+          _bundleCount: bundleMap[fromGroup + '->' + toGroup] ? bundleMap[fromGroup + '->' + toGroup].length : 1,
+        });
+      }
+    } else if (fromGroup) {
+      resultConns.push({ from: fromGroup, to: c.to, label: c.label || '', flowType: c.flowType || 'data' });
+    } else if (toGroup) {
+      resultConns.push({ from: c.from, to: toGroup, label: c.label || '', flowType: c.flowType || 'data' });
+    } else {
+      resultConns.push(c);
+    }
+  });
+
+  return { nodes: groupNodes.concat(flatNodes), conns: resultConns };
 }
 
 // Extract first directory segment from an ID like "components/Button" -> "components"
@@ -3818,7 +4019,15 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   if (!dataNodes || dataNodes.length === 0) return;
 
   // v0.1.10: Apply aggregation before layout
-  var aggResult = buildAggregation(dataNodes, dataConns);
+  // v0.1.51: Use module-level aggregation when USE_MODULE_LAYOUT and >= 20 nodes
+  var aggResult;
+  if (USE_MODULE_LAYOUT && dataNodes.length >= 20) {
+    aggResult = buildModuleAggregation(dataNodes, dataConns);
+  } else {
+    aggResult = buildAggregation(dataNodes, dataConns);
+  }
+  var totalNodeCount = AGGREGATION._allOriginalNodes ? AGGREGATION._allOriginalNodes.length : dataNodes.length;
+  AGGREGATION.highDensity = totalNodeCount > 300;
   dataNodes = aggResult.nodes;
   dataConns = aggResult.conns;
   window._aggDataNodes = dataNodes;
@@ -3837,6 +4046,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   window.nodeDataMap = nodeMap; // expose for panel name resolution
 
   // ─── Build Nodes (Chip cubes) ──────────────────────────
+  var _moduleHeadSeen = {};
   dataNodes.forEach(function(n) {
     nodeMap[n.id] = n;
     var pos = positions[n.id] || { x: 0, y: 0, z: 0 };
@@ -3932,6 +4142,20 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     nodeGroup.add(mesh);
 
     // Label (CSS2D)
+    var skipLabel = false;
+    if (AGGREGATION.highDensity && !n._isHub) {
+      var nMod = detectModule(n.id, n);
+      if (nMod && nMod !== 'other') {
+        if (_moduleHeadSeen[nMod]) {
+          skipLabel = true;
+        } else {
+          _moduleHeadSeen[nMod] = true;
+        }
+      } else {
+        skipLabel = true;
+      }
+    }
+    if (!skipLabel) {
     var labelDiv = document.createElement('div');
     labelDiv.className = 'label-2d';
     if (isGroup) {
@@ -3952,6 +4176,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     nodeGroup.add(label);
     // Store label ref on mesh for visibility toggling
     mesh.userData.labelObj = label;
+    }
   });
 
   // ─── Build Ports ───────────────────────────────────────
@@ -4137,10 +4362,31 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var mlObj = new THREE.CSS2DObject(mlDiv);
       mlObj.position.set(cX, cY + 1.2, cZ);
       moduleGroup.add(mlObj);
-      // Module 3D label
+      // Module 3D label with node count and diagnosis
+      var modDiagHtml = '';
+      var modNodeCnt = info.nodeCount || 0;
+      if (window._agentDiagnosisData && window._agentDiagnosisData.modules) {
+        for (var _mdi = 0; _mdi < window._agentDiagnosisData.modules.length; _mdi++) {
+          var _mD = window._agentDiagnosisData.modules[_mdi];
+          if ((_mD.name === modId || _mD.id === modId) && _mD.agentDiagnosis) {
+            var _st = _mD.agentDiagnosis.status;
+            if (_st) {
+              var _stColorMap = {healthy: '#4CAF50', overloaded: '#B71C1C', 'needs-split': '#FF9800'};
+              var _stLabelMap = {healthy: '✓健康', overloaded: '⚡过载', 'needs-split': '✂需拆分'};
+              var _sc = _stColorMap[_st] || '#888';
+              var _sl = _stLabelMap[_st] || _st;
+              modDiagHtml = '<span style="color:' + _sc + ';font-size:11px;margin-left:8px">' + _sl + '</span>';
+            }
+            break;
+          }
+        }
+      }
+      if (modNodeCnt > 0) {
+        modDiagHtml += '<span style="color:#888;font-size:10px;margin-left:6px">(' + modNodeCnt + ')</span>';
+      }
       var modLabelDiv = document.createElement('div');
       modLabelDiv.className = 'module-label-3d';
-      modLabelDiv.textContent = window.MODULE_CONFIG[modId] ? window.MODULE_CONFIG[modId].label : modId;
+      modLabelDiv.innerHTML = (window.MODULE_CONFIG[modId] ? window.MODULE_CONFIG[modId].label : modId) + modDiagHtml;
       modLabelDiv.style.borderColor = '#' + mc3.getHexString();
       modLabelDiv.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -4497,11 +4743,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
     });
   }
 
-  document.getElementById('nodeCount').textContent = AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)');
+  document.getElementById('nodeCount').textContent = (AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)')) + (AGGREGATION.highDensity ? ' [dense]' : '');
   document.getElementById('edgeCount').textContent = dataConns.length;
   if (AGGREGATION.mode !== 'none' && AGGREGATION._allOriginalNodes) {
     var existingIds = {};
-    dataNodes.forEach(function(n) { existingIds[n.id] = true; });
+    var _moduleHeadSeen = {};
+  dataNodes.forEach(function(n) { existingIds[n.id] = true; });
 
     AGGREGATION._allOriginalNodes.forEach(function(n) {
       if (existingIds[n.id]) return; // already in scene
@@ -4537,6 +4784,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       nodeGroup.add(mesh);
 
       // Label (CSS2D)
+      if (!AGGREGATION.highDensity || n._isHub) {
       var labelDiv = document.createElement('div');
       labelDiv.className = 'label-2d';
       labelDiv.style.fontSize = '10px';
@@ -4548,6 +4796,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       label.visible = false;
       mesh.userData.labelObj = label;
       nodeGroup.add(label);
+      }
     });
 
     // Also add internal edges (hidden initially)
@@ -4684,6 +4933,15 @@ function onMouseMove(event) {
     }
   }
 
+  // High-density hover label visibility toggle
+  if (AGGREGATION.highDensity) {
+    if (AGGREGATION._lastHoveredLabel && AGGREGATION._lastHoveredNodeId !== (found ? found.id : null)) {
+      AGGREGATION._lastHoveredLabel.visible = false;
+      AGGREGATION._lastHoveredLabel = null;
+      AGGREGATION._lastHoveredNodeId = null;
+    }
+  }
+
   if (found) {
     var tt = tooltipEl;
     tt.style.display = 'block';
@@ -4698,9 +4956,26 @@ function onMouseMove(event) {
     html += '<div><span class="tt-tag" style="background:#' + (lCfg ? new THREE.Color(lCfg.color).getHexString() : '555') + '44;color:#ccc">' + (lCfg ? lCfg.label : lk) + '</span></div>';
     tt.innerHTML = html;
     renderer.domElement.style.cursor = 'pointer';
+    // High-density: show hovered node label
+    if (AGGREGATION.highDensity) {
+      var hoveredNm = nodeMeshes[found.id];
+      if (hoveredNm && hoveredNm.mesh && hoveredNm.mesh.userData && hoveredNm.mesh.userData.labelObj) {
+        var hl = hoveredNm.mesh.userData.labelObj;
+        if (!hl.visible) {
+          hl.visible = true;
+          AGGREGATION._lastHoveredLabel = hl;
+          AGGREGATION._lastHoveredNodeId = found.id;
+        }
+      }
+    }
   } else {
     tooltipEl.style.display = 'none';
     renderer.domElement.style.cursor = 'default';
+    if (AGGREGATION.highDensity && AGGREGATION._lastHoveredLabel) {
+      AGGREGATION._lastHoveredLabel.visible = false;
+      AGGREGATION._lastHoveredLabel = null;
+      AGGREGATION._lastHoveredNodeId = null;
+    }
   }
 }
 
