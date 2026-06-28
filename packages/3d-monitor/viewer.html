@@ -4177,6 +4177,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
 
     // Label (CSS2D)
     var skipLabel = false;
+    if (!n._isGroupNode) {
     if (AGGREGATION.highDensity && !n._isHub) {
       var nMod = detectModule(n.id, n);
       if (nMod && nMod !== 'other') {
@@ -4188,6 +4189,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       } else {
         skipLabel = true;
       }
+    }
     }
     if (!skipLabel) {
     var labelDiv = document.createElement('div');
@@ -4689,50 +4691,25 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         else { glowOpacity *= 0.5; coreOpacity *= 0.5; }
       }
 
-      // v0.1.50: Cross-module thick pipe detection (USE_MODULE_LAYOUT)
+      // v0.1.51: Cross-module edge with flowType colors + bundleCount radius
       var _crossModEdge = USE_MODULE_LAYOUT && fromModule && toModule && fromModule !== toModule;
-      var _glowRadius = _crossModEdge ? 0.06 : 0.04;
-      var _coreRadius = _crossModEdge ? 0.035 : 0.022;
+      // P0: Cross-module edge uses flowType color mapping, tube radius tied to bundleCount
+      var _bundleCount = conn._bundleCount || 1;
+      var _glowRadius = _crossModEdge ? (0.035 + (_bundleCount - 1) * 0.015) + 0.025 : 0.04;
+      var _coreRadius = _crossModEdge ? 0.035 + (_bundleCount - 1) * 0.015 : 0.022;
+      // Use flowType color for cross-mod edges instead of module gradient
+      var _crossModColorHex = colorHex;
+      if (_crossModEdge) {
+        _crossModColorHex = FLOW_COLORS[flowType] || 0x60A5FA;
+      }
       // Main glow tube (thicker pipe)
       var tubeGeo = new THREE.TubeGeometry(curve, 20, _glowRadius, 8, false);
-      var glowMat;
-      if (_crossModEdge) {
-        // Gradient: source module color -> target module color
-        var _srcModColor = new THREE.Color((window._moduleLayoutInfo[fromModule] ? window._moduleLayoutInfo[fromModule].color : colorHex));
-        var _dstModColor = new THREE.Color((window._moduleLayoutInfo[toModule] ? window._moduleLayoutInfo[toModule].color : colorHex));
-        var posAttr = tubeGeo.getAttribute("position");
-        var colors = new Float32Array(posAttr.count * 3);
-        for (var _vi = 0; _vi < posAttr.count; _vi++) {
-          var _t = _vi / posAttr.count;
-          var _c = _srcModColor.clone().lerp(_dstModColor, _t);
-          colors[_vi*3] = _c.r; colors[_vi*3+1] = _c.g; colors[_vi*3+2] = _c.b;
-        }
-        tubeGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-        glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: glowOpacity });
-      } else {
-        glowMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: glowOpacity });
-      }
+      var glowMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: glowOpacity });
       var glowTube = new THREE.Mesh(tubeGeo, glowMat);
       edgeGroup.add(glowTube);
       // Core bright tube
       var coreTubeGeo = new THREE.TubeGeometry(curve, 20, _coreRadius, 8, false);
-      var coreMat;
-      if (_crossModEdge) {
-        // Gradient: source module color -> target module color
-        var _srcModColor2 = new THREE.Color((window._moduleLayoutInfo[fromModule] ? window._moduleLayoutInfo[fromModule].color : colorHex));
-        var _dstModColor2 = new THREE.Color((window._moduleLayoutInfo[toModule] ? window._moduleLayoutInfo[toModule].color : colorHex));
-        var posAttr2 = coreTubeGeo.getAttribute("position");
-        var colors2 = new Float32Array(posAttr2.count * 3);
-        for (var _vi2 = 0; _vi2 < posAttr2.count; _vi2++) {
-          var _t2 = _vi2 / posAttr2.count;
-          var _c2 = _srcModColor2.clone().lerp(_dstModColor2, _t2);
-          colors2[_vi2*3] = _c2.r; colors2[_vi2*3+1] = _c2.g; colors2[_vi2*3+2] = _c2.b;
-        }
-        coreTubeGeo.setAttribute("color", new THREE.BufferAttribute(colors2, 3));
-        coreMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: coreOpacity });
-      } else {
-        coreMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: coreOpacity });
-      }
+      var coreMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: coreOpacity });
       var coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
       edgeGroup.add(coreTube);
 
@@ -4748,6 +4725,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         curve: curve,
         flowType: flowType,
         colorHex: colorHex,
+        _bundleCount: conn._bundleCount || 1,
+        _crossModEdge: !!_crossModEdge,
       };
       edgeLines.push(edgeInfo);
 
@@ -4937,6 +4916,12 @@ function getIntersects(event) {
       if (c.isMesh && c.userData._isModulePlatform) allMeshes.push(c);
     });
   }
+  // P0: Include edge tubes for bundleCount hover detection
+  if (edgeGroup) {
+    edgeGroup.children.forEach(function(c) {
+      if (c.isMesh) allMeshes.push(c);
+    });
+  }
   return raycaster.intersectObjects(allMeshes);
 }
 
@@ -4960,14 +4945,29 @@ function onMouseMove(event) {
         break;
       }
     }
+    // P0: Edge tube hover — find matching edgeInfo for bundleCount tooltip
+    if (edgeLines && edgeLines.length > 0) {
+      for (var _ei = 0; _ei < edgeLines.length; _ei++) {
+        var _eInfo = edgeLines[_ei];
+        if (_eInfo._crossModEdge && (_eInfo.glowTube === obj || _eInfo.coreTube === obj)) {
+          found = { id: 'edge:' + _eInfo.fromId + '->' + _eInfo.toId, _isEdge: true, _edgeInfo: _eInfo };
+          break;
+        }
+      }
+      if (found) break;
+    }
   }
 
   // High-density hover label visibility toggle
   if (AGGREGATION.highDensity) {
     if (AGGREGATION._lastHoveredLabel && AGGREGATION._lastHoveredNodeId !== (found ? found.id : null)) {
-      AGGREGATION._lastHoveredLabel.visible = false;
-      AGGREGATION._lastHoveredLabel = null;
-      AGGREGATION._lastHoveredNodeId = null;
+      // Don't hide groupNode labels in highDensity mode
+      var _lastNm = nodeMeshes[AGGREGATION._lastHoveredNodeId];
+      if (!_lastNm || !_lastNm.data || !_lastNm.data._isGroupNode) {
+        AGGREGATION._lastHoveredLabel.visible = false;
+        AGGREGATION._lastHoveredLabel = null;
+        AGGREGATION._lastHoveredNodeId = null;
+      }
     }
   }
 
@@ -4980,9 +4980,16 @@ function onMouseMove(event) {
     if (found.label && found.label !== found.id) {
       html += '<div class="tt-desc">' + found.label + '</div>';
     }
+    // P0: Edge bundle tooltip
+    if (found._isEdge && found._edgeInfo) {
+      var _ei = found._edgeInfo;
+      html += '<div class="tt-desc">bundleCount: ' + _ei._bundleCount + '</div>';
+      html += '<div><span class="tt-tag" style="background:#' + new THREE.Color(_ei.colorHex).getHexString() + '44;color:#ccc">' + (_ei.flowType || 'data') + '</span></div>';
+    } else {
     var lk = resolveLayer(found);
     var lCfg = LAYER_CONFIG[lk];
     html += '<div><span class="tt-tag" style="background:#' + (lCfg ? new THREE.Color(lCfg.color).getHexString() : '555') + '44;color:#ccc">' + (lCfg ? lCfg.label : lk) + '</span></div>';
+    }
     tt.innerHTML = html;
     renderer.domElement.style.cursor = 'pointer';
     // High-density: show hovered node label
@@ -5001,9 +5008,13 @@ function onMouseMove(event) {
     tooltipEl.style.display = 'none';
     renderer.domElement.style.cursor = 'default';
     if (AGGREGATION.highDensity && AGGREGATION._lastHoveredLabel) {
-      AGGREGATION._lastHoveredLabel.visible = false;
-      AGGREGATION._lastHoveredLabel = null;
-      AGGREGATION._lastHoveredNodeId = null;
+      // Don't hide groupNode labels in highDensity mode
+      var _lastNm = nodeMeshes[AGGREGATION._lastHoveredNodeId];
+      if (!_lastNm || !_lastNm.data || !_lastNm.data._isGroupNode) {
+        AGGREGATION._lastHoveredLabel.visible = false;
+        AGGREGATION._lastHoveredLabel = null;
+        AGGREGATION._lastHoveredNodeId = null;
+      }
     }
   }
 }
@@ -5493,8 +5504,11 @@ function showGlobalDiagnosis() {
   var panel = document.getElementById('globalDiagnosisPanel');
   if (!panel) return;
   var gd = window._agentDiagnosisData && window._agentDiagnosisData.global;
+  // P0: Graceful degradation if no diagnosis data
   if (!gd) {
-    panel.style.display = 'none';
+    panel.style.display = 'block';
+    panel.innerHTML = '<div style="text-align:center;padding:12px"><div style="color:#888;font-size:13px;margin-bottom:6px">架构诊断数据未生成</div><div style="color:#666;font-size:11px">请运行 diagnose 命令生成诊断报告</div></div>';
+    autoCollapseLegend();
     return;
   }
   var scoreColor = gd.score >= 8 ? '#4CAF50' : (gd.score >= 5 ? '#FF9800' : '#F44336');
@@ -5567,7 +5581,8 @@ function showModuleInfo(modId) {
   var layerParts = [];
   var LAYER_LABELS = {};
   Object.keys(LAYER_CONFIG).forEach(function(k) { LAYER_LABELS[k] = LAYER_CONFIG[k].label; });
-  Object.keys(layerCount).forEach(function(lk) {
+  var layerSortedKeys = Object.keys(layerCount).sort(function(a,b) { return (layerCount[b] - layerCount[a]); });
+  layerSortedKeys.forEach(function(lk) {
     layerParts.push((LAYER_LABELS[lk] || lk) + '(' + layerCount[lk] + ')');
   });
   var layerStr = layerParts.join(' ');
@@ -5705,6 +5720,10 @@ function showModuleInfo(modId) {
           var _sc2 = _stColorMap2[_ag.status] || '#888';
           html += '<div style="margin-bottom:6px"><span class="agent-badge agent-badge-' + _ag.status + '">' + _em + ' ' + _sl2 + '</span></div>';
         }
+        // P0: Show diagnosis summary if present
+        if (_ag.summary) {
+          html += '<div style="font-size:11px;color:#aaa;padding:4px 0;margin-bottom:4px;line-height:1.4">' + _ag.summary + '</div>';
+        }
         if (_ag.detail) {
           html += '<div class="agent-detail">' + _ag.detail + '</div>';
         }
@@ -5814,7 +5833,15 @@ function onDblClick(event) {
     }
   }
   if (!hitNode) {
-    // Blank area double-click — deselect and close all panels
+    // P0: Double-click blank — collapse all expanded groups first, then close panel
+    if (AGGREGATION && AGGREGATION.groups) {
+      for (var _gi = 0; _gi < AGGREGATION.groups.length; _gi++) {
+        var _grp = AGGREGATION.groups[_gi];
+        if (_grp.expanded) {
+          toggleGroup(_grp.id, window._aggDataNodes, window._aggDataConns, {});
+        }
+      }
+    }
     var modPanel = document.getElementById('moduleInfoPanel');
     if (modPanel) modPanel.style.display = 'none';
     var globalPanel = document.getElementById('globalDiagnosisPanel');
