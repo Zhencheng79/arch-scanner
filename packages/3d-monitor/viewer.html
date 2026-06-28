@@ -2402,6 +2402,21 @@ function buildModuleAggregation(nodes, conns) {
       color: modColor,
     };
 
+    // Fix A: Inject agent diagnosis into groupNode — match module, color by status
+    if (window._agentDiagnosisData && window._agentDiagnosisData.modules) {
+      for (var _adI = 0; _adI < window._agentDiagnosisData.modules.length; _adI++) {
+        var _adMod = window._agentDiagnosisData.modules[_adI];
+        if ((_adMod.name === mod || _adMod.id === mod) && _adMod.agentDiagnosis && _adMod.agentDiagnosis.status) {
+          groupNode._diagnosisStatus = _adMod.agentDiagnosis.status;
+          var _stClrMap = { healthy: 0x4CAF50, warning: 0xFF9800, risk: 0xF44336, overloaded: 0xB71C1C };
+          if (_stClrMap[_adMod.agentDiagnosis.status] !== undefined) {
+            groupNode.color = _stClrMap[_adMod.agentDiagnosis.status];
+          }
+          break;
+        }
+      }
+    }
+
     AGG.groups.push({
       groupId: groupId,
       label: moduleLabel,
@@ -2519,6 +2534,24 @@ function buildModuleAggregation(nodes, conns) {
     } else {
       resultConns.push(c);
     }
+  });
+
+  // Fix C: Initialize _moduleLayoutInfo in buildModuleAggregation
+  // (fields centerX/Y/Z, width, depth are placeholder 0; real spatial data filled by computeModuleLayout/computeLayout)
+  window._moduleLayoutInfo = {};
+  Object.keys(moduleBuckets).forEach(function(mod) {
+    var children = moduleBuckets[mod];
+    if (children.length < 2) return;
+    var modLabel = window.MODULE_CONFIG && window.MODULE_CONFIG[mod] ? window.MODULE_CONFIG[mod].label : mod;
+    var modColor = window.MODULE_CONFIG && window.MODULE_CONFIG[mod] ? window.MODULE_CONFIG[mod].color : 0x888888;
+    window._moduleLayoutInfo[mod] = {
+      centerX: 0, centerY: 0, centerZ: 0,
+      width: 0, depth: 0,
+      nodeCount: children.length,
+      nodes: children.map(function(c) { return c.id; }),
+      label: modLabel,
+      color: modColor,
+    };
   });
 
   return { nodes: groupNodes.concat(flatNodes), conns: resultConns };
@@ -4362,8 +4395,8 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       var mlObj = new THREE.CSS2DObject(mlDiv);
       mlObj.position.set(cX, cY + 1.2, cZ);
       moduleGroup.add(mlObj);
-      // Module 3D label with node count and diagnosis
-      var modDiagHtml = '';
+      // Fix D: Module 3D label — emoji + label + count format
+      var modEmoji = '';
       var modNodeCnt = info.nodeCount || 0;
       if (window._agentDiagnosisData && window._agentDiagnosisData.modules) {
         for (var _mdi = 0; _mdi < window._agentDiagnosisData.modules.length; _mdi++) {
@@ -4371,22 +4404,17 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
           if ((_mD.name === modId || _mD.id === modId) && _mD.agentDiagnosis) {
             var _st = _mD.agentDiagnosis.status;
             if (_st) {
-              var _stColorMap = {healthy: '#4CAF50', overloaded: '#B71C1C', 'needs-split': '#FF9800'};
-              var _stLabelMap = {healthy: '✓健康', overloaded: '⚡过载', 'needs-split': '✂需拆分'};
-              var _sc = _stColorMap[_st] || '#888';
-              var _sl = _stLabelMap[_st] || _st;
-              modDiagHtml = '<span style="color:' + _sc + ';font-size:11px;margin-left:8px">' + _sl + '</span>';
+              var _emojiMap = {healthy: '\uD83D\uDCD7', warning: '\uD83D\uDCD9', risk: '\uD83D\uDCD5', overloaded: '\uD83D\uDD25', 'needs-split': '\uD83D\uDD25'};
+              modEmoji = _emojiMap[_st] || '';
             }
             break;
           }
         }
       }
-      if (modNodeCnt > 0) {
-        modDiagHtml += '<span style="color:#888;font-size:10px;margin-left:6px">(' + modNodeCnt + ')</span>';
-      }
+      var modLabelText = modEmoji + (window.MODULE_CONFIG[modId] ? window.MODULE_CONFIG[modId].label : modId) + (modNodeCnt > 0 ? '(' + modNodeCnt + ')' : '');
       var modLabelDiv = document.createElement('div');
       modLabelDiv.className = 'module-label-3d';
-      modLabelDiv.innerHTML = (window.MODULE_CONFIG[modId] ? window.MODULE_CONFIG[modId].label : modId) + modDiagHtml;
+      modLabelDiv.textContent = modLabelText;
       modLabelDiv.style.borderColor = '#' + mc3.getHexString();
       modLabelDiv.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -5208,6 +5236,11 @@ function onClick(event) {
   var nm = nodeMeshes[clickedNodeId];
   applyDimming(selectedNodeId);
   if (nm) {
+    // Fix B: Group node click → route to showModuleInfo
+    if (nm.data && nm.data._isGroupNode && nm.data._isModuleGroup) {
+      showModuleInfo(nm.data._moduleName);
+      return;
+    }
     updateNodeInfoPanel(nm.data);
   }
 }
@@ -5652,6 +5685,43 @@ function showModuleInfo(modId) {
       html += '<span style="color:' + sColor + '">' + sLabel + '</span>';
       html += '<span style="color:#888;font-size:11px">（' + fmtFlowTypeCounts(stats) + '）</span></div>';
     });
+  }
+
+  // Fix E: Agent diagnosis section for module
+  if (window._agentDiagnosisData && window._agentDiagnosisData.modules) {
+    for (var _di = 0; _di < window._agentDiagnosisData.modules.length; _di++) {
+      var _dMod = window._agentDiagnosisData.modules[_di];
+      if ((_dMod.name === modId || _dMod.id === modId) && _dMod.agentDiagnosis) {
+        var _ag = _dMod.agentDiagnosis;
+        html += '<hr class="nip-divider">';
+        html += '<div class="nip-section">Agent 诊断</div>';
+        if (_ag.status) {
+          var _emojiMap2 = {healthy: '📗', warning: '📙', risk: '📕', overloaded: '🔥', 'needs-split': '🔥'};
+          var _stLabelMap2 = {healthy: '健康', warning: '预警', risk: '风险', overloaded: '过载', 'needs-split': '需拆分'};
+          var _stColorMap2 = {healthy: '#4CAF50', warning: '#FF9800', risk: '#F44336', overloaded: '#B71C1C', 'needs-split': '#FF9800'};
+          var _em = _emojiMap2[_ag.status] || '';
+          var _sl2 = _stLabelMap2[_ag.status] || _ag.status;
+          var _sc2 = _stColorMap2[_ag.status] || '#888';
+          html += '<div style="margin-bottom:6px"><span class="agent-badge agent-badge-' + _ag.status + '">' + _em + ' ' + _sl2 + '</span></div>';
+        }
+        if (_ag.detail) {
+          html += '<div class="agent-detail">' + _ag.detail + '</div>';
+        }
+        if (_ag.issues && _ag.issues.length > 0) {
+          html += '<div class="gd-section">存在问题</div>';
+          _ag.issues.forEach(function(iss) {
+            html += '<div class="agent-suggestion">⚠️ ' + iss + '</div>';
+          });
+        }
+        if (_ag.suggestions && _ag.suggestions.length > 0) {
+          html += '<div class="gd-section" style="margin-top:6px">优化建议</div>';
+          _ag.suggestions.forEach(function(sug) {
+            html += '<div class="agent-suggestion">💡 ' + sug + '</div>';
+          });
+        }
+        break;
+      }
+    }
   }
 
   panel.innerHTML = html;
