@@ -24,7 +24,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "diagnose": "node packages/3d-monitor/scripts/auto_diagnose.js"
+    "diagnose": "node packages/3d-monitor/scripts/auto_diagnose.js",
+    "analyze": "node packages/3d-monitor/scripts/analyze.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.92.7",
