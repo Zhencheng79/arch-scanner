@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Monitor v0.1.51 — 聚合模式 + Agent诊断 + CSS2D优化</title>
+<title>3D Monitor v0.1.52 — 聚合模式 + Agent诊断 + CSS2D优化 + 边缘分层</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{overflow:hidden;background:#0a0a12;font-family:-apple-system,'SF Pro','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
@@ -4580,6 +4580,10 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   // Compute pipe-vs-pipe crossings to assign elevation offsets
   computePipeCrossings(dataConns, positions);
 
+  // P0: Edge layer rendering — minor edges (bundleCount < 5) use merged LineSegments
+  var _minorEdgePts = [];
+  var _minorEdgeColors = [];
+  var _minorLineOpacity = 0.35;
   if (dataConns) {
     dataConns.forEach(function(conn) {
       var fromData = nodeMap[conn.from];
@@ -4702,16 +4706,29 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (_crossModEdge) {
         _crossModColorHex = FLOW_COLORS[flowType] || 0x60A5FA;
       }
-      // Main glow tube (thicker pipe)
-      var tubeGeo = new THREE.TubeGeometry(curve, 20, _glowRadius, 8, false);
-      var glowMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: glowOpacity });
-      var glowTube = new THREE.Mesh(tubeGeo, glowMat);
-      edgeGroup.add(glowTube);
-      // Core bright tube
-      var coreTubeGeo = new THREE.TubeGeometry(curve, 20, _coreRadius, 8, false);
-      var coreMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: coreOpacity });
-      var coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
-      edgeGroup.add(coreTube);
+      // P0: Edge layer rendering — bundleCount >= 5 → TubeGeometry, < 5 → merged LineSegments
+      var glowTube = null, coreTube = null;
+      if (_bundleCount < 5) {
+        // Minor edge: collect into merged LineSegments (thin line, no individual geometry)
+        var _minorPts = curve.getPoints(8);
+        var _minorC = new THREE.Color(_crossModColorHex);
+        for (var _pi = 0; _pi < _minorPts.length - 1; _pi++) {
+          _minorEdgePts.push(_minorPts[_pi].x, _minorPts[_pi].y, _minorPts[_pi].z);
+          _minorEdgePts.push(_minorPts[_pi+1].x, _minorPts[_pi+1].y, _minorPts[_pi+1].z);
+          _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
+          _minorEdgeColors.push(_minorC.r, _minorC.g, _minorC.b);
+        }
+      } else {
+        // Major edge: TubeGeometry (glow + core) — visual weight high
+        var tubeGeo = new THREE.TubeGeometry(curve, 20, _glowRadius, 8, false);
+        var glowMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: glowOpacity });
+        glowTube = new THREE.Mesh(tubeGeo, glowMat);
+        edgeGroup.add(glowTube);
+        var coreTubeGeo = new THREE.TubeGeometry(curve, 20, _coreRadius, 8, false);
+        var coreMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: coreOpacity });
+        coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
+        edgeGroup.add(coreTube);
+      }
 
       // Store edge data
       var edgeInfo = {
@@ -4727,6 +4744,7 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         colorHex: colorHex,
         _bundleCount: conn._bundleCount || 1,
         _crossModEdge: !!_crossModEdge,
+        _isMinorEdge: _bundleCount < 5,
       };
       edgeLines.push(edgeInfo);
 
@@ -4749,6 +4767,20 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
       if (nodeMeshes[conn.from]) nodeMeshes[conn.from].edges.push(edgeInfo);
       if (nodeMeshes[conn.to]) nodeMeshes[conn.to].edges.push(edgeInfo);
     });
+
+    // P0: Create merged LineSegments for minor edges (bundleCount < 5)
+    if (_minorEdgePts.length > 0) {
+      var _minorLineGeo = new THREE.BufferGeometry();
+      _minorLineGeo.setAttribute('position', new THREE.Float32BufferAttribute(_minorEdgePts, 3));
+      _minorLineGeo.setAttribute('color', new THREE.Float32BufferAttribute(_minorEdgeColors, 3));
+      var _minorLineMat = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: _minorLineOpacity,
+      });
+      var _minorLineSeg = new THREE.LineSegments(_minorLineGeo, _minorLineMat);
+      edgeGroup.add(_minorLineSeg);
+    }
   }
 
   document.getElementById('nodeCount').textContent = (AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)')) + (AGGREGATION.highDensity ? ' [dense]' : '');
@@ -4871,6 +4903,8 @@ function buildFlowDots() {
   flowDots = [];
 
   edgeLines.forEach(function(ei) {
+    // P0: Skip flow dots for minor (LineSegments) edges
+    if (ei._isMinorEdge) return;
     // 每条管道放2个光点，间隔半个路径长度，初始进度随机化
     var baseProgress = Math.random();
     for (var i = 0; i < 2; i++) {
@@ -5571,7 +5605,10 @@ function showModuleInfo(modId) {
   
   var info = window._moduleLayoutInfo && window._moduleLayoutInfo[modId];
   if (!info) {
-    panel.innerHTML = '<div style="color:#888;padding:12px;text-align:center">模块数据未找到</div>';
+    // Debug: show available keys vs requested modId
+    var keys = window._moduleLayoutInfo ? Object.keys(window._moduleLayoutInfo).slice(0, 10).join(', ') : 'NO _moduleLayoutInfo';
+    console.log('[MODULE] requested:', modId, 'available keys:', keys, 'total:', window._moduleLayoutInfo ? Object.keys(window._moduleLayoutInfo).length : 0);
+    panel.innerHTML = '<div style="color:#888;padding:12px;text-align:center">模块数据未找到: ' + modId + '</div>';
     panel.style.display = 'block';
     return;
   }
