@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Loading...</title>
+<script>
+// 同步加载合并后的诊断数据（含Agent认知标注）
+var xhr = new XMLHttpRequest();
+var t = Date.now();
+xhr.open('GET', 'port_tag_result_with_diagnosis.json?_t=' + t, false);
+try { xhr.send(); } catch(e) {}
+if (xhr.status === 200) {
+  localStorage.setItem('__EMBEDDED_DATA__', xhr.responseText);
+  window.location.href = 'viewer.html';
+} else {
+  // fallback: 尝试异步fetch
+  fetch('port_tag_result_with_diagnosis.json?_t=' + t)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      localStorage.setItem('__EMBEDDED_DATA__', JSON.stringify(d));
+      window.location.href = 'viewer.html';
+    })
+    .catch(function(err) {
+      document.body.innerHTML = '加载失败: ' + err.message;
+    });
+}
+</script>
+</head><body></body></html>

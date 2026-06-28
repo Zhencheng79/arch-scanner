@@ -1,0 +1,291 @@
+{
+  "generatedBy": "赵公明 (Hermes Agent)",
+  "generatedAt": "2026-06-28",
+  "project": "arch-scanner (architecture-cognition-platform)",
+  "version": "v0.1.40-node-spread.22",
+
+  "global": {
+    "score": 6.5,
+    "summary": "项目处于从'工具集'向'平台'转型的过渡期。核心扫描工具（port-tag-tool）能力扎实，3D可视化渲染能力成熟，但缺少中间的认知加工层。整体结构清晰但三个子系统相对孤立。",
+    "issues": [
+      "三个核心子系统（port-tag-tool / 3d-monitor / 前端展示层）各自独立运作，缺乏统一的数据契约和编排层",
+      "缺少中间的Agent认知加工层——工具能扫、能渲染，但中间没人理解架构并产出诊断",
+      "测试/验证脚本（4个独立verify脚本）散落在infrastructure层，没有形成测试体系",
+      "旧版React Three Fiber前端（src/）已于项目重构时移除，诊断数据已清理"
+    ],
+    "suggestions": [
+      "[架构] 建立统一的架构认知管线：port-tag-tool输出 → Agent加工标注 → 3d-monitor渲染展示，让三层数据流彻底打通",
+      "[维护] 将4个verify脚本整合为统一的测试套件，纳入CI流程",
+      "[架构] 建立数据契约Schema，确保port-tag-tool输出、Agent标注数据、3d-monitor输入三者的格式一致"
+    ]
+  },
+
+  "modules": [
+    {
+      "name": "port-tag-tool",
+      "id": "packages-port-tag-tool",
+      "nodeCount": 8,
+      "layer": "business",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "summary": "核心扫描引擎，能力成熟。AST解析引擎v0.2.0已完成升级，连接识别从31条提升到100条。",
+        "detail": "8个节点构成完整的内聚模块：projectScanner.js（扫描引擎核心）、portRegistry.js（端口注册）、tagRegistry.js（标签管理）、mcp-server.js（MCP协议适配）、cli.js（命令行接口）。模块内部15条连接高度内聚，外部依赖仅7条，是项目中耦合度最低、设计最清晰的模块。",
+        "suggestions": [
+          "[架构] 建议增加数据格式校验层（JSON Schema），确保扫描输出格式稳定",
+          "[维护] projectScanner.js 47KB体积偏大，建议拆分为scanner-core.js和language-parsers.js"
+        ]
+      }
+    },
+    {
+      "name": "3d-monitor",
+      "id": "packages-3d-monitor",
+      "nodeCount": 1,
+      "layer": "infrastructure",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "summary": "3D渲染引擎，viewer.html单文件5416行，功能完整但维护挑战大。",
+        "detail": "单文件内联Three.js，从CDN兜底加载。支持节点散点布局和模块优先布局两种模式，具备图例、跨模块粗管道、流向箭头动画等能力。当前v0.1.40-node-spread.22，迭代了22个版本。",
+        "suggestions": [
+          "[架构] 5416行单文件已到维护极限，建议下一步提取数据加载/布局计算/渲染为独立模块",
+          "[性能] 内联Three.js可考虑改为CDN加载，减小文件体积（当前794KB）"
+        ]
+      }
+    },
+    {
+      "name": "components（前端组件库）",
+      "id": "components",
+      "nodeCount": 11,
+      "layer": "presentation",
+      "agentDiagnosis": {
+        "status": "needs-split",
+        "summary": "项目最大的模块（11个节点），承担了presentation层全部职责，建议拆分为展示组件和交互组件两组。",
+        "detail": "包含11个React Three Fiber组件，从低阶的Node3D/ConnectionLine到高阶的InfoPanel/AccordionExpand。44条外部连接使其成为耦合度最高的模块。其中NebulaLink组件是纯存根（return null），属于dead code。",
+        "suggestions": [
+          "[架构] 拆分为core-components（Node3D, ConnectionLine, PortMarker）和ui-components（InfoPanel, AccordionExpand, HoverLabel）两组",
+          "[维护] 清理NebulaLink死代码（已确认是存根组件）",
+          "[架构] 考虑将components与新3d-monitor/viewer.html合并，避免两套渲染方案并行"
+        ]
+      }
+    },
+    {
+      "name": "data（数据层）",
+      "id": "data",
+      "nodeCount": 5,
+      "layer": "presentation",
+      "agentDiagnosis": {
+        "status": "warning",
+        "summary": "数据层承担了数据加载和注册职责，但5个节点间内部零连接，数据流未形成管线。",
+        "detail": "包含mcpLoader、portRegistry、systemData、tagRegistry四个数据源节点。外部连接23条但内部零连接——各数据源独立工作，没有形成数据处理管线。",
+        "suggestions": [
+          "[架构] 建议建立统一的数据管线（loader → validator → transformer → store），减少src组件的直接依赖"
+        ]
+      }
+    },
+    {
+      "name": "external dependencies（外部依赖）",
+      "id": "dep",
+      "nodeCount": 9,
+      "layer": "external",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "summary": "9个外部依赖，core依赖合理（React/Three.js/ vite），无冗余。",
+        "detail": "dep-three（13条连接）和dep-react（11条连接）是最核心的外部依赖。dep-@react-three/postprocessing和dep-react-dom连接数较低（0-1条），可能与旧前端代码有关。",
+        "suggestions": [
+          "[维护] 检查dep-@react-three/postprocessing和dep-react-dom是否仍被需要（连接数极低）"
+        ]
+      }
+    }
+  ],
+
+  "nodes": [
+    {
+      "id": "project-root",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "leaf",
+        "summary": "项目根目录，仅标注用途。",
+        "detail": "",
+        "suggestions": []
+      }
+    },
+    {
+      "id": "packages-port-tag-tool--projectScanner",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "hub",
+        "summary": "扫描引擎核心，port-tag-tool的枢纽节点。负责AST解析和项目扫描。",
+        "detail": "47KB的扫描引擎，是port-tag-tool模块的核心。承担了AST解析、跨目录路径解析、npm依赖识别等关键职责。与tagRegistry和portRegistry紧密配合。",
+        "suggestions": [
+          "[架构] 建议拆分为scanner-core.js和language-parsers.js"
+        ]
+      }
+    },
+    {
+      "id": "packages-port-tag-tool--mcp-server",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "bridge",
+        "summary": "MCP协议适配器，注册路径已修复。",
+        "detail": "port-tag-tool的MCP Server，提供5个工具（scan_system/get_tags/get_node_ports/validate/summarize）。config.yaml注册路径已从hermes-3d-panorama更新为arch-scanner。",
+        "suggestions": []
+      }
+    },
+    {
+      "id": "components--Node3D",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "hub",
+        "summary": "3D节点渲染核心组件，连接数最高。",
+        "detail": "",
+        "suggestions": []
+      }
+    },
+    {
+      "id": "components--ConnectionLine",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "normal",
+        "summary": "连接线渲染组件。",
+        "detail": "",
+        "suggestions": []
+      }
+    },
+    {
+      "id": "components--InfoPanel",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "normal",
+        "summary": "信息面板组件。",
+        "detail": "",
+        "suggestions": []
+      }
+    },
+    {
+      "id": "components--NebulaLink",
+      "agentDiagnosis": {
+        "status": "risk",
+        "role": "leaf",
+        "summary": "纯存根组件（return null），属于dead code。",
+        "detail": "该组件实现为直接返回null，无实际渲染内容。可能是为未来功能预留的占位符，但目前是项目中唯一的死代码。",
+        "suggestions": [
+          "[维护] 清理或实现实际功能，避免误导",
+          "[维护] 如为预留占位，应加明确注释说明"
+        ]
+      }
+    },
+    {
+      "id": "components--AccordionExpand",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "bridge",
+        "summary": "展开/折叠组件，交互逻辑可能与其他组件重叠。",
+        "detail": "",
+        "suggestions": [
+          "[架构] 评估与HoverLabel/InfoPanel的职责重叠"
+        ]
+      }
+    },
+    {
+      "id": "data--systemData",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "bridge",
+        "summary": "系统数据提供者，承载了大部分数据流转。",
+        "detail": "作为数据层到展示层的关键桥梁，systemData承担了从MCP加载数据并向组件分发的职责。连接数较高，是presentation层的核心数据节点。",
+        "suggestions": [
+          "[性能] 数据加载可增加缓存和重试机制，目前是直接依赖"
+        ]
+      }
+    },
+    {
+      "id": "dep-three",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "hub",
+        "summary": "最核心的外部依赖（13条连接），连接了3d-monitor和前端展示层。",
+        "detail": "three.js是整个项目的渲染基石，13条连接使其成为外部依赖中连接数最高的节点。服务于3d-monitor渲染引擎。",
+        "suggestions": []
+      }
+    },
+    {
+      "id": "dep-react",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "hub",
+        "summary": "第二大外部依赖（11条连接），支撑前端展示层。",
+        "detail": "",
+        "suggestions": []
+      }
+    },
+    {
+      "id": ".hermes--verify-canvas-2d",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "leaf",
+        "summary": "独立测试脚本，但与其他verify脚本无关联。",
+        "detail": "多个verify脚本（verify-canvas-2d, verify_connections, verify_deep）各自独立存在，未形成统一测试套件。",
+        "suggestions": [
+          "[维护] 建议整合为统一的测试框架（如Jest/Vitest）"
+        ]
+      }
+    },
+    {
+      "id": ".hermes--verify_connections",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "leaf",
+        "summary": "独立测试脚本。",
+        "detail": "同verify-canvas-2d，散落的测试脚本。",
+        "suggestions": [
+          "[维护] 建议整合到统一测试框架"
+        ]
+      }
+    },
+    {
+      "id": ".hermes--verify_deep",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "leaf",
+        "summary": "深度验证脚本。",
+        "detail": "",
+        "suggestions": [
+          "[维护] 建议整合到统一测试框架"
+        ]
+      }
+    },
+    {
+      "id": "--generate_test_v0117",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "leaf",
+        "summary": "旧版测试生成脚本，版本号暗示已过时。",
+        "detail": "",
+        "suggestions": [
+          "[维护] 版本号v0117表明此脚本已不再维护，建议清理"
+        ]
+      }
+    },
+    {
+      "id": "--verify_v0117",
+      "agentDiagnosis": {
+        "status": "warning",
+        "role": "leaf",
+        "summary": "旧版验证脚本，配套generate_test。",
+        "detail": "",
+        "suggestions": [
+          "[维护] 建议清理或整合"
+        ]
+      }
+    },
+    {
+      "id": "--vite.config",
+      "agentDiagnosis": {
+        "status": "healthy",
+        "role": "leaf",
+        "summary": "Vite构建配置。",
+        "detail": "",
+        "suggestions": []
+      }
+    }
+  ]
+}

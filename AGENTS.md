@@ -25,7 +25,7 @@ arch-scanner（架构扫描器）是一个 MCP-powered 项目架构扫描与 3D 
 - 代码位置：`packages/3d-monitor/`
 - 核心文件：`viewer.html`（单文件内联 Three.js）
 - 注意：viewer.html 是单文件，所有代码内联，不要拆分成多文件
-- 主分支版本和力导向分支版本分开维护
+- force-layout分支已存档（tag: archive/force-layout-v0.1.40-force.15）
 
 ### 交互规范
 - 代码修改走 Kanban 任务

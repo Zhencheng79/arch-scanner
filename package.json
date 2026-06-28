@@ -1,6 +1,6 @@
 {
   "name": "arch-scanner",
-  "version": "0.1.17",
+  "version": "0.1.40",
   "description": "Architecture Scanner — 3D visualization of project architecture",
   "keywords": [
     "3d",
