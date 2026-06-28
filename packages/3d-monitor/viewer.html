@@ -2409,6 +2409,7 @@ function buildModuleAggregation(nodes, conns) {
         var _adMod = window._agentDiagnosisData.modules[_adI];
         if ((_adMod.name === mod || _adMod.id === mod) && _adMod.agentDiagnosis && _adMod.agentDiagnosis.status) {
           groupNode._diagnosisStatus = _adMod.agentDiagnosis.status;
+          groupNode.agentDiagnosis = _adMod.agentDiagnosis;
           var _stClrMap = { healthy: 0x4CAF50, warning: 0xFF9800, risk: 0xF44336, overloaded: 0xB71C1C };
           if (_stClrMap[_adMod.agentDiagnosis.status] !== undefined) {
             groupNode.color = _stClrMap[_adMod.agentDiagnosis.status];
@@ -5604,6 +5605,21 @@ function showModuleInfo(modId) {
   // Close right-side node info panel if open (modules in left, nodes in right - can coexist)
   
   var info = window._moduleLayoutInfo && window._moduleLayoutInfo[modId];
+  // Fallback: fuzzy match (trim, case-insensitive, first segment)
+  if (!info && window._moduleLayoutInfo) {
+    var allKeys = Object.keys(window._moduleLayoutInfo);
+    var modTrim = modId.trim().toLowerCase();
+    for (var ki = 0; ki < allKeys.length; ki++) {
+      var k = allKeys[ki];
+      if (k.trim().toLowerCase() === modTrim ||
+          k.trim().toLowerCase().indexOf(modTrim) !== -1 ||
+          modTrim.indexOf(k.trim().toLowerCase()) !== -1) {
+        info = window._moduleLayoutInfo[k];
+        modId = k;
+        break;
+      }
+    }
+  }
   if (!info) {
     // Debug: show available keys vs requested modId
     var keys = window._moduleLayoutInfo ? Object.keys(window._moduleLayoutInfo).slice(0, 10).join(', ') : 'NO _moduleLayoutInfo';
