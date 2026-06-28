@@ -4728,11 +4728,11 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
         }
       } else {
         // Major edge: TubeGeometry (glow + core) — visual weight high
-        var tubeGeo = new THREE.TubeGeometry(curve, 20, _glowRadius, 8, false);
+        var tubeGeo = new THREE.TubeGeometry(curve, 8, _glowRadius, 4, false);
         var glowMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: glowOpacity });
         glowTube = new THREE.Mesh(tubeGeo, glowMat);
         edgeGroup.add(glowTube);
-        var coreTubeGeo = new THREE.TubeGeometry(curve, 20, _coreRadius, 8, false);
+        var coreTubeGeo = new THREE.TubeGeometry(curve, 8, _coreRadius, 4, false);
         var coreMat = new THREE.MeshBasicMaterial({ color: _crossModColorHex, transparent: true, opacity: coreOpacity });
         coreTube = new THREE.Mesh(coreTubeGeo, coreMat);
         edgeGroup.add(coreTube);
