@@ -2645,6 +2645,10 @@ function buildFunctionAggregation(nodes, conns) {
     funcBuckets[funcMod].push(n);
   });
   
+  // Debug: log function module assignment
+  console.log('[FUNC_AGG] buckets:', Object.keys(funcBuckets).length, Object.keys(funcBuckets).join(', '));
+  console.log('[FUNC_AGG] unassigned:', unassignedNodes.length);
+  
   // 创建功能模块组节点
   var funcGroupNodes = [];
   var flatFuncNodes = [];
