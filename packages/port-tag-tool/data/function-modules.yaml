@@ -1,63 +1,67 @@
 # function-modules.yaml — Hermes Agent 功能模块 → 技术模块映射表
-# Created by Phase 1 task
+# 基于实际 detectModule 输出修正
 
 modules:
   调度中心:
-    description: 任务调度、事件分发、网关管理
+    description: 任务调度、消息路由、事件分发
     technical_modules:
-      - kanban
-      - cron
-      - webhook
-      - dispatcher
       - gateway
+      - cron
+      - hermes_cli
+      - tui_gateway
 
   智能体核心:
-    description: 智能推理、意图识别、会话管理
+    description: 智能推理、会话管理、意图识别
     technical_modules:
       - agent
       - agent-lsp
       - agent-transports
       - acp_adapter
 
-  系统部:
-    description: 系统操作、DevOps、命令行
-    technical_modules:
-      - system
-      - devops
-      - cli
-      - config
-
-  研究部:
-    description: 投资研究、数据采集、数据分析
-    technical_modules:
-      - research
-      - data-collection
-      - analysis
-
-  风控部:
-    description: 风险控制、合规审查
-    technical_modules:
-      - risk-control
-      - compliance
-
-  知识管理:
-    description: 知识库、笔记、联网查询
-    technical_modules:
-      - knowledge-mgmt
-      - obsidian
-      - plur
-
-  内容运营:
-    description: 运营操作、内容创作、社交媒
-    technical_modules:
-      - operations
-      - content
-      - social-media
-
   用户界面:
-    description: 用户交互界面、桌面应用
+    description: Web 界面、TUI 终端、桌面应用
     technical_modules:
       - web
-      - tui
-      - apps
-      - desktop
+      - ui-tui
+      - apps-desktop
+      - apps-bootstrap-installer
+      - apps-shared
+      - website
+
+  插件系统:
+    description: 第三方集成、模型提供商、浏览器、存储
+    technical_modules:
+      - plugins
+      - plugins-web
+      - plugins-platforms
+      - plugins-memory
+      - plugins-browser
+      - plugins-image_gen
+      - plugins-model_providers
+      - plugins-dashboard_auth
+      - plugins-cron
+      - plugins-disk-cleanup
+      - plugins-google_meet
+      - plugins-kanban-dashboard
+      - plugins-observability
+      - plugins-security
+      - plugins-spotify
+      - plugins-teams_pipeline
+      - plugins-video_gen
+      - plugins-hermes-achievements
+
+  测试与工具:
+    description: 测试套件、开发工具、CI/CD
+    technical_modules:
+      - tests
+      - tools
+      - scripts
+      - skills
+      - optional-skills
+      - providers
+      - packaging
+      - project-root
+
+  其他:
+    description: 未归类的技术模块
+    technical_modules: []

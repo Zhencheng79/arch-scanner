@@ -2628,7 +2628,18 @@ function buildFunctionAggregation(nodes, conns) {
   nodes.forEach(function(n) {
     // 先检查节点是否已有 _moduleName（技术模块）
     var techMod = n._moduleName || detectModule(n.id, n);
-    var funcMod = techToFunc[techMod] || 'other';
+    // Prefix match: map 'plugins-web-brave_free' → 'plugins-web' if mapped
+    var funcMod = techToFunc[techMod];
+    if (!funcMod && techMod) {
+      var tmLower = techMod.toLowerCase();
+      for (var _fk in techToFunc) {
+        if (tmLower.indexOf(_fk.toLowerCase()) === 0) {
+          funcMod = techToFunc[_fk];
+          break;
+        }
+      }
+    }
+    funcMod = funcMod || 'other';
     
     if (!funcBuckets[funcMod]) funcBuckets[funcMod] = [];
     funcBuckets[funcMod].push(n);
