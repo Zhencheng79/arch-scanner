@@ -2721,6 +2721,18 @@ function buildFunctionAggregation(nodes, conns) {
     });
     
     funcGroupNodes.push(funcGroupNode);
+    
+    // Register in AGGREGATION for toggleGroup
+    if (typeof AGGREGATION !== 'undefined') {
+      AGGREGATION.groups.push({
+        groupId: groupId,
+        label: funcLabel,
+        childIds: childIds,
+        layer: 'infrastructure',
+        expanded: false,
+      });
+      AGGREGATION.groupMap[groupId] = AGGREGATION.groups[AGGREGATION.groups.length - 1];
+    }
   });
   
   // 合并结果
