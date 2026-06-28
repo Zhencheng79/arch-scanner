@@ -1974,6 +1974,20 @@ var FUNCTION_MODULE_MAP = {
   "other":           { technicalModules: [],                                                             color: 0x888888 }
 };
 window.FUNCTION_MODULE_MAP = FUNCTION_MODULE_MAP;
+// Auto-verify: count how many tech modules would match hermes-agent modules
+var _autoVerify = {};
+Object.keys(FUNCTION_MODULE_MAP).forEach(function(fk) {
+  var tms = FUNCTION_MODULE_MAP[fk].technicalModules || [];
+  _autoVerify[fk] = { techModules: tms.length, sampleMatch: tms.slice(0,3).join(',') };
+});
+console.log('[FUNC_VERIFY] map loaded:', JSON.stringify(_autoVerify));
+// Write to page so non-GPU env can verify
+var _vEl = document.createElement('div');
+_vEl.id = 'funcMapStatus';
+_vEl.style.cssText = 'position:fixed;top:100px;left:16px;z-index:999;font-size:11px;color:#0f0;font-family:monospace;background:rgba(0,0,0,0.8);padding:6px 10px;border-radius:4px';
+_vEl.textContent = 'FUNC_MAP: ' + Object.keys(FUNCTION_MODULE_MAP).length + ' modules · ' +
+  Object.keys(FUNCTION_MODULE_MAP).filter(function(k){return k!=='other';}).join(', ');
+document.body.appendChild(_vEl);
 console.log('[FUNC_MAP] modules:', Object.keys(FUNCTION_MODULE_MAP).join(', '));
 // Print all technical modules per function module
 var _fmKeys = Object.keys(FUNCTION_MODULE_MAP);
