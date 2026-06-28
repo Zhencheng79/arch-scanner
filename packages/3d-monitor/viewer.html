@@ -4806,6 +4806,19 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   }
 
   document.getElementById('nodeCount').textContent = (AGGREGATION.mode === 'none' ? dataNodes.length : (dataNodes.length + ' (' + AGGREGATION._allOriginalNodes.length + ' total)')) + (AGGREGATION.highDensity ? ' [dense]' : '');
+  // v0.1.55: Show display level info
+  if (DISPLAY_LEVEL === 'function') {
+    var fgCount = 0, funcNames = [];
+    (AGGREGATION.groups || []).forEach(function(g) { fgCount++; funcNames.push(g.label); });
+    var infoEl = document.getElementById('levelInfo');
+    if (!infoEl) {
+      infoEl = document.createElement('div');
+      infoEl.id = 'levelInfo';
+      infoEl.style.cssText = 'position:fixed;top:64px;left:16px;z-index:50;font-size:11px;color:#888;font-family:monospace';
+      document.body.appendChild(infoEl);
+    }
+    infoEl.textContent = '功能模块: ' + fgCount + ' · ' + funcNames.slice(0, 8).join(', ') + (funcNames.length > 8 ? '...' : '');
+  }
   document.getElementById('edgeCount').textContent = dataConns.length;
   if (AGGREGATION.mode !== 'none' && AGGREGATION._allOriginalNodes) {
     var existingIds = {};
