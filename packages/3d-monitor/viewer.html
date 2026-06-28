@@ -4074,6 +4074,12 @@ function buildScene(dataNodes, dataConns, dataPorts, dataTags) {
   var positions;
   if (USE_MODULE_LAYOUT) {
     positions = computeModuleLayout(dataNodes);
+    // v0.1.53: Map groupNode._moduleName → _moduleLayoutInfo for showModuleInfo lookup
+    dataNodes.forEach(function(n) {
+      if (n._isGroupNode && n._moduleName && window._moduleLayoutInfo && !window._moduleLayoutInfo[n._moduleName]) {
+        window._moduleLayoutInfo[n._moduleName] = window._moduleLayoutInfo[n.id];
+      }
+    });
   } else {
     positions = computeLayout(dataNodes);
   }

@@ -413,6 +413,17 @@ async function main() {
     agentDiagnosis: {
       global: {
         score: globalScore,
+        issues: (() => {
+          const issues = [];
+          const wc = modules.filter(m => m.agentDiagnosis.status === 'warning').length;
+          const oc = modules.filter(m => m.agentDiagnosis.status === 'overloaded').length;
+          const rc = modules.filter(m => m.agentDiagnosis.status === 'risk').length;
+          if (wc > 0) issues.push(`${wc} 个模块处于警告状态`);
+          if (oc > 0) issues.push(`${oc} 个模块处于过载状态`);
+          if (rc > 0) issues.push(`${rc} 个模块处于风险状态`);
+          if (issues.length === 0 && globalScore < 7) issues.push('全局评分偏低，建议系统性检查架构');
+          return issues;
+        })(),
         summary: `项目状态：${modules.length}个模块，${nodes.length}个节点。${modules.filter(m => m.agentDiagnosis.status === 'warning').length}个模块处于警告状态，${modules.filter(m => m.agentDiagnosis.status === 'overloaded').length}个模块处于过载状态。`,
         detail: `全局评分：${globalScore}/10。警告模块${modules.filter(m => m.agentDiagnosis.status === 'warning').length}个，过载模块${modules.filter(m => m.agentDiagnosis.status === 'overloaded').length}个，风险模块${modules.filter(m => m.agentDiagnosis.status === 'risk').length}个。评分规则：基础10分，每个警告减0.3分，每个过载/风险减0.5分。`,
         suggestions: (() => {
