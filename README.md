@@ -55,6 +55,14 @@ npm run build
 - **@react-three/postprocessing** — 后期处理特效
 - **Vite** — 构建工具
 
+## 支持项目
+
+如果这个项目对你有帮助，欢迎赞赏支持 ❤️
+
+<p align="center">
+  <img src="images/wechat-pay.jpg" width="250" alt="微信赞赏码" />
+</p>
+
 ## 许可协议
 
 MIT License © 2026
